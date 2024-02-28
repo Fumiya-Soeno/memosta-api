@@ -4,8 +4,6 @@ export default function handler(req, res) {
   const API_KEY = process.env.API_KEY;
   const requestApiKey = req.headers["x-api-key"];
 
-  console.log(requestApiKey);
-
   if (API_KEY && requestApiKey === API_KEY) {
     if (req.method === "POST") {
       res.setHeader("Access-Control-Allow-Credentials", true);
