@@ -11,11 +11,9 @@ export default async function handler(req, res) {
     const records =
       await sql`SELECT * FROM users WHERE email = ${email} AND password = ${password}`;
 
-    if (records.count > 0) {
+    if (records.rowCount > 0) {
       // ユーザーが見つかった場合
-      return res
-        .status(200)
-        .json({ success: true, message: "ログイン成功", user: records[0] });
+      return res.status(200).json({ success: true, message: "ログイン成功" });
     } else {
       // ユーザーが見つからない場合
       return res.status(401).json({ success: false, message: "認証失敗" });
