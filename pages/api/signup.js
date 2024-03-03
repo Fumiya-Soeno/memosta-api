@@ -1,5 +1,6 @@
 import { sql } from "@vercel/postgres";
 import bcrypt from "bcrypt";
+import { generateTokens } from "./functions/token";
 
 const SALT_ROUNDS = 10; // bcryptのソルト生成のためのラウンド数
 
@@ -29,7 +30,13 @@ export default async function handler(req, res) {
 
       // ハッシュ化されたパスワードを使用してユーザーをデータベースに保存
       await sql`INSERT INTO users(email, password) VALUES(${email}, ${hashedPassword})`;
-      return res.status(200).json({ success: true, message: "新規登録に成功" });
+      const { accessToken, refreshToken } = generateTokens(newUser.id); // newUser.id は新しく登録されたユーザーのID
+      return res.status(200).json({
+        success: true,
+        message: "新規登録に成功",
+        accessToken,
+        refreshToken,
+      });
     }
   } catch (error) {
     return commonError(res, error); // resを渡すように修正

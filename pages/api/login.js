@@ -1,5 +1,6 @@
 import { sql } from "@vercel/postgres";
 import bcrypt from "bcrypt";
+import { generateTokens } from "./functions/token";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -9,23 +10,25 @@ export default async function handler(req, res) {
   const { email, password } = req.body;
 
   try {
-    // まずユーザーをメールアドレスで検索
     const records = await sql`SELECT * FROM users WHERE email = ${email}`;
 
     if (records.rowCount > 0) {
-      // ユーザーが見つかった場合、bcryptでパスワードの比較を行う
       const user = records.rows[0];
-
       const match = await bcrypt.compare(password, user.password);
+
       if (match) {
-        // パスワードが一致した場合
-        return res.status(200).json({ success: true, message: "ログイン成功" });
+        // アクセストークンとリフレッシュトークンの生成
+        const { accessToken, refreshToken } = generateTokens(user.id);
+        return res.status(200).json({
+          success: true,
+          message: "ログイン成功",
+          accessToken,
+          refreshToken,
+        });
       } else {
-        // パスワードが一致しない場合
         return res.status(401).json({ success: false, message: "認証失敗" });
       }
     } else {
-      // ユーザーが見つからない場合
       return res.status(401).json({ success: false, message: "認証失敗" });
     }
   } catch (error) {
