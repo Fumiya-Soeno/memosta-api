@@ -1,32 +1,38 @@
-// http://localhost:3000/api/cards
+// 必要な関数のインポート
+import { verifyToken, generateTokens, refreshTokens } from "./functions/token";
 
-export default function handler(req, res) {
-  const API_KEY = process.env.API_KEY;
-  const requestApiKey = req.headers["x-api-key"];
+export default async function handler(req, res) {
+  const accessToken = req.headers["authorization"]?.split(" ")[1];
+  const refreshToken = req.headers["x-refresh-token"];
 
-  if (API_KEY && requestApiKey === API_KEY) {
-    if (req.method === "POST") {
-      res.setHeader("Access-Control-Allow-Credentials", true);
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      res.setHeader(
-        "Access-Control-Allow-Methods",
-        "GET,OPTIONS,PATCH,DELETE,POST,PUT"
-      );
-      res.setHeader(
-        "Access-Control-Allow-Headers",
-        "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
-      );
+  const {
+    valid: accessValid,
+    expired: accessExpired,
+    decoded,
+  } = verifyToken(accessToken, "access");
 
-      // TODO: カード保存処理の実装
-
-      res.status(200).json({ success: true, message: "Card created" });
-    } else {
-      // 他のHTTPメソッドの処理
-      res.setHeader("Allow", ["POST"]);
-      res.status(405).end(`Method ${req.method} Not Allowed`);
+  if (accessValid && decoded?.userId) {
+    // アクセストークンが有効で、userIdを取得できた場合
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+      generateTokens(decoded.userId);
+    return res.status(200).json({
+      success: true,
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    });
+  } else if (accessExpired && refreshToken) {
+    // アクセストークンの有効期限が切れており、リフレッシュトークンが提供されている場合
+    const refreshResult = await refreshTokens(refreshToken);
+    if (refreshResult.userUpdated) {
+      return res.status(200).json({
+        success: true,
+        accessToken: refreshResult.accessToken,
+        refreshToken: refreshResult.refreshToken,
+      });
     }
-  } else {
-    // APIキーが不正
-    res.status(401).json({ success: false, message: "Unauthorized" });
   }
+
+  return res
+    .status(401)
+    .json({ success: false, message: "トークンの検証に失敗しました" });
 }
