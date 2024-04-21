@@ -39,7 +39,7 @@ export async function refreshTokens(accessToken, refreshToken) {
   if (accessValid || (accessExpired && refreshValid)) {
     // アクセストークンが有効、またはアクセストークンが切れてリフレッシュトークンが有効な場合、新しいトークンを生成
     const newTokens = generateTokens(decoded.userId);
-    return { ...newTokens, userUpdated: true };
+    return { ...newTokens, userUpdated: true, userId: decoded.userId };
   } else {
     // トークンの更新が不可能な場合
     return { userUpdated: false };

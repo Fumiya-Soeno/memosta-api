@@ -15,10 +15,10 @@ export async function authenticate(req) {
     return { userId: decoded.userId, accessToken, valid: true };
   } else if (accessExpired && refreshToken) {
     // アクセストークンの有効期限が切れており、リフレッシュトークンが提供されている場合
-    const refreshResult = await refreshTokens(refreshToken);
+    const refreshResult = await refreshTokens(accessToken, refreshToken);
     if (refreshResult.userUpdated) {
       return {
-        userId: refreshResult.decoded.userId,
+        userId: refreshResult.userId,
         accessToken: refreshResult.accessToken,
         valid: true,
       };
