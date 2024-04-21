@@ -14,12 +14,25 @@ export default async function handler(req, res) {
       .json({ success: false, message: "トークンの検証に失敗しました" });
   }
 
-  console.log(req.body);
   try {
-    await sql`UPDATE cards SET lylics = ${req.body.lylics} WHERE id = ${req.body.card_id} `;
+    await sql`BEGIN`; // トランザクション開始
+
+    await sql`UPDATE cards SET lylics = ${req.body.lylics} WHERE id = ${req.body.card_id}`;
+    if (req.body.decorations) {
+      await sql`DELETE FROM card_decorations WHERE card_id = ${req.body.card_id}`;
+
+      for (const deco of req.body.decorations) {
+        await sql`INSERT INTO card_decorations(card_id, start_pos, end_pos) VALUES(${req.body.card_id}, ${deco.start_pos}, ${deco.end_pos})`;
+      }
+    }
+
+    await sql`COMMIT`; // トランザクション確定
   } catch (error) {
-    console.log(error);
-    return res.status(500).end(`Something went wrong`);
+    await sql`ROLLBACK`; // エラー発生時にはロールバック
+    console.error(error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Something went wrong" });
   }
 
   return res.status(200).json({
