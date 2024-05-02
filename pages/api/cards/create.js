@@ -14,8 +14,11 @@ export default async function handler(req, res) {
       .json({ success: false, message: "トークンの検証に失敗しました" });
   }
 
-  // TODO: カード作成(INSERT)処理
-  // const records = await sql`INSERT INTO cards`;
+  try {
+    await sql`INSERT INTO cards(title, lylics, user_id) VALUES(${req.body.title}, '', ${authResult.userId})`;
+  } catch (error) {
+    console.error(error);
+  }
 
   return res.status(200).json({
     success: true,

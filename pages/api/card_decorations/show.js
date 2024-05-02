@@ -24,7 +24,7 @@ export default async function handler(req, res) {
 
   // カード装飾レコードの取得(SELECT)処理
   const records =
-    await sql`SELECT * FROM card_decorations WHERE card_id = ${req.body.card_id}`;
+    await sql`SELECT start_pos, end_pos FROM card_decorations WHERE card_id = ${req.body.card_id}`;
 
   return res.status(200).json({
     success: true,
