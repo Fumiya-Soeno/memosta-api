@@ -22,7 +22,7 @@ export default async function handler(req, res) {
       await sql`DELETE FROM card_decorations WHERE card_id = ${req.body.card_id}`;
 
       for (const deco of req.body.decorations) {
-        await sql`INSERT INTO card_decorations(card_id, start_pos, end_pos) VALUES(${req.body.card_id}, ${deco.start_pos}, ${deco.end_pos})`;
+        await sql`INSERT INTO card_decorations(card_id, start_pos, end_pos, type) VALUES(${req.body.card_id}, ${deco.start_pos}, ${deco.end_pos}, ${deco.type})`;
       }
     }
 
