@@ -17,7 +17,10 @@ export default async function handler(req, res) {
   try {
     await sql`BEGIN`; // トランザクション開始
 
-    await sql`UPDATE cards SET lylics = ${req.body.lylics} WHERE id = ${req.body.card_id}`;
+    let lylics = req.body.lylics.trim();
+
+    await sql`UPDATE cards SET lylics = ${lylics} WHERE id = ${req.body.card_id}`;
+
     if (req.body.decorations) {
       await sql`DELETE FROM card_decorations WHERE card_id = ${req.body.card_id}`;
 
