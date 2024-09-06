@@ -9,6 +9,13 @@ type Card = {
   label: string;
 };
 
+type RankingItem = {
+  username: string;
+  streak: number;
+  win_rate: number;
+  date: string;
+};
+
 // カードデッキを生成するヘルパー関数
 const generateDeck = (): Card[] => {
   const suits = ["♠", "♣", "♦", "♥"];
@@ -64,16 +71,16 @@ const calculateProbabilities = (deck: Card[], currentCardValue: number) => {
 export default function Home() {
   // 初期値にUUIDを使ったユーザー名を生成
   const initialUsername = uuidv4();
-  const [username, setUsername] = useState(initialUsername);
-  const [deck, setDeck] = useState(generateDeck());
-  const [currentCard, setCurrentCard] = useState(null);
-  const [nextCard, setNextCard] = useState(null);
-  const [previousCard, setPreviousCard] = useState(null);
-  const [streak, setStreak] = useState(0);
-  const [gameOver, setGameOver] = useState(false);
-  const [draw, setDraw] = useState(false);
-  const [totalProbability, setTotalProbability] = useState(1); // 初期値は1（100%）
-  const [ranking, setRanking] = useState([]);
+  const [username, setUsername] = useState<string>(initialUsername);
+  const [deck, setDeck] = useState<Card[]>(generateDeck());
+  const [currentCard, setCurrentCard] = useState<Card | null>(null);
+  const [nextCard, setNextCard] = useState<Card | null>(null);
+  const [previousCard, setPreviousCard] = useState<Card | null>(null);
+  const [streak, setStreak] = useState<number>(0);
+  const [gameOver, setGameOver] = useState<boolean>(false);
+  const [draw, setDraw] = useState<boolean>(false);
+  const [totalProbability, setTotalProbability] = useState<number>(1); // 初期値は1（100%）
+  const [ranking, setRanking] = useState<RankingItem[]>([]);
 
   // ランキングを取得する関数
   const fetchRanking = async () => {
@@ -90,7 +97,7 @@ export default function Home() {
 
   const { highProb, lowProb } = calculateProbabilities(
     deck,
-    currentCard?.value
+    currentCard?.value || 0
   );
 
   // ローカルストレージからユーザー名を取得
@@ -103,7 +110,7 @@ export default function Home() {
   }, []);
 
   // ユーザー名を変更し、ローカルストレージに保存
-  const handleUsernameChange = (e) => {
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newUsername = e.target.value;
     setUsername(newUsername);
     localStorage.setItem("username", newUsername);
@@ -113,7 +120,7 @@ export default function Home() {
   const startGame = () => {
     const shuffledDeck = [...deck].sort(() => Math.random() - 0.5);
     setDeck(shuffledDeck);
-    const initialCard = shuffledDeck.pop();
+    const initialCard = shuffledDeck.pop() || null;
     setCurrentCard(initialCard);
     setNextCard(null);
     setPreviousCard(null);
@@ -124,19 +131,21 @@ export default function Home() {
   };
 
   // カードを引くロジック
-  const drawCard = (choice) => {
+  const drawCard = (choice: "HIGH" | "LOW") => {
     if (deck.length === 0 || gameOver) return;
 
-    const newCard = deck.pop();
+    const newCard = deck.pop() || null;
     setNextCard(newCard);
 
     setPreviousCard(currentCard);
 
-    if (newCard.value === currentCard.value) {
+    if (newCard && currentCard && newCard.value === currentCard.value) {
       setDraw(true);
     } else if (
-      (choice === "HIGH" && newCard.value > currentCard.value) ||
-      (choice === "LOW" && newCard.value < currentCard.value)
+      newCard &&
+      currentCard &&
+      ((choice === "HIGH" && newCard.value > currentCard.value) ||
+        (choice === "LOW" && newCard.value < currentCard.value))
     ) {
       setStreak(streak + 1);
       setDraw(false);
@@ -163,7 +172,7 @@ export default function Home() {
       date: new Date().toISOString(),
     };
 
-    fetch("api/high_and_low/post_ranking", {
+    fetch("/api/high_and_low/post_ranking", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
