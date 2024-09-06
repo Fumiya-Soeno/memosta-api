@@ -30,14 +30,44 @@ const generateDeck = () => {
   return deck;
 };
 
+// 確率を計算するヘルパー関数
+const calculateProbabilities = (deck, currentCardValue) => {
+  if (!currentCardValue) return { highProb: 0, lowProb: 0 };
+
+  const remainingHighCards = deck.filter(
+    (card) => card.value > currentCardValue
+  ).length;
+  const remainingLowCards = deck.filter(
+    (card) => card.value < currentCardValue
+  ).length;
+  const totalRemainingCards = deck.length;
+
+  const highProb =
+    totalRemainingCards > 0
+      ? (remainingHighCards / totalRemainingCards) * 100
+      : 0;
+  const lowProb =
+    totalRemainingCards > 0
+      ? (remainingLowCards / totalRemainingCards) * 100
+      : 0;
+
+  return { highProb: highProb.toFixed(2), lowProb: lowProb.toFixed(2) };
+};
+
 export default function Home() {
   const [deck, setDeck] = useState(generateDeck());
   const [currentCard, setCurrentCard] = useState(null);
   const [nextCard, setNextCard] = useState(null);
-  const [previousCard, setPreviousCard] = useState(null); // 新しいステートを追加
+  const [previousCard, setPreviousCard] = useState(null);
   const [streak, setStreak] = useState(0);
   const [gameOver, setGameOver] = useState(false);
-  const [draw, setDraw] = useState(false); // 引き分けフラグ
+  const [draw, setDraw] = useState(false);
+  const [totalProbability, setTotalProbability] = useState(1); // 初期値は1（100%）
+
+  const { highProb, lowProb } = calculateProbabilities(
+    deck,
+    currentCard?.value
+  );
 
   // ゲームを開始して最初のカードを引く
   const startGame = () => {
@@ -46,10 +76,11 @@ export default function Home() {
     const initialCard = shuffledDeck.pop();
     setCurrentCard(initialCard);
     setNextCard(null);
-    setPreviousCard(null); // ゲーム開始時は前のカードをリセット
+    setPreviousCard(null);
     setStreak(0);
     setGameOver(false);
     setDraw(false);
+    setTotalProbability(1); // ゲーム開始時に確率をリセット
   };
 
   // カードを引くロジック
@@ -59,21 +90,21 @@ export default function Home() {
     const newCard = deck.pop();
     setNextCard(newCard);
 
-    // currentCardを更新する前にpreviousCardに保存
     setPreviousCard(currentCard);
 
     if (newCard.value === currentCard.value) {
-      // 引き分け処理
       setDraw(true);
     } else if (
       (choice === "HIGH" && newCard.value > currentCard.value) ||
       (choice === "LOW" && newCard.value < currentCard.value)
     ) {
-      // 正解
       setStreak(streak + 1);
       setDraw(false);
+
+      // 確率を計算して掛け合わせる
+      const prob = choice === "HIGH" ? highProb / 100 : lowProb / 100;
+      setTotalProbability((prev) => prev * prob); // 連勝確率を累積する
     } else {
-      // 不正解
       setGameOver(true);
       setDraw(false);
     }
@@ -105,7 +136,7 @@ export default function Home() {
           <>
             <div className="col-span-4 text-center">
               <p>{streak}連勝</p>
-
+              <p>連勝率: {(totalProbability * 100).toFixed(2)}%</p>{" "}
               {gameOver && (
                 <div className="mt-4">
                   <h2 className="text-2xl text-red-500 mb-4">Game Over</h2>
@@ -115,10 +146,12 @@ export default function Home() {
                     {" → "}
                     {currentCard.suit}
                     {currentCard.label}
+                    {draw && (
+                      <h2 className="text-2xl text-yellow-500 mb-4">DRAW</h2>
+                    )}
                   </h2>
                 </div>
               )}
-
               {!gameOver && (
                 <div className="mt-2">
                   <div>
@@ -144,15 +177,12 @@ export default function Home() {
                       LOW
                     </button>
                   </div>
+                  <div className="mt-4">
+                    <p>HIGHの確率: {highProb}%</p>
+                    <p>LOWの確率: {lowProb}%</p>
+                  </div>
                 </div>
               )}
-
-              {draw && (
-                <div className="mt-4">
-                  <h2 className="text-2xl text-yellow-500 mb-4">DRAW</h2>
-                </div>
-              )}
-
               {gameOver && (
                 <button
                   className="px-4 py-2 bg-green-500 text-white rounded mt-4"
