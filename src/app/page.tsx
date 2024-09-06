@@ -3,8 +3,14 @@
 import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 
+type Card = {
+  suit: string;
+  value: number;
+  label: string;
+};
+
 // カードデッキを生成するヘルパー関数
-const generateDeck = () => {
+const generateDeck = (): Card[] => {
   const suits = ["♠", "♣", "♦", "♥"];
   const values = [
     { value: 2, label: "2" },
@@ -22,7 +28,7 @@ const generateDeck = () => {
     { value: 14, label: "A" },
   ];
 
-  let deck = [];
+  let deck: Card[] = []; // 型を明示
   suits.forEach((suit) => {
     values.forEach((card) => {
       deck.push({ suit, ...card });
