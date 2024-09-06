@@ -121,7 +121,8 @@ export default function Home() {
 
   // ゲームを開始して最初のカードを引く
   const startGame = () => {
-    const shuffledDeck = [...deck].sort(() => Math.random() - 0.5);
+    const newDeck = generateDeck(); // 新しいデッキを生成
+    const shuffledDeck = [...newDeck].sort(() => Math.random() - 0.5); // デッキをシャッフル
     setDeck(shuffledDeck);
     const initialCard = shuffledDeck.pop() || null;
     setCurrentCard(initialCard);
