@@ -295,22 +295,27 @@ export default function Home() {
           </h2>
           <ul className="list-disc">
             {ranking.length > 0 ? (
-              ranking.map((item, index) => (
-                <li key={index} className="mb-2 text-xs list-none">
-                  {index + 1}位 {item.username} - {item.streak}連勝 (連勝率:{" "}
-                  {item.win_rate}%)
-                  <br />
-                  {new Date(item.date).toLocaleDateString("ja-JP", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}{" "}
-                  {new Date(item.date).toLocaleTimeString("ja-JP", {
-                    hour: "numeric",
-                    minute: "numeric",
-                  })}
-                </li>
-              ))
+              ranking.map((item, index) => {
+                const date = new Date(item.date);
+                date.setHours(date.getHours() + 9); // 9時間を加算
+
+                return (
+                  <li key={index} className="mb-2 text-xs list-none">
+                    {index + 1}位 {item.username} - {item.streak}連勝 (連勝率:{" "}
+                    {item.win_rate}%)
+                    <br />
+                    {date.toLocaleDateString("ja-JP", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}{" "}
+                    {date.toLocaleTimeString("ja-JP", {
+                      hour: "numeric",
+                      minute: "numeric",
+                    })}
+                  </li>
+                );
+              })
             ) : (
               <p>ランキング取得中...</p>
             )}
