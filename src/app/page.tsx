@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { v4 as uuidv4 } from "uuid";
 
 // カードデッキを生成するヘルパー関数
 const generateDeck = () => {
@@ -55,6 +56,9 @@ const calculateProbabilities = (deck, currentCardValue) => {
 };
 
 export default function Home() {
+  // 初期値にUUIDを使ったユーザー名を生成
+  const initialUsername = uuidv4();
+  const [username, setUsername] = useState(initialUsername);
   const [deck, setDeck] = useState(generateDeck());
   const [currentCard, setCurrentCard] = useState(null);
   const [nextCard, setNextCard] = useState(null);
@@ -68,6 +72,21 @@ export default function Home() {
     deck,
     currentCard?.value
   );
+
+  // ローカルストレージからユーザー名を取得
+  useEffect(() => {
+    const storedUsername = localStorage.getItem("username");
+    if (storedUsername) {
+      setUsername(storedUsername);
+    }
+  }, []);
+
+  // ユーザー名を変更し、ローカルストレージに保存
+  const handleUsernameChange = (e) => {
+    const newUsername = e.target.value;
+    setUsername(newUsername);
+    localStorage.setItem("username", newUsername);
+  };
 
   // ゲームを開始して最初のカードを引く
   const startGame = () => {
@@ -107,10 +126,36 @@ export default function Home() {
     } else {
       setGameOver(true);
       setDraw(false);
+      postGameOverData(); // ゲームオーバー時にAPIにデータ送信
     }
 
     setCurrentCard(newCard);
     setDeck(deck);
+  };
+
+  // ゲームオーバー時にAPIにデータをPOST
+  const postGameOverData = () => {
+    const data = {
+      username: username,
+      streak: streak,
+      winRate: (totalProbability * 100).toFixed(2),
+      date: new Date().toISOString(),
+    };
+
+    fetch("api/high_and_low/post_ranking", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        console.log("Data successfully posted:", result);
+      })
+      .catch((error) => {
+        console.error("Error posting data:", error);
+      });
   };
 
   return (
@@ -123,20 +168,33 @@ export default function Home() {
 
       <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
         {!currentCard && (
-          <a
-            href="#"
-            className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-            onClick={startGame}
-          >
-            <h2 className={`mb-3 text-2xl font-semibold`}>Play</h2>
-          </a>
+          <div className="col-span-4">
+            <div>
+              <input
+                type="text"
+                value={username}
+                onChange={handleUsernameChange}
+                className="mb-4 px-4 py-2 border border-gray-300 rounded text-black"
+                placeholder="Enter your username"
+              />
+            </div>
+            <div>
+              <button
+                className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+                onClick={startGame}
+              >
+                <h2 className={`mb-3 text-2xl font-semibold`}>Play</h2>
+              </button>
+            </div>
+          </div>
         )}
 
         {currentCard && (
           <>
             <div className="col-span-4 text-center">
               <p>{streak}連勝</p>
-              <p>連勝率: {(totalProbability * 100).toFixed(2)}%</p>{" "}
+              <p>連勝確率: {(totalProbability * 100).toFixed(2)}%</p>{" "}
+              {/* 連勝確率を表示 */}
               {gameOver && (
                 <div className="mt-4">
                   <h2 className="text-2xl text-red-500 mb-4">Game Over</h2>
@@ -168,19 +226,21 @@ export default function Home() {
                       className="px-4 py-2 bg-blue-500 text-white rounded"
                       onClick={() => drawCard("HIGH")}
                     >
-                      HIGH
-                    </button>
+                      {" "}
+                      HIGH{" "}
+                    </button>{" "}
                     <button
                       className="px-4 py-2 bg-red-500 text-white rounded"
                       onClick={() => drawCard("LOW")}
                     >
-                      LOW
-                    </button>
-                  </div>
+                      {" "}
+                      LOW{" "}
+                    </button>{" "}
+                  </div>{" "}
                   <div className="mt-4">
-                    <p>HIGHの確率: {highProb}%</p>
-                    <p>LOWの確率: {lowProb}%</p>
-                  </div>
+                    {" "}
+                    <p>HIGHの確率: {highProb}%</p> <p>LOWの確率: {lowProb}%</p>{" "}
+                  </div>{" "}
                 </div>
               )}
               {gameOver && (
