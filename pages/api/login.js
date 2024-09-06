@@ -1,6 +1,6 @@
 import { sql } from "@vercel/postgres";
 import bcrypt from "bcrypt";
-import { generateTokens } from "../helpers/token";
+import { generateTokens } from "../../lib/token";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
