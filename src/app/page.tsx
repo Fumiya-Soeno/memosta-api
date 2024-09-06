@@ -67,6 +67,20 @@ export default function Home() {
   const [gameOver, setGameOver] = useState(false);
   const [draw, setDraw] = useState(false);
   const [totalProbability, setTotalProbability] = useState(1); // 初期値は1（100%）
+  const [ranking, setRanking] = useState([]);
+
+  // ランキングを取得する関数
+  const fetchRanking = async () => {
+    try {
+      const response = await fetch("/api/high_and_low/get_ranking"); // ランキング取得APIにリクエストを送る
+      const data = await response.json();
+      if (data.success) {
+        setRanking(data.ranking);
+      }
+    } catch (error) {
+      console.error("Failed to fetch ranking", error);
+    }
+  };
 
   const { highProb, lowProb } = calculateProbabilities(
     deck,
@@ -79,6 +93,7 @@ export default function Home() {
     if (storedUsername) {
       setUsername(storedUsername);
     }
+    fetchRanking();
   }, []);
 
   // ユーザー名を変更し、ローカルストレージに保存
@@ -122,7 +137,7 @@ export default function Home() {
 
       // 確率を計算して掛け合わせる
       const prob = choice === "HIGH" ? highProb / 100 : lowProb / 100;
-      setTotalProbability((prev) => prev * prob); // 連勝確率を累積する
+      setTotalProbability((prev) => prev * prob); // 連勝率を累積する
     } else {
       setGameOver(true);
       setDraw(false);
@@ -166,7 +181,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
+      <div className="mb-4 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
         {!currentCard && (
           <div className="col-span-4">
             <div>
@@ -193,8 +208,8 @@ export default function Home() {
           <>
             <div className="col-span-4 text-center">
               <p>{streak}連勝</p>
-              <p>連勝確率: {(totalProbability * 100).toFixed(2)}%</p>{" "}
-              {/* 連勝確率を表示 */}
+              <p>連勝率: {(totalProbability * 100).toFixed(2)}%</p>{" "}
+              {/* 連勝率を表示 */}
               {gameOver && (
                 <div className="mt-4">
                   <h2 className="text-2xl text-red-500 mb-4">Game Over</h2>
@@ -254,6 +269,25 @@ export default function Home() {
             </div>
           </>
         )}
+      </div>
+      <div className="mb-4 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
+        <div className="col-span-4">
+          <h2 className="text-2xl font-semibold mb-4">
+            連勝数ランキング TOP 10
+          </h2>
+          <ul className="list-disc">
+            {ranking.length > 0 ? (
+              ranking.map((item, index) => (
+                <li key={index} className="mb-2 text-xs list-none">
+                  {index + 1}位 {item.username} - {item.streak}連勝 (連勝率:{" "}
+                  {item.win_rate}%)
+                </li>
+              ))
+            ) : (
+              <p>ランキング取得中...</p>
+            )}
+          </ul>
+        </div>
       </div>
     </main>
   );
