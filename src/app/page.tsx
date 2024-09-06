@@ -38,7 +38,7 @@ const generateDeck = (): Card[] => {
 };
 
 // 確率を計算するヘルパー関数
-const calculateProbabilities = (deck, currentCardValue) => {
+const calculateProbabilities = (deck: Card[], currentCardValue: number) => {
   if (!currentCardValue) return { highProb: 0, lowProb: 0 };
 
   const remainingHighCards = deck.filter(
