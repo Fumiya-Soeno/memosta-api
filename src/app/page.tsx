@@ -273,7 +273,7 @@ export default function Home() {
       <div className="mb-4 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
         <div className="col-span-4">
           <h2 className="text-2xl font-semibold mb-4">
-            連勝数ランキング TOP 10
+            連勝数ランキング TOP {ranking.length}
           </h2>
           <ul className="list-disc">
             {ranking.length > 0 ? (
@@ -281,6 +281,16 @@ export default function Home() {
                 <li key={index} className="mb-2 text-xs list-none">
                   {index + 1}位 {item.username} - {item.streak}連勝 (連勝率:{" "}
                   {item.win_rate}%)
+                  <br />
+                  {new Date(item.date).toLocaleDateString("ja-JP", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}{" "}
+                  {new Date(item.date).toLocaleTimeString("ja-JP", {
+                    hour: "numeric",
+                    minute: "numeric",
+                  })}
                 </li>
               ))
             ) : (

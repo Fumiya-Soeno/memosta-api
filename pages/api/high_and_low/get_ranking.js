@@ -11,7 +11,7 @@ export default async function handler(req, res) {
       SELECT username, streak, win_rate, date
       FROM ranking
       ORDER BY streak DESC, win_rate ASC
-      LIMIT 10
+      LIMIT 8
     `;
 
     return res.status(200).json({
