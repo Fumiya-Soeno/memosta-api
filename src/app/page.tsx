@@ -65,7 +65,10 @@ const calculateProbabilities = (deck: Card[], currentCardValue: number) => {
       ? (remainingLowCards / totalRemainingCards) * 100
       : 0;
 
-  return { highProb: highProb.toFixed(2), lowProb: lowProb.toFixed(2) };
+  return {
+    highProb: parseFloat(highProb.toFixed(2)),
+    lowProb: parseFloat(lowProb.toFixed(2)),
+  };
 };
 
 export default function Home() {
