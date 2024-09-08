@@ -66,13 +66,12 @@ const calculateProbabilities = (deck: Card[], currentCardValue: number) => {
       : 0;
 
   return {
-    highProb: parseFloat(highProb.toFixed(2)),
-    lowProb: parseFloat(lowProb.toFixed(2)),
+    highProb: parseFloat(highProb.toFixed(1)),
+    lowProb: parseFloat(lowProb.toFixed(1)),
   };
 };
 
 export default function Home() {
-  // 初期値にUUIDを使ったユーザー名を生成
   const initialUsername = uuidv4();
   const [username, setUsername] = useState<string>(initialUsername);
   const [deck, setDeck] = useState<Card[]>(generateDeck());
@@ -84,6 +83,7 @@ export default function Home() {
   const [draw, setDraw] = useState<boolean>(false);
   const [totalProbability, setTotalProbability] = useState<number>(1); // 初期値は1（100%）
   const [ranking, setRanking] = useState<RankingItem[]>([]);
+  const [winRateRanking, setWinRateRanking] = useState<RankingItem[]>([]); // 追加
 
   // ランキングを取得する関数
   const fetchRanking = async () => {
@@ -92,6 +92,7 @@ export default function Home() {
       const data = await response.json();
       if (data.success) {
         setRanking(data.ranking);
+        setWinRateRanking(data.winRateRanking); // 追加
       }
     } catch (error) {
       console.error("Failed to fetch ranking", error);
@@ -228,7 +229,6 @@ export default function Home() {
             <div className="col-span-4 text-center">
               <p>{streak}連勝</p>
               <p>連勝率: {(totalProbability * 100).toFixed(2)}%</p>{" "}
-              {/* 連勝率を表示 */}
               {gameOver && (
                 <div className="mt-4">
                   <h2 className="text-2xl text-red-500 mb-4">Game Over</h2>
@@ -260,21 +260,19 @@ export default function Home() {
                       className="px-4 py-2 bg-blue-500 text-white rounded"
                       onClick={() => drawCard("HIGH")}
                     >
-                      {" "}
-                      HIGH{" "}
-                    </button>{" "}
+                      HIGH
+                    </button>
                     <button
                       className="px-4 py-2 bg-red-500 text-white rounded"
                       onClick={() => drawCard("LOW")}
                     >
-                      {" "}
-                      LOW{" "}
-                    </button>{" "}
-                  </div>{" "}
-                  <div className="mt-4">
-                    {" "}
-                    <p>HIGHの確率: {highProb}%</p> <p>LOWの確率: {lowProb}%</p>{" "}
-                  </div>{" "}
+                      LOW
+                    </button>
+                  </div>
+                  <div className="flex justify-center gap-4">
+                    <p className="px-4 py-2 text-white rounded">{highProb}%</p>
+                    <p className="px-4 py-2 text-white rounded">{lowProb}%</p>
+                  </div>
                 </div>
               )}
               {gameOver && (
@@ -298,7 +296,6 @@ export default function Home() {
             {ranking.length > 0 ? (
               ranking.map((item, index) => {
                 const date = new Date(item.date);
-                date.setHours(date.getHours() + 9); // 9時間を加算
 
                 return (
                   <li key={index} className="mb-2 text-xs list-none">
@@ -318,7 +315,40 @@ export default function Home() {
                 );
               })
             ) : (
-              <p>ランキング取得中...</p>
+              <p>取得中...</p>
+            )}
+          </ul>
+        </div>
+
+        <div className="col-span-4 mt-4">
+          <h2 className="text-2xl font-semibold mb-4">
+            連勝率ランキング TOP {winRateRanking.length}
+          </h2>
+          <ul className="list-disc">
+            {winRateRanking.length > 0 ? (
+              winRateRanking.map((item, index) => {
+                const date = new Date(item.date);
+                date.setHours(date.getHours() + 9); // 9時間を加算
+
+                return (
+                  <li key={index} className="mb-2 text-xs list-none">
+                    {index + 1}位 {item.username} - 連勝率: {item.win_rate}% (
+                    {item.streak}連勝)
+                    <br />
+                    {date.toLocaleDateString("ja-JP", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}{" "}
+                    {date.toLocaleTimeString("ja-JP", {
+                      hour: "numeric",
+                      minute: "numeric",
+                    })}
+                  </li>
+                );
+              })
+            ) : (
+              <p>取得中...</p>
             )}
           </ul>
         </div>
