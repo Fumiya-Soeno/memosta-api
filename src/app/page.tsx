@@ -148,7 +148,7 @@ export default function Home() {
                 type="text"
                 value={username}
                 onChange={handleUsernameChange}
-                className="mb-2 px-4 py-2 border border-gray-300 rounded text-black"
+                className="mb-4 px-4 py-2 border border-gray-300 rounded text-black"
                 placeholder="ニックネーム（必須）"
               />
               {error && <p className="text-red-500 mb-4">{error}</p>}
