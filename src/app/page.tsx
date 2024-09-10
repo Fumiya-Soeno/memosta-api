@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import { Card, RankingItem } from "../../lib/high_and_low/type";
 import { generateDeck } from "../../lib/high_and_low/functions/generateDeck";
 import { calculateProbabilities } from "../../lib/high_and_low/functions/calculateProbabilities";
 
 export default function Home() {
-  const [username, setUsername] = useState<string>("");
+  const [username, setUsername] = useState<string | null>(null);
   const [deck, setDeck] = useState<Card[]>(generateDeck());
   const [currentCard, setCurrentCard] = useState<Card | null>(null);
   const [nextCard, setNextCard] = useState<Card | null>(null);
@@ -19,6 +19,7 @@ export default function Home() {
   const [ranking, setRanking] = useState<RankingItem[]>([]);
   const [winRateRanking, setWinRateRanking] = useState<RankingItem[]>([]); // 追加
   const [error, setError] = useState<string | null>(null); // エラーメッセージ用の状態管理
+  const inputRef = useRef<HTMLInputElement>(null); // ニックネーム入力用の参照
 
   // ランキングを取得する関数
   const fetchRanking = async () => {
@@ -44,30 +45,32 @@ export default function Home() {
     const storedUsername = localStorage.getItem("username");
     if (storedUsername) {
       setUsername(storedUsername);
-      // 自動的にゲームを開始
       startGame(storedUsername);
+    } else {
+      setUsername(""); // ニックネームが設定されていない場合、入力を促す
     }
     fetchRanking();
   }, []);
 
-  // ユーザー名を変更し、ローカルストレージに保存
-  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newUsername = e.target.value;
-    setUsername(newUsername);
-    localStorage.setItem("username", newUsername);
-  };
+  // ニックネームが決定され、ゲームを開始する
+  const handlePlay = () => {
+    const inputUsername = inputRef.current?.value.trim();
 
-  // ゲームを開始して最初のカードを引く
-  const startGame = (existingUsername?: string) => {
-    // 既存のニックネームがない場合は入力されたものをチェック
-    const nameToUse = existingUsername || username;
-    if (!nameToUse.trim()) {
+    if (!inputUsername) {
       setError("ニックネームは必須です");
       return;
     }
 
-    // エラーを消してゲームを開始
     setError(null);
+    localStorage.setItem("username", inputUsername); // ローカルストレージに保存
+    setUsername(inputUsername); // stateを更新
+    startGame(inputUsername); // ゲーム開始
+  };
+
+  // ゲームを開始して最初のカードを引く
+  const startGame = (existingUsername?: string) => {
+    const nameToUse = existingUsername || username;
+    if (!nameToUse?.trim()) return;
 
     const newDeck = generateDeck(); // 新しいデッキを生成
     const shuffledDeck = [...newDeck].sort(() => Math.random() - 0.5); // デッキをシャッフル
@@ -143,91 +146,92 @@ export default function Home() {
   return (
     <main className="flex flex-col items-center justify-between p-12">
       <h1 className="text-4xl mb-4 font-bold">HIGH & LOW</h1>
-      <div className="mb-4 grid text-center">
-        {!currentCard && (
-          <div className="col-span-4">
-            <div>
-              <input
-                type="text"
-                value={username}
-                onChange={handleUsernameChange}
-                className="mb-4 px-4 py-2 border border-gray-300 rounded text-black"
-                placeholder="ニックネーム（必須）"
-              />
-              {error && <p className="text-red-500 mb-4">{error}</p>}
-            </div>
-            <button
-              className="px-4 py-2 bg-blue-500 text-white rounded"
-              onClick={() => startGame()}
-            >
-              Play
-            </button>
-          </div>
-        )}
 
-        {currentCard && (
-          <>
-            <div className="col-span-4 text-center">
-              <p>{streak}連勝</p>
-              <p>連勝率: {(totalProbability * 100).toFixed(2)}%</p>{" "}
-              {gameOver && (
-                <div className="mt-4">
-                  <h2 className="text-2xl text-red-500 mb-4">Game Over</h2>
+      {/* ニックネームが未設定であれば、inputとPlayボタンを表示 */}
+      {username === "" && (
+        <div className="mb-4 grid text-center col-span-4">
+          <div>
+            <input
+              ref={inputRef}
+              type="text"
+              className="mb-4 px-4 py-2 border border-gray-300 rounded text-black"
+              placeholder="ニックネーム（必須）"
+            />
+            {error && <p className="text-red-500 mb-4">{error}</p>}
+          </div>
+          <button
+            className="px-4 py-2 bg-blue-500 text-white rounded"
+            onClick={handlePlay}
+          >
+            Play
+          </button>
+        </div>
+      )}
+
+      {/* ゲームが開始された場合の画面 */}
+      {username && currentCard && (
+        <div className="mb-4 grid text-center">
+          <div className="col-span-4 text-center">
+            <p>{streak}連勝</p>
+            <p>連勝率: {(totalProbability * 100).toFixed(2)}%</p>{" "}
+            {gameOver && (
+              <div className="mt-4">
+                <h2 className="text-2xl text-red-500 mb-4">Game Over</h2>
+                <h2 className="text-2xl">
+                  {previousCard?.suit}
+                  {previousCard?.label}
+                  {" → "}
+                  {currentCard.suit}
+                  {currentCard.label}
+                  {draw && (
+                    <h2 className="text-2xl text-yellow-500 mb-4">DRAW</h2>
+                  )}
+                </h2>
+              </div>
+            )}
+            {!gameOver && (
+              <div className="mt-2">
+                <div>
                   <h2 className="text-2xl">
                     {previousCard?.suit}
                     {previousCard?.label}
-                    {" → "}
+                    {previousCard && " → "}
                     {currentCard.suit}
                     {currentCard.label}
-                    {draw && (
-                      <h2 className="text-2xl text-yellow-500 mb-4">DRAW</h2>
-                    )}
                   </h2>
                 </div>
-              )}
-              {!gameOver && (
-                <div className="mt-2">
-                  <div>
-                    <h2 className="text-2xl">
-                      {previousCard?.suit}
-                      {previousCard?.label}
-                      {previousCard && " → "}
-                      {currentCard.suit}
-                      {currentCard.label}
-                    </h2>
-                  </div>
-                  <div className="flex justify-center gap-4 mt-4">
-                    <button
-                      className="px-4 py-2 bg-blue-500 text-white rounded"
-                      onClick={() => drawCard("HIGH")}
-                    >
-                      HIGH
-                    </button>
-                    <button
-                      className="px-4 py-2 bg-red-500 text-white rounded"
-                      onClick={() => drawCard("LOW")}
-                    >
-                      LOW
-                    </button>
-                  </div>
-                  <div className="flex justify-center gap-4">
-                    <p className="px-4 py-2 text-white rounded">{highProb}%</p>
-                    <p className="px-4 py-2 text-white rounded">{lowProb}%</p>
-                  </div>
+                <div className="flex justify-center gap-4 mt-4">
+                  <button
+                    className="px-4 py-2 bg-blue-500 text-white rounded"
+                    onClick={() => drawCard("HIGH")}
+                  >
+                    HIGH
+                  </button>
+                  <button
+                    className="px-4 py-2 bg-red-500 text-white rounded"
+                    onClick={() => drawCard("LOW")}
+                  >
+                    LOW
+                  </button>
                 </div>
-              )}
-              {gameOver && (
-                <button
-                  className="px-4 py-2 bg-green-500 text-white rounded mt-4"
-                  onClick={() => startGame()}
-                >
-                  Retry
-                </button>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+                <div className="flex justify-center gap-4">
+                  <p className="px-4 py-2 text-white rounded">{highProb}%</p>
+                  <p className="px-4 py-2 text-white rounded">{lowProb}%</p>
+                </div>
+              </div>
+            )}
+            {gameOver && (
+              <button
+                className="px-4 py-2 bg-green-500 text-white rounded mt-4"
+                onClick={() => startGame()}
+              >
+                Retry
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="mb-4 grid text-center">
         <div className="col-span-4">
           <h2 className="text-2xl font-semibold mb-4">
