@@ -39,11 +39,13 @@ export default function Home() {
     currentCard?.value || 0
   );
 
-  // ローカルストレージからユーザー名を取得
+  // ローカルストレージからユーザー名を取得して、必要であれば自動的にゲームを開始
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
     if (storedUsername) {
       setUsername(storedUsername);
+      // 自動的にゲームを開始
+      startGame(storedUsername);
     }
     fetchRanking();
   }, []);
@@ -56,9 +58,10 @@ export default function Home() {
   };
 
   // ゲームを開始して最初のカードを引く
-  const startGame = () => {
-    // ニックネームが入力されていない場合エラーを表示
-    if (!username.trim()) {
+  const startGame = (existingUsername?: string) => {
+    // 既存のニックネームがない場合は入力されたものをチェック
+    const nameToUse = existingUsername || username;
+    if (!nameToUse.trim()) {
       setError("ニックネームは必須です");
       return;
     }
@@ -155,7 +158,7 @@ export default function Home() {
             </div>
             <button
               className="px-4 py-2 bg-blue-500 text-white rounded"
-              onClick={startGame}
+              onClick={() => startGame()}
             >
               Play
             </button>
@@ -216,7 +219,7 @@ export default function Home() {
               {gameOver && (
                 <button
                   className="px-4 py-2 bg-green-500 text-white rounded mt-4"
-                  onClick={startGame}
+                  onClick={() => startGame()}
                 >
                   Retry
                 </button>
