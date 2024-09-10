@@ -61,6 +61,11 @@ export default function Home() {
       return;
     }
 
+    if (inputUsername.length > 10) {
+      setError("ニックネームは10文字以内で入力してください");
+      return;
+    }
+
     setError(null);
     localStorage.setItem("username", inputUsername); // ローカルストレージに保存
     setUsername(inputUsername); // stateを更新
@@ -154,6 +159,7 @@ export default function Home() {
             <input
               ref={inputRef}
               type="text"
+              maxLength={10} // 入力を10文字までに制限
               className="mb-4 px-4 py-2 border border-gray-300 rounded text-black"
               placeholder="ニックネーム（必須）"
             />

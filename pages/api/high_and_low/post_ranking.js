@@ -9,7 +9,12 @@ export default async function handler(req, res) {
     await sql`BEGIN`; // トランザクション開始
 
     // リクエストボディからデータを抽出
-    const { username, streak, winRate, date } = req.body;
+    let { username, streak, winRate, date } = req.body;
+
+    // usernameが10文字以上の場合、先頭10文字に切り詰める
+    if (username.length > 10) {
+      username = username.substring(0, 10);
+    }
 
     // データベースにランキング情報を挿入
     await sql`
