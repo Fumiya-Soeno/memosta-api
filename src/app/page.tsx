@@ -3,73 +3,9 @@
 import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-type Card = {
-  suit: string;
-  value: number;
-  label: string;
-};
-
-type RankingItem = {
-  username: string;
-  streak: number;
-  win_rate: number;
-  date: string;
-};
-
-// カードデッキを生成するヘルパー関数
-const generateDeck = (): Card[] => {
-  const suits = ["♠", "♣", "♦", "♥"];
-  const values = [
-    { value: 2, label: "2" },
-    { value: 3, label: "3" },
-    { value: 4, label: "4" },
-    { value: 5, label: "5" },
-    { value: 6, label: "6" },
-    { value: 7, label: "7" },
-    { value: 8, label: "8" },
-    { value: 9, label: "9" },
-    { value: 10, label: "10" },
-    { value: 11, label: "J" },
-    { value: 12, label: "Q" },
-    { value: 13, label: "K" },
-    { value: 14, label: "A" },
-  ];
-
-  let deck: Card[] = []; // 型を明示
-  suits.forEach((suit) => {
-    values.forEach((card) => {
-      deck.push({ suit, ...card });
-    });
-  });
-  return deck;
-};
-
-// 確率を計算するヘルパー関数
-const calculateProbabilities = (deck: Card[], currentCardValue: number) => {
-  if (!currentCardValue) return { highProb: 0, lowProb: 0 };
-
-  const remainingHighCards = deck.filter(
-    (card) => card.value > currentCardValue
-  ).length;
-  const remainingLowCards = deck.filter(
-    (card) => card.value < currentCardValue
-  ).length;
-  const totalRemainingCards = deck.length;
-
-  const highProb =
-    totalRemainingCards > 0
-      ? (remainingHighCards / totalRemainingCards) * 100
-      : 0;
-  const lowProb =
-    totalRemainingCards > 0
-      ? (remainingLowCards / totalRemainingCards) * 100
-      : 0;
-
-  return {
-    highProb: parseFloat(highProb.toFixed(1)),
-    lowProb: parseFloat(lowProb.toFixed(1)),
-  };
-};
+import { Card, RankingItem } from "../../lib/high_and_low/type";
+import { generateDeck } from "../../lib/high_and_low/functions/generateDeck";
+import { calculateProbabilities } from "../../lib/high_and_low/functions/calculateProbabilities";
 
 export default function Home() {
   const initialUsername = uuidv4();
@@ -328,7 +264,6 @@ export default function Home() {
             {winRateRanking.length > 0 ? (
               winRateRanking.map((item, index) => {
                 const date = new Date(item.date);
-                date.setHours(date.getHours() + 9); // 9時間を加算
 
                 return (
                   <li key={index} className="mb-2 text-xs list-none">
