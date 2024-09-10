@@ -1,15 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { v4 as uuidv4 } from "uuid";
 
 import { Card, RankingItem } from "../../lib/high_and_low/type";
 import { generateDeck } from "../../lib/high_and_low/functions/generateDeck";
 import { calculateProbabilities } from "../../lib/high_and_low/functions/calculateProbabilities";
 
 export default function Home() {
-  const initialUsername = uuidv4();
-  const [username, setUsername] = useState<string>(initialUsername);
+  const [username, setUsername] = useState<string>("");
   const [deck, setDeck] = useState<Card[]>(generateDeck());
   const [currentCard, setCurrentCard] = useState<Card | null>(null);
   const [nextCard, setNextCard] = useState<Card | null>(null);
@@ -20,6 +18,7 @@ export default function Home() {
   const [totalProbability, setTotalProbability] = useState<number>(1); // 初期値は1（100%）
   const [ranking, setRanking] = useState<RankingItem[]>([]);
   const [winRateRanking, setWinRateRanking] = useState<RankingItem[]>([]); // 追加
+  const [error, setError] = useState<string | null>(null); // エラーメッセージ用の状態管理
 
   // ランキングを取得する関数
   const fetchRanking = async () => {
@@ -58,6 +57,15 @@ export default function Home() {
 
   // ゲームを開始して最初のカードを引く
   const startGame = () => {
+    // ニックネームが入力されていない場合エラーを表示
+    if (!username.trim()) {
+      setError("ニックネームは必須です");
+      return;
+    }
+
+    // エラーを消してゲームを開始
+    setError(null);
+
     const newDeck = generateDeck(); // 新しいデッキを生成
     const shuffledDeck = [...newDeck].sort(() => Math.random() - 0.5); // デッキをシャッフル
     setDeck(shuffledDeck);
@@ -145,9 +153,10 @@ export default function Home() {
                 type="text"
                 value={username}
                 onChange={handleUsernameChange}
-                className="mb-4 px-4 py-2 border border-gray-300 rounded text-black"
-                placeholder="Enter your username"
+                className="mb-2 px-4 py-2 border border-gray-300 rounded text-black"
+                placeholder="ニックネーム（必須）"
               />
+              {error && <p className="text-red-500 mb-4">{error}</p>}
             </div>
             <div>
               <button
