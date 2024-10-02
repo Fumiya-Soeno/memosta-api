@@ -1,22 +1,31 @@
 import { sql } from "@vercel/postgres";
+import { generateCsrfToken } from "../../../lib/generateCsrfToken";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
+  // クライアントからCSRFトークンを取得
+  const clientCsrfToken = req.headers["x-csrf-token"];
+  const serverCsrfToken = generateCsrfToken("your_secret_key");
+
+  // トークンの検証
+  if (clientCsrfToken !== serverCsrfToken) {
+    return res
+      .status(403)
+      .json({ success: false, message: "Invalid CSRF token" });
+  }
+
   try {
     await sql`BEGIN`; // トランザクション開始
 
-    // リクエストボディからデータを抽出
     let { username, streak, winRate, date } = req.body;
 
-    // usernameが10文字以上の場合、先頭10文字に切り詰める
     if (username.length > 10) {
       username = username.substring(0, 10);
     }
 
-    // データベースにランキング情報を挿入
     await sql`
       INSERT INTO ranking (username, streak, win_rate, date)
       VALUES (${username}, ${streak}, ${winRate}, ${date})
