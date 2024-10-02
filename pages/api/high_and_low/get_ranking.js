@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  const csrfToken = generateCsrfToken("your_secret_key");
+  const csrfToken = generateCsrfToken(process.env.JWT_SECRET);
 
   try {
     // ランキングデータの取得

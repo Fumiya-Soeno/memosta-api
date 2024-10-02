@@ -8,7 +8,7 @@ export default async function handler(req, res) {
 
   // クライアントからCSRFトークンを取得
   const clientCsrfToken = req.headers["x-csrf-token"];
-  const serverCsrfToken = generateCsrfToken("your_secret_key");
+  const serverCsrfToken = generateCsrfToken(process.env.JWT_SECRET);
 
   // トークンの検証
   if (clientCsrfToken !== serverCsrfToken) {
