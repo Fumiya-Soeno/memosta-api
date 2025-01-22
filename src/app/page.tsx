@@ -2,8 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import * as PIXI from "pixi.js";
-import { Header } from "./components/common/Header";
-import { Sidebar } from "./components/common/Sidebar";
+import { Template } from "./components/common/Template";
 
 export default function Home() {
   const pixiContainerRef = useRef<HTMLDivElement>(null);
@@ -42,34 +41,9 @@ export default function Home() {
   };
 
   return (
-    <div style={{ display: "flex", height: "100vh" }}>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        <Header />
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "16px",
-          }}
-        >
-          <Sidebar />
-          <main
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "16px",
-            }}
-          >
-            <div ref={pixiContainerRef} />
-            <button onClick={handleStart}>Start</button>
-          </main>
-        </div>
-      </div>
-    </div>
+    <Template>
+      <div ref={pixiContainerRef} />
+      <button onClick={handleStart}>Start</button>
+    </Template>
   );
 }
