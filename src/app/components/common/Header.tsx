@@ -1,38 +1,18 @@
 "use client";
 
+import Link from "next/link";
+
 export function Header() {
   return (
-    <header
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "1rem 2rem",
-        backgroundColor: "#333",
-        color: "#fff",
-        fontSize: "1.2rem",
-      }}
-    >
-      <div>Character's War</div>
-      <nav>
-        <a
-          href="#"
-          style={{
-            margin: "0 1rem",
-            textDecoration: "none",
-            color: "#fff",
-          }}
-        >
+    <header className="flex justify-between items-center px-8 py-4 bg-gray-800 text-white text-lg">
+      <Link href="/" className="text-white no-underline">
+        Character's War
+      </Link>
+      <nav className="flex space-x-4">
+        <a href="#" className="text-white no-underline hover:underline">
           Home
         </a>
-        <a
-          href="#"
-          style={{
-            margin: "0 1rem",
-            textDecoration: "none",
-            color: "#fff",
-          }}
-        >
+        <a href="#" className="text-white no-underline hover:underline">
           Logout
         </a>
       </nav>

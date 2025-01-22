@@ -9,28 +9,12 @@ interface TemplateProps {
 
 export function Template({ children }: TemplateProps) {
   return (
-    <div style={{ display: "flex", height: "100vh" }}>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+    <div className="flex h-screen">
+      <div className="flex flex-col flex-1">
         <Header />
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+        <div className="flex flex-1 items-center justify-center">
           <Sidebar />
-          <main
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "16px",
-            }}
-          >
+          <main className="flex flex-1 flex-col items-center justify-center gap-4">
             {children}
           </main>
         </div>
