@@ -17,13 +17,16 @@ export default async function handler(req, res) {
       const match = await bcrypt.compare(password, user.password);
 
       if (match) {
-        // アクセストークンとリフレッシュトークンの生成
         const { accessToken, refreshToken } = generateTokens(user.id);
+
+        // HttpOnly Cookie にトークンを設定
+        res.setHeader("Set-Cookie", [
+          `accessToken=${accessToken}; HttpOnly; Path=/; Secure; SameSite=Strict`,
+        ]);
+
         return res.status(200).json({
           success: true,
           message: "ログイン成功",
-          accessToken,
-          refreshToken,
         });
       } else {
         return res.status(401).json({ success: false, message: "認証失敗" });
