@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { LogoutButton } from "./LogoutButton";
 
 export function Header() {
   return (
@@ -9,12 +10,7 @@ export function Header() {
         Character's War
       </Link>
       <nav className="flex space-x-4">
-        <a href="#" className="text-white no-underline hover:underline">
-          Home
-        </a>
-        <a href="#" className="text-white no-underline hover:underline">
-          Logout
-        </a>
+        <LogoutButton />
       </nav>
     </header>
   );

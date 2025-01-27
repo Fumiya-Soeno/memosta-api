@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { SidebarLink } from "./SidebarLink";
+import { useRouter } from "next/navigation";
 
-export function Sidebar() {
+export function LogoutButton() {
   const [isLoggedIn, setIsLoggedIn] = useState(false); // ログイン状態を管理
+  const router = useRouter();
 
   // ログイン状態の確認
   useEffect(() => {
@@ -30,18 +31,39 @@ export function Sidebar() {
     checkLoginStatus();
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/logout", {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        // ローカルストレージからトークン削除
+        localStorage.removeItem("accessToken");
+
+        // ログイン状態を false に設定
+        setIsLoggedIn(false);
+
+        // ログイン画面にリダイレクト
+        router.push("/login");
+      } else {
+        console.error("ログアウトに失敗しました");
+      }
+    } catch (error) {
+      console.error("エラーが発生しました", error);
+    }
+  };
+
   if (!isLoggedIn) {
     return null; // 非ログイン時は何も表示しない
   }
 
   return (
-    <aside className="w-52 bg-gray-100 h-full p-4 shadow-md">
-      <nav>
-        <ul className="list-none p-0">
-          <SidebarLink href="#" text="ユニット登録" />
-          <SidebarLink href="#" text="ユニット管理" />
-        </ul>
-      </nav>
-    </aside>
+    <button
+      onClick={handleLogout}
+      className="text-white no-underline hover:underline"
+    >
+      Logout
+    </button>
   );
 }
