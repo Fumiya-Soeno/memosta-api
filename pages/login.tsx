@@ -1,14 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Template } from "../src/app/components/common/Template";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  // ✅ ログイン状態をチェック
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("/api/auth/me", {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          router.push("/"); // すでにログイン済みならトップページにリダイレクト
+        }
+      } catch (error) {
+        console.error("認証チェックエラー:", error);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
 
   // フロントエンドでのバリデーション
   const validateInput = () => {
