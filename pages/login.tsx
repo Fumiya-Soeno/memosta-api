@@ -20,7 +20,10 @@ const Login = () => {
         });
 
         if (response.ok) {
-          router.push("/"); // すでにログイン済みならトップページにリダイレクト
+          const data = await response.json();
+          if (data.loggedIn) {
+            router.push("/"); // すでにログイン済みならトップページにリダイレクト
+          }
         }
       } catch (error) {
         console.error("認証チェックエラー:", error);
