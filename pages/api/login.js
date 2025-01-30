@@ -19,9 +19,10 @@ export default async function handler(req, res) {
       if (match) {
         const { accessToken, refreshToken } = generateTokens(user.id);
 
-        // HttpOnly Cookie にトークンを設定
+        // HttpOnly Cookie に accessToken と refreshToken を設定
         res.setHeader("Set-Cookie", [
-          `accessToken=${accessToken}; HttpOnly; Path=/; Secure; SameSite=Strict`,
+          `accessToken=${accessToken}; HttpOnly; Path=/; Secure; SameSite=Strict; Max-Age=3600`, // 1時間有効
+          `refreshToken=${refreshToken}; HttpOnly; Path=/; Secure; SameSite=Strict; Max-Age=604800`, // 7日間有効
         ]);
 
         return res.status(200).json({
