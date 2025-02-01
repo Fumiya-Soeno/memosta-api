@@ -15,7 +15,24 @@ export default async function handler(req, res) {
     const userId = await authenticateUser(accessToken, refreshToken, res);
     const records = await getUserCharacters(userId);
 
-    return res.status(200).json({ success: true, records: records.rows });
+    let rows = records.rows;
+
+    const grouped = rows.reduce((acc, item) => {
+      if (!acc[item.id]) {
+        acc[item.id] = [];
+      }
+      acc[item.id].push(item);
+      return acc;
+    }, {});
+
+    rows = Object.values(grouped).map((group) =>
+      group
+        .sort((a, b) => a.position - b.position)
+        .map((item) => item.name)
+        .join("")
+    );
+
+    return res.status(200).json({ success: true, rows: rows });
   } catch (error) {
     console.error("エラー:", error);
     return res
