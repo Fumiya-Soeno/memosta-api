@@ -22,7 +22,7 @@ export async function getUserCharacters(userId) {
  * @param {number} unitId - ユニットのID
  * @returns {Promise<Array>} キャラクター情報の配列
  */
-export async function getCharactersByUnitId(unitId) {
+export async function getCharactersByUnitId(unitId, userId) {
   return await sql`
     SELECT
       c.name, c.life, c.attack, c.speed,
@@ -39,6 +39,7 @@ export async function getCharactersByUnitId(unitId) {
     LEFT JOIN skills s ON c.skill = s.id
     LEFT JOIN specials sp ON c.special = sp.id
     LEFT JOIN passives p ON c.passive = p.id
-    WHERE u.id = ${unitId};  -- 指定されたユニットIDのデータのみ取得
+    WHERE u.id = ${unitId}
+    AND u.user_id = ${userId};
   `;
 }
