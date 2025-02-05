@@ -25,12 +25,13 @@ export default async function handler(req, res) {
       return acc;
     }, {});
 
-    rows = Object.values(grouped).map((group) =>
-      group
+    rows = Object.entries(grouped).map(([id, group]) => ({
+      id: parseInt(id, 10),
+      name: group
         .sort((a, b) => a.position - b.position)
         .map((item) => item.name)
-        .join("")
-    );
+        .join(""),
+    }));
 
     return res.status(200).json({ success: true, rows: rows });
   } catch (error) {
