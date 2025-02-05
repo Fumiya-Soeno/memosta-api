@@ -26,7 +26,7 @@ export async function getCharactersByUnitId(unitId, userId) {
   return await sql`
     SELECT
       c.name, c.life, c.attack, c.speed,
-      v.vector,
+      v.vector, uc.position,
       e.name AS element_name,
       s.name AS skill_name,
       sp.name AS special_name,
