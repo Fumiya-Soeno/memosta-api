@@ -1,5 +1,6 @@
 import { authenticateUser } from "../../helpers/auth";
 import { getUserCharacters } from "../../helpers/db";
+import { joinedCharactersName } from "../../helpers/unit";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -15,23 +16,7 @@ export default async function handler(req, res) {
     const userId = await authenticateUser(accessToken, refreshToken, res);
     const records = await getUserCharacters(userId);
 
-    let rows = records.rows;
-
-    const grouped = rows.reduce((acc, item) => {
-      if (!acc[item.id]) {
-        acc[item.id] = [];
-      }
-      acc[item.id].push(item);
-      return acc;
-    }, {});
-
-    rows = Object.entries(grouped).map(([id, group]) => ({
-      id: parseInt(id, 10),
-      name: group
-        .sort((a, b) => a.position - b.position)
-        .map((item) => item.name)
-        .join(""),
-    }));
+    const rows = joinedCharactersName(records.rows);
 
     return res.status(200).json({ success: true, rows: rows });
   } catch (error) {
