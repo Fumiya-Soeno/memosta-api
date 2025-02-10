@@ -17,3 +17,9 @@ export function joinedCharactersName(rows) {
 
   return joinedName;
 }
+
+export const charNameColorClasses = {
+  火: "text-red-600",
+  水: "text-blue-600",
+  木: "text-green-600",
+};

@@ -4,12 +4,13 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Template } from "../../src/app/components/common/Template";
 import { fetchApi } from "../helpers/api";
-import { joinedCharactersName } from "../helpers/unit";
+import { joinedCharactersName, charNameColorClasses } from "../helpers/unit";
 
 const EditUnit = () => {
   const searchParams = useSearchParams();
   const id = searchParams.get("id"); // ✅ URLの `id` を取得
   const [unitData, setUnitData] = useState(null); // ✅ ユニットデータ用の state
+  const [activeChar, setActiveChar] = useState(null);
   const [unitName, setUnitName] = useState("");
 
   useEffect(() => {
@@ -21,6 +22,7 @@ const EditUnit = () => {
       (result) => {
         console.log("取得データ:", result);
         setUnitData(result.records);
+        setActiveChar(result.records[0]);
 
         const joinedName = joinedCharactersName(result.records)[0].name;
         setUnitName(joinedName);
@@ -42,20 +44,30 @@ const EditUnit = () => {
           type="text"
           className="text-gray-600 border border-gray-300 rounded px-2 py-1"
           value={unitName}
-          onChange={(e) => setUnitName(e.target.value)} // 🔥 これを追加
+          onChange={(e) => setUnitName(e.target.value)}
         />
 
-        <div>
-          {Array.from({ length: 12 }, (_, index) => (
-            <span key={index} className="inline-block text-gray-600">
-              ○
-            </span>
-          ))}
+        <div className="m-6">
+          {unitData
+            ? unitData.map((char, index) => (
+                <span
+                  key={index}
+                  className={`inline-block cursor-pointer text-5xl ${
+                    charNameColorClasses[char.element_name]
+                  }`}
+                  onClick={() => {
+                    setActiveChar(char);
+                  }}
+                >
+                  {char.name}
+                </span>
+              ))
+            : ""}
         </div>
 
-        {unitData ? (
+        {activeChar ? (
           <pre className="bg-gray-100 p-4 rounded text-black">
-            {JSON.stringify(unitData, null, 2)}
+            {JSON.stringify(activeChar, null, 2)}
           </pre>
         ) : (
           <p className="text-gray-500">読み込み中...</p>
