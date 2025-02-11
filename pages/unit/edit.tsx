@@ -5,12 +5,16 @@ import { useSearchParams } from "next/navigation";
 import { Template } from "../../src/app/components/common/Template";
 import { fetchApi } from "../helpers/api";
 import { joinedCharactersName, charNameColorClasses } from "../helpers/unit";
+import BarIndicator from "../../src/app/components/unit/BarIndicator";
 
 // ✅ ユニットのデータ型を定義
 interface UnitDataType {
   id: number;
   name: string;
   element_name: string;
+  life: number;
+  attack: number;
+  speed: number;
 }
 
 const EditUnit = () => {
@@ -47,7 +51,6 @@ const EditUnit = () => {
       <div className="w-full flex flex-col items-center justify-center h-[calc(100vh-60px)]">
         <h1 className="text-2xl font-bold">ユニット編集</h1>
         <p className="text-lg text-gray-600">ID: {id}</p>
-
         {/* ✅ onChange を追加して編集可能にする */}
         <input
           type="text"
@@ -55,7 +58,6 @@ const EditUnit = () => {
           value={unitName}
           onChange={(e) => setUnitName(e.target.value)}
         />
-
         <div className="m-6">
           {unitData?.map((char: UnitDataType, index: number) => (
             <span
@@ -70,6 +72,24 @@ const EditUnit = () => {
               {char.name}
             </span>
           )) || ""}
+        </div>
+
+        <div>
+          <BarIndicator
+            label="LIFE"
+            value={Number(activeChar?.life) / 10}
+            barColor="bg-green-500"
+          />
+          <BarIndicator
+            label="ATK"
+            value={Number(activeChar?.attack)}
+            barColor="bg-red-500"
+          />
+          <BarIndicator
+            label="SPD"
+            value={Number(activeChar?.speed)}
+            barColor="bg-blue-500"
+          />
         </div>
 
         {activeChar ? (
