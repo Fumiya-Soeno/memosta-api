@@ -6,32 +6,41 @@ import { Template } from "../../src/app/components/common/Template";
 import { fetchApi } from "../helpers/api";
 import { joinedCharactersName, charNameColorClasses } from "../helpers/unit";
 
+// ✅ ユニットのデータ型を定義
+interface UnitDataType {
+  id: number;
+  name: string;
+  element_name: string;
+}
+
 const EditUnit = () => {
   const searchParams = useSearchParams();
-  const id = searchParams.get("id"); // ✅ URLの `id` を取得
-  const [unitData, setUnitData] = useState(null); // ✅ ユニットデータ用の state
-  const [activeChar, setActiveChar] = useState(null);
-  const [unitName, setUnitName] = useState("");
+  const id = searchParams?.get("id") || ""; // ✅ `null` の可能性を除外
+  const [unitData, setUnitData] = useState<UnitDataType[] | null>(null); // ✅ 型を明示
+  const [activeChar, setActiveChar] = useState<UnitDataType | null>(null);
+  const [unitName, setUnitName] = useState<string>("");
 
   useEffect(() => {
-    if (!id) return; // ✅ `id` が取得できない場合はリクエストを実行しない
+    if (!id) return;
 
     fetchApi(
-      `/unit/edit?unitId=${id}`, // ✅ `unitId` をクエリとして渡す
+      `/unit/edit?unitId=${id}`,
       "GET",
-      (result) => {
+      (result: { records: UnitDataType[] }) => {
+        // ✅ `result` の型を明示
         console.log("取得データ:", result);
         setUnitData(result.records);
-        setActiveChar(result.records[0]);
+        setActiveChar(result.records[0] || null);
 
-        const joinedName = joinedCharactersName(result.records)[0].name;
+        const joinedName = joinedCharactersName(result.records)[0]?.name || "";
         setUnitName(joinedName);
       },
-      (error) => {
+      (error: unknown) => {
+        // ✅ `error` の型を `unknown` にして安全に処理
         console.error("APIエラー:", error);
       }
     );
-  }, [id]); // ✅ `id` が変更されたときに再取得
+  }, [id]);
 
   return (
     <Template>
@@ -39,7 +48,7 @@ const EditUnit = () => {
         <h1 className="text-2xl font-bold">ユニット編集</h1>
         <p className="text-lg text-gray-600">ID: {id}</p>
 
-        {/* ✅ onChangeを追加して編集可能にする */}
+        {/* ✅ onChange を追加して編集可能にする */}
         <input
           type="text"
           className="text-gray-600 border border-gray-300 rounded px-2 py-1"
@@ -48,21 +57,19 @@ const EditUnit = () => {
         />
 
         <div className="m-6">
-          {unitData
-            ? unitData.map((char, index) => (
-                <span
-                  key={index}
-                  className={`inline-block cursor-pointer text-5xl ${
-                    charNameColorClasses[char.element_name]
-                  }`}
-                  onClick={() => {
-                    setActiveChar(char);
-                  }}
-                >
-                  {char.name}
-                </span>
-              ))
-            : ""}
+          {unitData?.map((char: UnitDataType, index: number) => (
+            <span
+              key={index}
+              className={`inline-block cursor-pointer text-5xl ${
+                charNameColorClasses[
+                  char.element_name as keyof typeof charNameColorClasses
+                ] || ""
+              }`}
+              onClick={() => setActiveChar(char)}
+            >
+              {char.name}
+            </span>
+          )) || ""}
         </div>
 
         {activeChar ? (
