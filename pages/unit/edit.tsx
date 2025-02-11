@@ -17,6 +17,9 @@ interface UnitDataType {
   attack: number;
   speed: number;
   vector: number;
+  skill_name: string;
+  special_name: string;
+  passive_name: string;
 }
 
 const EditUnit = () => {
@@ -100,13 +103,27 @@ const EditUnit = () => {
           </div>
         </div>
 
-        {activeChar ? (
-          <pre className="bg-gray-100 p-4 rounded text-black">
-            {JSON.stringify(activeChar, null, 2)}
-          </pre>
-        ) : (
-          <p className="text-gray-500">読み込み中...</p>
-        )}
+        <div className="flex gap-4">
+          <div>
+            <div className="mx-auto my-0 w-20 h-20 bg-white rounded-full"></div>
+            <div className="text-center">SKILL</div>
+            <div className="text-center text-xs">{activeChar?.skill_name}</div>
+          </div>
+          <div>
+            <div className="mx-auto my-0 w-20 h-20 bg-white rounded-full"></div>
+            <div className="text-center">SPECIAL</div>
+            <div className="text-center text-xs">
+              {activeChar?.special_name}
+            </div>
+          </div>
+          <div>
+            <div className="mx-auto my-0 w-20 h-20 bg-white rounded-full"></div>
+            <div className="text-center">PASSIVE</div>
+            <div className="text-center text-xs">
+              {activeChar?.passive_name}
+            </div>
+          </div>
+        </div>
       </div>
     </Template>
   );
