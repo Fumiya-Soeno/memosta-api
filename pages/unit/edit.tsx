@@ -6,6 +6,7 @@ import { Template } from "../../src/app/components/common/Template";
 import { fetchApi } from "../helpers/api";
 import { joinedCharactersName, charNameColorClasses } from "../helpers/unit";
 import BarIndicator from "../../src/app/components/unit/BarIndicator";
+import VectorIndicator from "../../src/app/components/unit/VectorIndicator";
 
 // ✅ ユニットのデータ型を定義
 interface UnitDataType {
@@ -15,6 +16,7 @@ interface UnitDataType {
   life: number;
   attack: number;
   speed: number;
+  vector: number;
 }
 
 const EditUnit = () => {
@@ -74,22 +76,28 @@ const EditUnit = () => {
           )) || ""}
         </div>
 
-        <div>
-          <BarIndicator
-            label="LIFE"
-            value={Number(activeChar?.life) / 10}
-            barColor="bg-green-500"
-          />
-          <BarIndicator
-            label="ATK"
-            value={Number(activeChar?.attack)}
-            barColor="bg-red-500"
-          />
-          <BarIndicator
-            label="SPD"
-            value={Number(activeChar?.speed)}
-            barColor="bg-blue-500"
-          />
+        <div className="flex mb-4">
+          <div>
+            <BarIndicator
+              label="LIFE"
+              value={Number(activeChar?.life) / 10}
+              barColor="bg-green-500"
+            />
+            <BarIndicator
+              label="ATK"
+              value={Number(activeChar?.attack)}
+              barColor="bg-red-500"
+            />
+            <BarIndicator
+              label="SPD"
+              value={Number(activeChar?.speed)}
+              barColor="bg-blue-500"
+            />
+          </div>
+          <div className="flex ml-4">
+            <span>VEC</span>
+            <VectorIndicator arrow={activeChar?.vector} />
+          </div>
         </div>
 
         {activeChar ? (
