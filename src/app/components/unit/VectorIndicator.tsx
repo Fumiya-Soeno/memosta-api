@@ -14,7 +14,7 @@ const VectorIndicator: React.FC<VectorIndicatorProps> = ({ arrow }) => {
       {angles.map((angle, index) => (
         <div
           key={index}
-          className={`absolute left-1/4 bottom-0 w-14 border-t border-white ${
+          className={`absolute left-1/4 bottom-0 w-14 border-t ${
             arrow === angle ? "border-red-600" : "border-dashed border-gray-700"
           }`}
           style={{
