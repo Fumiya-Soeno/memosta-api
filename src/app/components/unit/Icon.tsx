@@ -7,6 +7,9 @@ import PoisonMistIcon from "./icons/special/PoisonMistIcon";
 import KyuchiIcon from "./icons/passive/KyuchiIcon";
 import PowerUpIcon from "./icons/special/PowerUpIcon";
 import TatsujinIcon from "./icons/passive/TatsujinIcon";
+import PenetratingDiffusionIcon from "./icons/skill/PenetratingDiffusionIcon";
+import EarthQuakeIcon from "./icons/special/EarthQuakeIcon";
+import ReflectionIcon from "./icons/passive/ReflectionIcon";
 
 const Icon = ({ name }) => {
   let icon;
@@ -17,11 +20,17 @@ const Icon = ({ name }) => {
     case "ロックオンレーザー":
       icon = <LockOnLaserIcon />;
       break;
+    case "貫通拡散弾":
+      icon = <PenetratingDiffusionIcon />;
+      break;
     case "毒霧":
       icon = <PoisonMistIcon />;
       break;
     case "パワーアップ":
       icon = <PowerUpIcon />;
+      break;
+    case "アースクエイク":
+      icon = <EarthQuakeIcon />;
       break;
     case "達人":
       icon = <TatsujinIcon />;
@@ -29,6 +38,8 @@ const Icon = ({ name }) => {
     case "窮地":
       icon = <KyuchiIcon />;
       break;
+    case "反射":
+      icon = <ReflectionIcon />;
     default:
       break;
   }
