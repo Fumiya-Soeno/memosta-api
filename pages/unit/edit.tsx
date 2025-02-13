@@ -7,6 +7,7 @@ import { fetchApi } from "../helpers/api";
 import { joinedCharactersName, charNameColorClasses } from "../helpers/unit";
 import BarIndicator from "../../src/app/components/unit/BarIndicator";
 import VectorIndicator from "../../src/app/components/unit/VectorIndicator";
+import Icon from "../../src/app/components/unit/Icon";
 
 // ✅ ユニットのデータ型を定義
 interface UnitDataType {
@@ -20,6 +21,7 @@ interface UnitDataType {
   skill_name: string;
   special_name: string;
   passive_name: string;
+  position: number;
 }
 
 const EditUnit = () => {
@@ -55,11 +57,10 @@ const EditUnit = () => {
     <Template>
       <div className="w-full flex flex-col items-center justify-center h-[calc(100vh-60px)]">
         <h1 className="text-2xl font-bold">ユニット編集</h1>
-        <p className="text-lg text-gray-600">ID: {id}</p>
         {/* ✅ onChange を追加して編集可能にする */}
         <input
           type="text"
-          className="text-gray-600 border border-gray-300 rounded px-2 py-1"
+          className="text-gray-600 border border-gray-300 rounded px-2 py-1 mt-2"
           value={unitName}
           onChange={(e) => setUnitName(e.target.value)}
         />
@@ -68,6 +69,10 @@ const EditUnit = () => {
             <span
               key={index}
               className={`inline-block cursor-pointer text-5xl ${
+                char.position === activeChar?.position
+                  ? "underline decoration-gray-600 decoration-2"
+                  : "opacity-60"
+              } ${
                 charNameColorClasses[
                   char.element_name as keyof typeof charNameColorClasses
                 ] || ""
@@ -105,19 +110,19 @@ const EditUnit = () => {
 
         <div className="flex gap-4">
           <div>
-            <div className="mx-auto my-0 w-20 h-20 bg-white rounded-full"></div>
+            <Icon name={activeChar?.skill_name}></Icon>
             <div className="text-center">SKILL</div>
             <div className="text-center text-xs">{activeChar?.skill_name}</div>
           </div>
           <div>
-            <div className="mx-auto my-0 w-20 h-20 bg-white rounded-full"></div>
+            <Icon name={activeChar?.special_name}></Icon>
             <div className="text-center">SPECIAL</div>
             <div className="text-center text-xs">
               {activeChar?.special_name}
             </div>
           </div>
           <div>
-            <div className="mx-auto my-0 w-20 h-20 bg-white rounded-full"></div>
+            <Icon name={activeChar?.passive_name}></Icon>
             <div className="text-center">PASSIVE</div>
             <div className="text-center text-xs">
               {activeChar?.passive_name}
