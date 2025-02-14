@@ -8,21 +8,7 @@ import { joinedCharactersName, charNameColorClasses } from "../helpers/unit";
 import BarIndicator from "../../src/app/components/unit/BarIndicator";
 import VectorIndicator from "../../src/app/components/unit/VectorIndicator";
 import Icon from "../../src/app/components/unit/Icon";
-
-// ✅ ユニットのデータ型を定義
-interface UnitDataType {
-  id: number;
-  name: string;
-  element_name: string;
-  life: number;
-  attack: number;
-  speed: number;
-  vector: number;
-  skill_name: string;
-  special_name: string;
-  passive_name: string;
-  position: number;
-}
+import { UnitDataType } from "../../src/types/unit";
 
 const EditUnit = () => {
   const searchParams = useSearchParams();
