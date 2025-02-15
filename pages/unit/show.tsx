@@ -1,30 +1,66 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; // ✅ ルーティング用
+import { useRouter } from "next/navigation";
 import { Template } from "../../src/app/components/common/Template";
 import { fetchApi } from "../helpers/api";
 
-const Unit = () => {
-  const [units, setUnits] = useState([]); // ✅ データを保存するステート
-  const router = useRouter(); // ✅ ルーターの取得
+interface UnitDataType {
+  id: number;
+  name: string;
+  // 必要なプロパティを追加（例: vector, position, speed, など）
+}
 
+const Unit = () => {
+  const [units, setUnits] = useState<UnitDataType[]>([]);
+  const [activeUnitId, setActiveUnitId] = useState<number | null>(null);
+  const router = useRouter();
+
+  // ユニット一覧とアクティブユニットを取得
   useEffect(() => {
     fetchApi(
       "/unit/show",
       "GET",
-      (result) => {
-        setUnits(result.rows); // ✅ API のデータを state に保存
+      (result: { rows: UnitDataType[] }) => {
+        setUnits(result.rows);
+        // ユニット一覧取得後、アクティブユニットを取得
+        fetchApi(
+          "/active_unit/show",
+          "GET",
+          (result: { rows: { unit_id: number }[] }) => {
+            const activeId = result.rows[0]?.unit_id;
+            setActiveUnitId(activeId);
+          },
+          (error: unknown) => {
+            console.error("active_unit/show APIエラー:", error);
+          }
+        );
       },
-      (error) => {
-        console.error("APIエラー:", error);
+      (error: unknown) => {
+        console.error("unit/show APIエラー:", error);
       }
     );
   }, []);
 
-  // ✅ カードクリック時に `/unit/edit?id={id}` へ遷移
+  // ユニットカードクリック時は編集画面へ遷移
   const handleCardClick = (id: number) => {
     router.push(`/unit/edit?id=${id}`);
+  };
+
+  // 「Set Active」ボタンでアクティブユニットを変更
+  const handleSetActive = (unitId: number) => {
+    fetchApi(
+      "/active_unit/update",
+      "POST",
+      (result: any) => {
+        console.log("Active unit updated:", result);
+        setActiveUnitId(unitId);
+      },
+      (error: unknown) => {
+        console.error("active_unit/update APIエラー:", error);
+      },
+      { unitId }
+    );
   };
 
   return (
@@ -36,10 +72,23 @@ const Unit = () => {
               units.map((unit) => (
                 <li
                   key={unit.id}
-                  onClick={() => handleCardClick(unit.id)} // ✅ クリックで遷移
-                  className="w-full h-16 bg-white shadow-lg rounded-lg flex items-center justify-center text-gray-800 text-lg cursor-pointer hover:bg-gray-100 transition"
+                  className="w-full h-16 bg-white shadow-lg rounded-lg flex items-center justify-between text-gray-800 text-lg cursor-pointer hover:bg-gray-100 transition px-4"
                 >
-                  {unit.name}
+                  <div onClick={() => handleCardClick(unit.id)}>
+                    {unit.name}{" "}
+                    {activeUnitId === unit.id && (
+                      <span className="text-blue-500 font-bold">(Active)</span>
+                    )}
+                  </div>
+                  {/* アクティブなユニットの場合は "Set Active" ボタンを表示しない */}
+                  {activeUnitId !== unit.id && (
+                    <button
+                      onClick={() => handleSetActive(unit.id)}
+                      className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                    >
+                      Set Active
+                    </button>
+                  )}
                 </li>
               ))
             ) : (

@@ -43,3 +43,15 @@ export async function getCharactersByUnitId(unitId, userId) {
     AND u.user_id = ${userId};
   `;
 }
+
+export async function getActiveUnit(userId) {
+  return await sql`
+    SELECT unit_id FROM active_unit WHERE user_id = ${userId};
+  `;
+}
+
+export async function updateActiveUnit(userId, unitId) {
+  return await sql`
+    UPDATE active_unit SET unit_id = ${unitId} WHERE user_id = ${userId}
+`;
+}
