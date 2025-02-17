@@ -29,8 +29,13 @@ export function PixiCanvas({
   const textsRef = useRef<UnitText[]>([]);
   const animationStartedRef = useRef(false);
 
+  // サンドバッグ用のrefとHP管理
+  const sandbagContainerRef = useRef<PIXI.Container | null>(null);
+  const sandbagHPBarRef = useRef<PIXI.Graphics | null>(null);
+  const currentHPRef = useRef(100);
+
   const [unitData, setUnitData] = useState<UnitDataType[] | null>(null);
-  const [unitId, setUnitId] = useState<number | null>(null); // ✅ `unitId` を state に保存
+  const [unitId, setUnitId] = useState<number | null>(null);
 
   useEffect(() => {
     const app = new PIXI.Application({
@@ -43,7 +48,65 @@ export function PixiCanvas({
     }
     appRef.current = app;
 
-    // ✅ `unitId` を API から取得
+    // サンドバッグの作成
+    const sandbagContainer = new PIXI.Container();
+    // サンドバッグのテキスト（フォントサイズ20で作成）
+    const sandbagTextStyle = new PIXI.TextStyle({
+      fontSize: 20,
+      fill: 0x000000,
+      fontWeight: "bold",
+    });
+    const sandbagText = new PIXI.Text("●", sandbagTextStyle);
+    sandbagText.anchor.set(0.5);
+    sandbagContainer.addChild(sandbagText);
+
+    // HPバー用のGraphicsオブジェクト
+    const hpBar = new PIXI.Graphics();
+    sandbagContainer.addChild(hpBar);
+
+    // サンドバッグは画面上部中央に配置（Y座標は任意調整）
+    sandbagContainer.x = app.screen.width / 2;
+    sandbagContainer.y = app.screen.height / 4;
+    app.stage.addChild(sandbagContainer);
+
+    sandbagContainerRef.current = sandbagContainer;
+    sandbagHPBarRef.current = hpBar;
+
+    // HPバーの定数
+    const HP_BAR_WIDTH = 20;
+    const HP_BAR_HEIGHT = 1;
+
+    // HPバー更新関数
+    const updateHPBar = () => {
+      if (!hpBar) return;
+      hpBar.clear();
+      const maxHP = 100;
+      const currentHP = currentHPRef.current;
+      const hpRatio = currentHP / maxHP;
+      const greenWidth = HP_BAR_WIDTH * hpRatio;
+      // 緑部分（残量）
+      hpBar.beginFill(0x00ff00);
+      hpBar.drawRect(
+        -HP_BAR_WIDTH / 2,
+        sandbagText.height / 2 + 5,
+        greenWidth,
+        HP_BAR_HEIGHT
+      );
+      hpBar.endFill();
+      // 赤部分（減少分）
+      hpBar.beginFill(0xff0000);
+      hpBar.drawRect(
+        -HP_BAR_WIDTH / 2 + greenWidth,
+        sandbagText.height / 2 + 5,
+        HP_BAR_WIDTH - greenWidth,
+        HP_BAR_HEIGHT
+      );
+      hpBar.endFill();
+    };
+
+    updateHPBar();
+
+    // APIでactive_unit/showからunitIdを取得
     fetchApi("/active_unit/show", "GET", (result) => {
       const id = result?.rows[0]?.unit_id;
       if (id) setUnitId(id);
@@ -54,10 +117,9 @@ export function PixiCanvas({
     };
   }, [width, height, backgroundColor]);
 
-  // ✅ `unitId` を取得後に `unit/edit` API を実行
+  // unitId取得後にunit/edit APIを実行
   useEffect(() => {
     if (unitId === null) return;
-
     fetchApi(
       `/unit/edit?unitId=${unitId}`,
       "GET",
@@ -68,8 +130,9 @@ export function PixiCanvas({
         console.error("APIエラー:", error);
       }
     );
-  }, [unitId]); // ✅ `unitId` が更新されたら実行
+  }, [unitId]);
 
+  // unitDataが取得されたら、各ユニットのPIXI.Textオブジェクトを生成し中央揃えで配置
   useEffect(() => {
     if (!unitData) return;
     const app = appRef.current;
@@ -91,6 +154,7 @@ export function PixiCanvas({
     const unitTexts: UnitText[] = sortedUnits.map((unit) => {
       const text = new PIXI.Text(unit.name, textStyle);
       text.anchor.set(0.5);
+      // APIのvectorに180°加算して進行方向を反転
       const angle = ((unit.vector + 180) * Math.PI) / 180;
       const vx = unit.speed * Math.cos(angle);
       const vy = unit.speed * Math.sin(angle);
@@ -102,7 +166,7 @@ export function PixiCanvas({
     let currentX = leftEdge;
     unitTexts.forEach((ut) => {
       ut.text.x = currentX + ut.text.width / 2;
-      ut.text.y = app.screen.height / 2;
+      ut.text.y = (app.screen.height * 3) / 4;
       currentX += ut.text.width;
       app.stage.addChild(ut.text);
     });
@@ -115,6 +179,7 @@ export function PixiCanvas({
     if (!app || animationStartedRef.current) return;
     animationStartedRef.current = true;
 
+    // 各キャラクターの移動を開始（ラッピング処理付き）
     app.ticker.add(() => {
       textsRef.current.forEach((ut) => {
         ut.text.x += ut.vx;
