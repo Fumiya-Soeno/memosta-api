@@ -1,5 +1,6 @@
-// attacks/LockOnLaser.ts
+// skills/LockOnLaser.ts
 import * as PIXI from "pixi.js";
+import { showDamageText, DamageText } from "../utils/DamageTextUtil";
 
 export interface UnitText {
   text: PIXI.Text;
@@ -15,16 +16,6 @@ export interface Laser {
   start: { x: number; y: number };
   end: { x: number; y: number };
   damage: number;
-}
-
-export interface DamageText {
-  text: PIXI.Text;
-  age: number;
-  lifetime: number;
-  startX: number;
-  startY: number;
-  hVel: number;
-  peakHeight: number;
 }
 
 export function pointToLineDistance(
@@ -112,31 +103,12 @@ export function handleLockOnLaserAttack(params: {
   if (distance < 10) {
     currentHPRef.current = Math.max(currentHPRef.current - damage, 0);
     updateHPBar();
-
-    const dmgText = new PIXI.Text(
-      damage.toFixed(1),
-      new PIXI.TextStyle({
-        fontSize: 16,
-        fill: 0xff0000,
-        fontWeight: "bold",
-      })
-    );
-    dmgText.anchor.set(0.5);
-    const randomOffsetX = Math.random() * 40 - 20;
-    const randomOffsetY = Math.random() * 40 - 20;
-    const startX = sandbagCenter.x + randomOffsetX;
-    const startY = sandbagCenter.y + randomOffsetY;
-    dmgText.x = startX;
-    dmgText.y = startY;
-    app.stage.addChild(dmgText);
-    damageTexts.push({
-      text: dmgText,
-      age: 0,
-      lifetime: 30,
-      startX,
-      startY,
-      hVel: Math.random() * 2 - 1,
-      peakHeight: 20,
+    // 汎用関数でダメージテキストを表示
+    showDamageText({
+      app,
+      damage,
+      basePosition: sandbagCenter,
+      damageTexts,
     });
   }
 }

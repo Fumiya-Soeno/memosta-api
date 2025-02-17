@@ -1,7 +1,7 @@
-// attacks/CrossBurst.ts
+// skills/CrossBurst.ts
 import * as PIXI from "pixi.js";
-import { DamageText } from "./LockOnLaser"; // 共通の型を再利用できます
-import { UnitText } from "./LockOnLaser"; // 必要に応じて
+import { showDamageText, DamageText } from "../utils/DamageTextUtil";
+import { UnitText } from "./LockOnLaser";
 
 export interface CrossBurst {
   graphics: PIXI.Graphics;
@@ -13,6 +13,11 @@ export interface CrossBurst {
   pos: { x: number; y: number };
 }
 
+/**
+ * handleCrossBurstAttack
+ * special_name が "十字バースト" のユニットから、上下左右4方向に爆発エフェクトを発生させます。
+ * 各爆発は初期は半径0で描画され、expansionFrames かけて最大半径 (ここでは30px) まで拡大します。
+ */
 export function handleCrossBurstAttack(params: {
   app: PIXI.Application;
   texts: UnitText[];
@@ -59,6 +64,13 @@ export function handleCrossBurstAttack(params: {
   });
 }
 
+/**
+ * updateCrossBursts
+ * 毎フレーム、各爆発エフェクトを更新します。
+ * 拡大フェーズ中は、エフェクトの半径が線形に拡大し、同時にサンドバッグとの衝突判定を行います。
+ * 衝突判定によりダメージが与えられた場合は、showDamageText 関数を呼び出してダメージ表示を行います。
+ * 拡大フェーズ終了後は、fadeFrames かけてエフェクトをフェードアウトさせ、寿命が切れたら削除します。
+ */
 export function updateCrossBursts(params: {
   app: PIXI.Application;
   crossBursts: CrossBurst[];
@@ -75,6 +87,12 @@ export function updateCrossBursts(params: {
     updateHPBar,
     damageTexts,
   } = params;
+  const sandbagBounds = sandbagContainer.getBounds();
+  const sandbagCenter = {
+    x: sandbagBounds.x + sandbagBounds.width / 2,
+    y: sandbagBounds.y + sandbagBounds.height / 2,
+  };
+
   for (let i = crossBursts.length - 1; i >= 0; i--) {
     const burst = crossBursts[i];
     burst.age++;
@@ -86,45 +104,21 @@ export function updateCrossBursts(params: {
       burst.graphics.drawCircle(0, 0, currentRadius);
       burst.graphics.endFill();
       // 攻撃判定：拡大フェーズ中のみ
-      const sandbagBounds = sandbagContainer.getBounds();
-      const sandbagCenter = {
-        x: sandbagBounds.x + sandbagBounds.width / 2,
-        y: sandbagBounds.y + sandbagBounds.height / 2,
-      };
       const dx = sandbagCenter.x - burst.pos.x;
       const dy = sandbagCenter.y - burst.pos.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
       if (distance < currentRadius + 10) {
         currentHPRef.current = Math.max(currentHPRef.current - burst.damage, 0);
         updateHPBar();
-        const dmgText = new PIXI.Text(
-          burst.damage.toFixed(1),
-          new PIXI.TextStyle({
-            fontSize: 16,
-            fill: 0xff0000,
-            fontWeight: "bold",
-          })
-        );
-        dmgText.anchor.set(0.5);
-        const randomOffsetX = Math.random() * 40 - 20;
-        const randomOffsetY = Math.random() * 40 - 20;
-        const startX = sandbagCenter.x + randomOffsetX;
-        const startY = sandbagCenter.y + randomOffsetY;
-        dmgText.x = startX;
-        dmgText.y = startY;
-        app.stage.addChild(dmgText);
-        damageTexts.push({
-          text: dmgText,
-          age: 0,
-          lifetime: 30,
-          startX,
-          startY,
-          hVel: Math.random() * 2 - 1,
-          peakHeight: 20,
+        showDamageText({
+          app,
+          damage: burst.damage,
+          basePosition: sandbagCenter,
+          damageTexts,
         });
       }
     } else {
-      // フェードアウトフェーズ
+      // フェードアウトフェーズ：alpha を線形に低下
       const fadeAge = burst.age - burst.expansionFrames;
       const alpha = 1 - fadeAge / burst.fadeFrames;
       burst.graphics.alpha = alpha;

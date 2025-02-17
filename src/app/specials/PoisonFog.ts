@@ -1,6 +1,6 @@
 // specials/PoisonFog.ts
 import * as PIXI from "pixi.js";
-import { DamageText } from "../skills/LockOnLaser"; // 共通の型を再利用可能なら
+import { showDamageText } from "../utils/DamageTextUtil";
 
 export interface PoisonFog {
   graphics: PIXI.Graphics;
@@ -11,7 +11,7 @@ export interface PoisonFog {
 }
 
 /**
- * 毒霧を発生させる
+ * handlePoisonFogAttack
  * special_name が "毒霧" のユニットを対象とし、ユニットの現在位置を中心に毒霧エフェクトを生成します。
  * ダメージは攻撃力の10%とします。
  */
@@ -24,7 +24,7 @@ export function handlePoisonFogAttack(params: {
   if (!attacker) return;
   const startPos = { x: attacker.text.x, y: attacker.text.y };
   const damage = attacker.unit.attack * 0.1;
-  // 毒霧エフェクト：直径10px（半径5px）ではなく、ここでは見やすさのため大きめに描画（例：半径40px）
+  // 毒霧エフェクト：ここでは見やすさのため、半径100pxの円形エフェクトとして描画
   const fogGfx = new PIXI.Graphics();
   fogGfx.beginFill(0x9933cc, 0.7);
   fogGfx.drawCircle(0, 0, 100);
@@ -42,10 +42,11 @@ export function handlePoisonFogAttack(params: {
 }
 
 /**
- * 毒霧エフェクトの更新処理
- * 生成された毒霧エフェクトは、毎フレーム age を更新し、
- * 経過に応じて alpha 値を下げ、最終的に透明化して消滅します。
- * また、サンドバッグ中心との衝突判定でダメージを与えます。
+ * updatePoisonFogs
+ * 毒霧エフェクトの更新処理:
+ * 毎フレーム、age を更新し、初期の透明度 0.7 から線形に 0 へフェードアウトさせます。
+ * また、サンドバッグ中心との距離が 100px 内なら攻撃を与え、ダメージテキストは
+ * 汎用関数 showDamageText を利用して表示します。
  */
 export function updatePoisonFogs(params: {
   app: PIXI.Application;
@@ -53,7 +54,7 @@ export function updatePoisonFogs(params: {
   sandbagContainer: PIXI.Container;
   currentHPRef: { current: number };
   updateHPBar: () => void;
-  damageTexts: DamageText[];
+  damageTexts: any[]; // DamageText[] としても可
 }) {
   const {
     app,
@@ -72,41 +73,21 @@ export function updatePoisonFogs(params: {
   for (let i = poisonFogs.length - 1; i >= 0; i--) {
     const fog = poisonFogs[i];
     fog.age++;
-    // 徐々に透明になるように alpha を更新（初期0.7から線形に0へ）
+    // 徐々に透明になるように alpha を更新（初期 0.7 から線形に 0 へ）
     fog.graphics.alpha = 0.7 * (1 - fog.age / fog.lifetime);
 
-    // 衝突判定：毒霧の中心からサンドバッグ中心までの距離が半径40px以内なら攻撃
+    // 衝突判定：毒霧の中心からサンドバッグ中心までの距離が 100px 内なら攻撃
     const dx = sandbagCenter.x - fog.pos.x;
     const dy = sandbagCenter.y - fog.pos.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     if (distance < 100) {
       currentHPRef.current = Math.max(currentHPRef.current - fog.damage, 0);
       updateHPBar();
-
-      const dmgText = new PIXI.Text(
-        fog.damage.toFixed(1),
-        new PIXI.TextStyle({
-          fontSize: 16,
-          fill: 0xff0000,
-          fontWeight: "bold",
-        })
-      );
-      dmgText.anchor.set(0.5);
-      const randomOffsetX = Math.random() * 40 - 20;
-      const randomOffsetY = Math.random() * 40 - 20;
-      const startX = sandbagCenter.x + randomOffsetX;
-      const startY = sandbagCenter.y + randomOffsetY;
-      dmgText.x = startX;
-      dmgText.y = startY;
-      app.stage.addChild(dmgText);
-      damageTexts.push({
-        text: dmgText,
-        age: 0,
-        lifetime: 30,
-        startX,
-        startY,
-        hVel: Math.random() * 2 - 1,
-        peakHeight: 20,
+      showDamageText({
+        app,
+        damage: fog.damage,
+        basePosition: sandbagCenter,
+        damageTexts,
       });
     }
     if (fog.age >= fog.lifetime) {

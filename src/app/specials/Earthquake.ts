@@ -1,6 +1,6 @@
 // specials/Earthquake.ts
 import * as PIXI from "pixi.js";
-import { DamageText } from "../skills/LockOnLaser"; // 必要に応じて共通型を再利用
+import { showDamageText } from "../utils/DamageTextUtil";
 
 export interface EarthquakeEffect {
   graphics: PIXI.Graphics;
@@ -54,6 +54,7 @@ export function handleEarthquakeAttack(params: {
  * 各 EarthquakeEffect を毎フレーム更新し、最初の2フレームは攻撃ダメージを与えた後、
  * 残りの期間はフェードアウトして消滅する。攻撃判定は全画面に対して行われるため、
  * サンドバッグへのダメージ処理も実施する。
+ * ダメージテキストの表示は、汎用関数 showDamageText を利用します。
  */
 export function updateEarthquakeEffects(params: {
   app: PIXI.Application;
@@ -61,7 +62,7 @@ export function updateEarthquakeEffects(params: {
   sandbagContainer: PIXI.Container;
   currentHPRef: { current: number };
   updateHPBar: () => void;
-  damageTexts: DamageText[];
+  damageTexts: any[]; // DamageText[] としても良い
 }) {
   const {
     app,
@@ -84,26 +85,12 @@ export function updateEarthquakeEffects(params: {
     if (eq.age <= 2) {
       currentHPRef.current = Math.max(currentHPRef.current - eq.damage, 0);
       updateHPBar();
-      const dmgText = new PIXI.Text(
-        eq.damage.toFixed(1),
-        new PIXI.TextStyle({
-          fontSize: 16,
-          fill: 0xff0000,
-          fontWeight: "bold",
-        })
-      );
-      dmgText.anchor.set(0.5);
-      dmgText.x = sandbagCenter.x;
-      dmgText.y = sandbagCenter.y;
-      app.stage.addChild(dmgText);
-      damageTexts.push({
-        text: dmgText,
-        age: 0,
+      showDamageText({
+        app,
+        damage: eq.damage,
+        basePosition: sandbagCenter,
+        damageTexts,
         lifetime: 30,
-        startX: sandbagCenter.x,
-        startY: sandbagCenter.y,
-        hVel: 0,
-        peakHeight: 20,
       });
     }
     // フェードアウトフェーズ：alpha を線形に低下

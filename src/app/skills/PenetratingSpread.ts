@@ -1,8 +1,7 @@
-// attacks/PenetratingSpread.ts
+// skills/PenetratingSpread.ts
 import * as PIXI from "pixi.js";
-import { DamageText } from "./LockOnLaser"; // 共通の型を再利用できる場合
+import { showDamageText } from "../utils/DamageTextUtil";
 
-// 貫通拡散弾用の弾オブジェクトの型
 export interface PenetratingSpreadBullet {
   graphics: PIXI.Graphics;
   vx: number;
@@ -10,13 +9,16 @@ export interface PenetratingSpreadBullet {
   damage: number;
 }
 
-// 16方向に弾を発射する処理
+/**
+ * handlePenetratingSpreadAttack
+ * skill_name が「貫通拡散弾」のユニットを対象として、16方向に弾を発射します。
+ * 各弾は視認性向上のため、白いアウトライン付きで半径2pxの円として描画されます。
+ */
 export function handlePenetratingSpreadAttack(params: {
   app: PIXI.Application;
   texts: { text: PIXI.Text; unit: { skill_name: string; attack: number } }[];
   spreadBullets: PenetratingSpreadBullet[];
 }) {
-  // skill_name が「貫通拡散弾」のユニットを対象とする
   const attacker = params.texts.find(
     (ut) => ut.unit.skill_name === "貫通拡散弾"
   );
@@ -31,7 +33,7 @@ export function handlePenetratingSpreadAttack(params: {
     const angle = i * angleIncrement;
     const vx = bulletSpeed * Math.cos(angle);
     const vy = bulletSpeed * Math.sin(angle);
-    // 弾の描画（視認性向上のため、白いアウトライン付き、半径2に変更）
+    // 弾の描画（視認性向上のため、黒いアウトライン付き、半径2に変更）
     const bulletGfx = new PIXI.Graphics();
     bulletGfx.lineStyle(1, 0x000000, 1);
     bulletGfx.beginFill(0x00ffff);
@@ -49,14 +51,19 @@ export function handlePenetratingSpreadAttack(params: {
   }
 }
 
-// 弾の更新処理（移動、攻撃判定、画面端での削除）
+/**
+ * updatePenetratingSpreadBullets
+ * 各弾を毎フレーム更新し、移動および攻撃判定を行います。
+ * 衝突判定で、サンドバッグ中心との距離が10px未満の場合、showDamageText を利用してダメージ表示を行います。
+ * また、画面外に出た弾は削除します。
+ */
 export function updatePenetratingSpreadBullets(params: {
   app: PIXI.Application;
   spreadBullets: PenetratingSpreadBullet[];
   sandbagContainer: PIXI.Container;
   currentHPRef: { current: number };
   updateHPBar: () => void;
-  damageTexts: DamageText[];
+  damageTexts: any[]; // DamageText[] としても良い
 }) {
   const {
     app,
@@ -78,42 +85,23 @@ export function updatePenetratingSpreadBullets(params: {
     // 移動更新
     bullet.graphics.x += bullet.vx;
     bullet.graphics.y += bullet.vy;
-    // 衝突判定：ここでは弾の中心とサンドバッグ中心の距離が 10px 未満ならヒットとする
+    // 衝突判定：弾の中心とサンドバッグ中心の距離が10px未満ならヒット
     const dx = bullet.graphics.x - sandbagCenter.x;
     const dy = bullet.graphics.y - sandbagCenter.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
     if (dist < 10) {
-      // 毎フレームダメージを与える（貫通するため弾は消えない）
+      // 毎フレームダメージを与える（弾は貫通するため削除しない）
       currentHPRef.current = Math.max(currentHPRef.current - bullet.damage, 0);
       updateHPBar();
-      // ダメージ表示
-      const dmgText = new PIXI.Text(
-        bullet.damage.toFixed(1),
-        new PIXI.TextStyle({
-          fontSize: 16,
-          fill: 0xff0000,
-          fontWeight: "bold",
-        })
-      );
-      dmgText.anchor.set(0.5);
-      const randomOffsetX = Math.random() * 40 - 20;
-      const randomOffsetY = Math.random() * 40 - 20;
-      const startX = sandbagCenter.x + randomOffsetX;
-      const startY = sandbagCenter.y + randomOffsetY;
-      dmgText.x = startX;
-      dmgText.y = startY;
-      app.stage.addChild(dmgText);
-      damageTexts.push({
-        text: dmgText,
-        age: 0,
-        lifetime: 30,
-        startX,
-        startY,
-        hVel: Math.random() * 2 - 1,
-        peakHeight: 20,
+      // 汎用関数を使用してダメージテキストを表示
+      showDamageText({
+        app,
+        damage: bullet.damage,
+        basePosition: sandbagCenter,
+        damageTexts,
       });
     }
-    // 画面端チェック（弾の中心が画面外に出たら削除）
+    // 画面端チェック：弾が画面外に出たら削除
     if (
       bullet.graphics.x < 0 ||
       bullet.graphics.x > app.screen.width ||
