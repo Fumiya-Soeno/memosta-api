@@ -279,8 +279,8 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // エコーブレード攻撃（special_name === "エコーブレード"、7フレームごと）
-      if (attackFrameCounter.current % 7 === 0) {
+      // エコーブレード攻撃（skill_name === "エコーブレード"、15フレームごと）
+      if (attackFrameCounter.current % 15 === 0) {
         handleEchoBladeAttack({
           app,
           texts: textsRef.current,

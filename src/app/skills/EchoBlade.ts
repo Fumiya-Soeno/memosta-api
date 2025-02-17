@@ -55,30 +55,12 @@ export function handleEchoBladeAttack(params: {
   const dist = Math.sqrt(dx * dx + dy * dy);
   const attackAngle = Math.atan2(dy, dx);
 
-  // ① 斬撃攻撃エフェクト（即時ダメージ、60%）
-  const slash = new PIXI.Graphics();
-  slash.lineStyle(4, 0xff0000, 1);
-  // 三日月型エフェクト：弧を -45°～45° で描画
-  slash.arc(0, 0, 40, (-45 * Math.PI) / 180, (45 * Math.PI) / 180);
-  // 発射時の自身とターゲットを結ぶ角度に合わせて回転
-  slash.rotation = attackAngle;
-  slash.x = attackerPos.x;
-  slash.y = attackerPos.y;
-  params.app.stage.addChild(slash);
-  const slashDamage = attacker.unit.attack * 0.6;
-  // 斬撃エフェクトは3フレーム後に除去
-  setTimeout(() => {
-    params.app.stage.removeChild(slash);
-  }, 50);
-
-  // 斬撃による即時ダメージ処理（※実際の判定タイミングは用途に応じて調整可能）
-
   // ② 衝撃波攻撃エフェクト（30%ダメージ、ゆっくり移動）
   const shock = new PIXI.Graphics();
   shock.lineStyle(2, 0x0000ff, 1);
   shock.beginFill(0x0000ff, 0.5);
   // 三日月型エフェクト：弧を -45°～45° で描画
-  shock.arc(0, 0, 20, (-45 * Math.PI) / 180, (45 * Math.PI) / 180);
+  shock.arc(0, 0, 40, (-45 * Math.PI) / 180, (45 * Math.PI) / 180);
   shock.endFill();
   // 回転を発射時の角度に合わせる
   shock.rotation = attackAngle;
@@ -86,15 +68,16 @@ export function handleEchoBladeAttack(params: {
   shock.y = attackerPos.y;
   params.app.stage.addChild(shock);
   // 衝撃波パラメータ：速度 2px/frame、lifetime 60フレーム、30%ダメージ
-  const shockVx = 2 * Math.cos(attackAngle);
-  const shockVy = 2 * Math.sin(attackAngle);
+  const shockSpeed = 10;
+  const shockVx = shockSpeed * Math.cos(attackAngle);
+  const shockVy = shockSpeed * Math.sin(attackAngle);
   const shockDamage = attacker.unit.attack * 0.3;
   // ※ここでは lifetime を 60 に設定していますが、必要に応じて調整してください
   params.echoBladeEffects.push({
     graphics: shock,
     vx: shockVx,
     vy: shockVy,
-    lifetime: 60,
+    lifetime: 600,
     damage: shockDamage,
   });
 }
