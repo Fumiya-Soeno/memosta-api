@@ -6,7 +6,7 @@ import * as PIXI from "pixi.js";
 import { fetchApi } from "../../../pages/helpers/api";
 import { UnitDataType } from "../../types/unit";
 
-// インポート
+// 各スキルのインポート
 import {
   handleLockOnLaserAttack,
   UnitText as LaserUnitText,
@@ -18,6 +18,11 @@ import {
   updateCrossBursts,
   CrossBurst,
 } from "../skills/CrossBurst";
+import {
+  handlePenetratingSpreadAttack,
+  updatePenetratingSpreadBullets,
+  PenetratingSpreadBullet,
+} from "../skills/PenetratingSpread";
 
 interface PixiCanvasProps {
   width?: number;
@@ -43,12 +48,15 @@ export function PixiCanvas({
   const attackFrameCounter = useRef(0);
   const lasersRef = useRef<Laser[]>([]);
   const crossBurstsRef = useRef<CrossBurst[]>([]);
+  const spreadBulletsRef = useRef<PenetratingSpreadBullet[]>([]);
   const damageTextsRef = useRef<DamageText[]>([]);
 
   const sandbagContainerRef = useRef<PIXI.Container | null>(null);
   const sandbagHPBarRef = useRef<PIXI.Graphics | null>(null);
   const sandbagTextRef = useRef<PIXI.Text | null>(null);
-  const currentHPRef = useRef(100);
+
+  const sandBagMaxHP = 1000;
+  const currentHPRef = useRef(sandBagMaxHP);
 
   const [unitData, setUnitData] = useState<UnitDataType[] | null>(null);
   const [unitId, setUnitId] = useState<number | null>(null);
@@ -58,7 +66,7 @@ export function PixiCanvas({
     const sandbagText = sandbagTextRef.current;
     if (!hpBar || !sandbagText) return;
     hpBar.clear();
-    const maxHP = 100;
+    const maxHP = sandBagMaxHP;
     const currentHP = currentHPRef.current;
     const hpRatio = currentHP / maxHP;
     const greenWidth = 20 * hpRatio;
@@ -75,8 +83,7 @@ export function PixiCanvas({
     hpBar.endFill();
   };
 
-  // 以下 unitId, unitData の取得などはこれまでと同様
-
+  // unitId, unitData の取得はこれまでと同様
   useEffect(() => {
     const app = new PIXI.Application({ width, height, backgroundColor });
     if (pixiContainerRef.current) {
@@ -166,10 +173,9 @@ export function PixiCanvas({
         if (ut.text.y < 0) ut.text.y = app.screen.height;
         else if (ut.text.y > app.screen.height) ut.text.y = 0;
       });
-
       attackFrameCounter.current++;
 
-      // ロックオンレーザー攻撃の呼び出し
+      // ロックオンレーザー攻撃
       if (attackFrameCounter.current % 5 === 0) {
         handleLockOnLaserAttack({
           app,
@@ -182,17 +188,14 @@ export function PixiCanvas({
         });
       }
 
-      // 十字バースト発射
+      // 十字バースト攻撃
       if (attackFrameCounter.current % 9 === 0) {
-        // 発射（爆発エフェクト生成）は別ファイルの関数で処理
         handleCrossBurstAttack({
           app,
           texts: textsRef.current,
           crossBursts: crossBurstsRef.current,
         });
       }
-
-      // 各十字バーストエフェクトの更新
       updateCrossBursts({
         app,
         crossBursts: crossBurstsRef.current,
@@ -202,7 +205,24 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // レーザーとダメージ表示の更新処理（これまでと同様）
+      // 貫通拡散弾攻撃：10フレームごとに発動
+      if (attackFrameCounter.current % 10 === 0) {
+        handlePenetratingSpreadAttack({
+          app,
+          texts: textsRef.current,
+          spreadBullets: spreadBulletsRef.current,
+        });
+      }
+      updatePenetratingSpreadBullets({
+        app,
+        spreadBullets: spreadBulletsRef.current,
+        sandbagContainer: sandbagContainerRef.current!,
+        currentHPRef,
+        updateHPBar,
+        damageTexts: damageTextsRef.current,
+      });
+
+      // レーザーとダメージ表示の更新
       for (let i = lasersRef.current.length - 1; i >= 0; i--) {
         const laser = lasersRef.current[i];
         laser.lifetime -= 1;
