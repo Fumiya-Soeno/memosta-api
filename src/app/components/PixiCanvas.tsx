@@ -39,17 +39,25 @@ import {
   PowerUpEffect,
 } from "../specials/PowerUp";
 
+// サンドバッグ関連のインポート
+import {
+  createSandbag,
+  updateHPBar as updateSandbagHPBar,
+  Sandbag,
+  SANDBAG_MAX_HP,
+} from "../sandbag/Sandbag";
+
 interface PixiCanvasProps {
   width?: number;
   height?: number;
   backgroundColor?: number;
 }
 
-// ExtendedUnitText に、パワーアップ効果用のプロパティを追加
+// ExtendedUnitText にパワーアップ用のプロパティを追加
 export interface ExtendedUnitText extends LaserUnitText {
   vx: number;
   vy: number;
-  powerUpMultiplier: number; // 通常1.0、バフ中は1.3
+  powerUpMultiplier: number; // 通常は 1.0、バフ中は 1.3
   baseAttack: number; // 元の攻撃力
 }
 
@@ -72,37 +80,13 @@ export function PixiCanvas({
   const damageTextsRef = useRef<DamageText[]>([]);
   const powerUpEffectsRef = useRef<PowerUpEffect[]>([]);
 
-  const sandbagContainerRef = useRef<PIXI.Container | null>(null);
-  const sandbagHPBarRef = useRef<PIXI.Graphics | null>(null);
-  const sandbagTextRef = useRef<PIXI.Text | null>(null);
-  const sandBagMaxHP = 1000;
-  const currentHPRef = useRef(sandBagMaxHP);
+  // サンドバッグ関連
+  const sandbagDataRef = useRef<Sandbag | null>(null);
+
+  const currentHPRef = useRef(SANDBAG_MAX_HP);
 
   const [unitData, setUnitData] = useState<UnitDataType[] | null>(null);
   const [unitId, setUnitId] = useState<number | null>(null);
-
-  // HPバー更新関数
-  const updateHPBar = () => {
-    const hpBar = sandbagHPBarRef.current;
-    const sandbagText = sandbagTextRef.current;
-    if (!hpBar || !sandbagText) return;
-    hpBar.clear();
-    const maxHP = sandBagMaxHP;
-    const currentHP = currentHPRef.current;
-    const hpRatio = currentHP / maxHP;
-    const greenWidth = 20 * hpRatio;
-    hpBar.beginFill(0x00ff00);
-    hpBar.drawRect(-10, sandbagText.height / 2 + 5, greenWidth, 1);
-    hpBar.endFill();
-    hpBar.beginFill(0xff0000);
-    hpBar.drawRect(
-      -10 + greenWidth,
-      sandbagText.height / 2 + 5,
-      20 - greenWidth,
-      1
-    );
-    hpBar.endFill();
-  };
 
   // PIXI Application とサンドバッグの生成
   useEffect(() => {
@@ -112,31 +96,23 @@ export function PixiCanvas({
     }
     appRef.current = app;
 
-    // サンドバッグ作成
-    const sandbagContainer = new PIXI.Container();
-    const sandbagText = new PIXI.Text("●", {
-      fontSize: 20,
-      fill: 0x000000,
-      fontWeight: "bold",
-    });
-    sandbagText.anchor.set(0.5);
-    sandbagContainer.addChild(sandbagText);
-    sandbagTextRef.current = sandbagText;
-    const hpBar = new PIXI.Graphics();
-    sandbagContainer.addChild(hpBar);
-    sandbagContainer.x = app.screen.width / 2;
-    sandbagContainer.y = app.screen.height / 4;
-    app.stage.addChild(sandbagContainer);
-    sandbagContainerRef.current = sandbagContainer;
-    sandbagHPBarRef.current = hpBar;
-    updateHPBar();
+    // サンドバッグ作成（画面中央上部）
+    const sandbag = createSandbag(
+      app,
+      app.screen.width / 2,
+      app.screen.height / 4
+    );
+    sandbagDataRef.current = sandbag;
+    updateSandbagHPBar(sandbag, currentHPRef.current);
 
     fetchApi("/active_unit/show", "GET", (result) => {
       const id = result?.rows[0]?.unit_id;
       if (id) setUnitId(id);
     });
 
-    return () => app.destroy(true, true);
+    return () => {
+      app.destroy(true, true);
+    };
   }, [width, height, backgroundColor]);
 
   // APIからユニットデータ取得
@@ -204,7 +180,7 @@ export function PixiCanvas({
         else if (ut.text.x > app.screen.width) ut.text.x = 0;
         if (ut.text.y < 0) ut.text.y = app.screen.height;
         else if (ut.text.y > app.screen.height) ut.text.y = 0;
-        // パワーアップ中なら、攻撃力をバフ倍率に合わせて更新
+        // パワーアップ中なら攻撃力を更新
         if (ut.unit.special_name === "パワーアップ") {
           ut.unit.attack = ut.baseAttack * ut.powerUpMultiplier;
         }
@@ -216,9 +192,10 @@ export function PixiCanvas({
         handleLockOnLaserAttack({
           app,
           texts: textsRef.current,
-          sandbagContainer: sandbagContainerRef.current!,
+          sandbagContainer: sandbagDataRef.current!.container,
           currentHPRef,
-          updateHPBar,
+          updateHPBar: () =>
+            updateSandbagHPBar(sandbagDataRef.current!, currentHPRef.current),
           damageTexts: damageTextsRef.current,
           lasers: lasersRef.current,
         });
@@ -235,9 +212,10 @@ export function PixiCanvas({
       updateCrossBursts({
         app,
         crossBursts: crossBurstsRef.current,
-        sandbagContainer: sandbagContainerRef.current!,
+        sandbagContainer: sandbagDataRef.current!.container,
         currentHPRef,
-        updateHPBar,
+        updateHPBar: () =>
+          updateSandbagHPBar(sandbagDataRef.current!, currentHPRef.current),
         damageTexts: damageTextsRef.current,
       });
 
@@ -252,9 +230,10 @@ export function PixiCanvas({
       updatePenetratingSpreadBullets({
         app,
         spreadBullets: spreadBulletsRef.current,
-        sandbagContainer: sandbagContainerRef.current!,
+        sandbagContainer: sandbagDataRef.current!.container,
         currentHPRef,
-        updateHPBar,
+        updateHPBar: () =>
+          updateSandbagHPBar(sandbagDataRef.current!, currentHPRef.current),
         damageTexts: damageTextsRef.current,
       });
 
@@ -269,9 +248,10 @@ export function PixiCanvas({
       updatePoisonFogs({
         app,
         poisonFogs: poisonFogsRef.current,
-        sandbagContainer: sandbagContainerRef.current!,
+        sandbagContainer: sandbagDataRef.current!.container,
         currentHPRef,
-        updateHPBar,
+        updateHPBar: () =>
+          updateSandbagHPBar(sandbagDataRef.current!, currentHPRef.current),
         damageTexts: damageTextsRef.current,
       });
 
@@ -286,14 +266,15 @@ export function PixiCanvas({
       updateEarthquakeEffects({
         app,
         earthquakeEffects: earthquakeEffectsRef.current,
-        sandbagContainer: sandbagContainerRef.current!,
+        sandbagContainer: sandbagDataRef.current!.container,
         currentHPRef,
-        updateHPBar,
+        updateHPBar: () =>
+          updateSandbagHPBar(sandbagDataRef.current!, currentHPRef.current),
         damageTexts: damageTextsRef.current,
       });
 
-      // パワーアップ攻撃（special_name === "パワーアップ"、100フレームごと）
-      if (attackFrameCounter.current % 100 === 0) {
+      // パワーアップ攻撃（special_name === "パワーアップ"、40フレームごと）
+      if (attackFrameCounter.current % 40 === 0) {
         handlePowerUpAttack({
           app,
           texts: textsRef.current,
@@ -313,7 +294,6 @@ export function PixiCanvas({
           lasersRef.current.splice(i, 1);
         }
       }
-
       // ダメージ表示の更新
       for (let i = damageTextsRef.current.length - 1; i >= 0; i--) {
         const dt = damageTextsRef.current[i];
