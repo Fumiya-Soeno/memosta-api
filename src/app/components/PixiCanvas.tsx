@@ -27,6 +27,12 @@ import {
   updatePoisonFogs,
   PoisonFog,
 } from "../specials/PoisonFog";
+import {
+  handleEarthquakeAttack,
+  updateEarthquakeEffects,
+  EarthquakeEffect,
+  EarthquakeUnit,
+} from "../specials/Earthquake";
 
 interface PixiCanvasProps {
   width?: number;
@@ -54,6 +60,7 @@ export function PixiCanvas({
   const crossBurstsRef = useRef<CrossBurst[]>([]);
   const spreadBulletsRef = useRef<PenetratingSpreadBullet[]>([]);
   const poisonFogsRef = useRef<PoisonFog[]>([]);
+  const earthquakeEffectsRef = useRef<EarthquakeEffect[]>([]);
   const damageTextsRef = useRef<DamageText[]>([]);
 
   const sandbagContainerRef = useRef<PIXI.Container | null>(null);
@@ -233,7 +240,7 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // 毒霧攻撃（special_name === "毒霧"、10フレームごと）
+      // 毒霧攻撃（special_name === "毒霧"、80フレームごと）
       if (attackFrameCounter.current % 80 === 0) {
         handlePoisonFogAttack({
           app,
@@ -250,6 +257,25 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
+      // アースクエイク攻撃（100フレームごと）
+      if (attackFrameCounter.current % 100 === 0) {
+        // 対象は special_name === "アースクエイク" のユニット
+        // textsRef の型は ExtendedUnitText ですが、unit には special_name も含むと仮定
+        handleEarthquakeAttack({
+          app,
+          texts: textsRef.current as unknown as EarthquakeUnit[],
+          earthquakeEffects: earthquakeEffectsRef.current,
+        });
+      }
+      updateEarthquakeEffects({
+        app,
+        earthquakeEffects: earthquakeEffectsRef.current,
+        sandbagContainer: sandbagContainerRef.current!,
+        currentHPRef,
+        updateHPBar,
+        damageTexts: damageTextsRef.current,
+      });
+
       // レーザーの更新
       for (let i = lasersRef.current.length - 1; i >= 0; i--) {
         const laser = lasersRef.current[i];
@@ -259,7 +285,6 @@ export function PixiCanvas({
           lasersRef.current.splice(i, 1);
         }
       }
-
       // ダメージ表示の更新
       for (let i = damageTextsRef.current.length - 1; i >= 0; i--) {
         const dt = damageTextsRef.current[i];
