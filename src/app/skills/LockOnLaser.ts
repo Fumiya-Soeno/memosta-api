@@ -94,7 +94,7 @@ export function handleLockOnLaserAttack(params: {
   };
 
   const laserGfx = new PIXI.Graphics();
-  laserGfx.lineStyle(3, 0x0000ff, 1);
+  laserGfx.lineStyle(30, 0x0000ff, 1);
   laserGfx.moveTo(attackerPos.x, attackerPos.y);
   laserGfx.lineTo(farPoint.x, farPoint.y);
   app.stage.addChild(laserGfx);
