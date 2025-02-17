@@ -33,6 +33,11 @@ import {
   EarthquakeEffect,
   EarthquakeUnit,
 } from "../specials/Earthquake";
+import {
+  handlePowerUpAttack,
+  updatePowerUpEffects,
+  PowerUpEffect,
+} from "../specials/PowerUp";
 
 interface PixiCanvasProps {
   width?: number;
@@ -40,9 +45,12 @@ interface PixiCanvasProps {
   backgroundColor?: number;
 }
 
-interface ExtendedUnitText extends LaserUnitText {
+// ExtendedUnitText に、パワーアップ効果用のプロパティを追加
+export interface ExtendedUnitText extends LaserUnitText {
   vx: number;
   vy: number;
+  powerUpMultiplier: number; // 通常1.0、バフ中は1.3
+  baseAttack: number; // 元の攻撃力
 }
 
 export function PixiCanvas({
@@ -62,6 +70,7 @@ export function PixiCanvas({
   const poisonFogsRef = useRef<PoisonFog[]>([]);
   const earthquakeEffectsRef = useRef<EarthquakeEffect[]>([]);
   const damageTextsRef = useRef<DamageText[]>([]);
+  const powerUpEffectsRef = useRef<PowerUpEffect[]>([]);
 
   const sandbagContainerRef = useRef<PIXI.Container | null>(null);
   const sandbagHPBarRef = useRef<PIXI.Graphics | null>(null);
@@ -127,9 +136,7 @@ export function PixiCanvas({
       if (id) setUnitId(id);
     });
 
-    return () => {
-      app.destroy(true, true);
-    };
+    return () => app.destroy(true, true);
   }, [width, height, backgroundColor]);
 
   // APIからユニットデータ取得
@@ -162,7 +169,14 @@ export function PixiCanvas({
       const angle = ((unit.vector + 180) * Math.PI) / 180;
       const vx = unit.speed * Math.cos(angle);
       const vy = unit.speed * Math.sin(angle);
-      return { text, unit, vx, vy };
+      return {
+        text,
+        unit,
+        vx,
+        vy,
+        powerUpMultiplier: 1.0,
+        baseAttack: unit.attack,
+      };
     });
     const totalWidth = unitTexts.reduce((sum, ut) => sum + ut.text.width, 0);
     let currentX = app.screen.width / 2 - totalWidth / 2;
@@ -190,6 +204,10 @@ export function PixiCanvas({
         else if (ut.text.x > app.screen.width) ut.text.x = 0;
         if (ut.text.y < 0) ut.text.y = app.screen.height;
         else if (ut.text.y > app.screen.height) ut.text.y = 0;
+        // パワーアップ中なら、攻撃力をバフ倍率に合わせて更新
+        if (ut.unit.special_name === "パワーアップ") {
+          ut.unit.attack = ut.baseAttack * ut.powerUpMultiplier;
+        }
       });
       attackFrameCounter.current++;
 
@@ -257,10 +275,8 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // アースクエイク攻撃（100フレームごと）
+      // アースクエイク攻撃（special_name === "アースクエイク"、100フレームごと）
       if (attackFrameCounter.current % 100 === 0) {
-        // 対象は special_name === "アースクエイク" のユニット
-        // textsRef の型は ExtendedUnitText ですが、unit には special_name も含むと仮定
         handleEarthquakeAttack({
           app,
           texts: textsRef.current as unknown as EarthquakeUnit[],
@@ -276,7 +292,19 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // レーザーの更新
+      // パワーアップ攻撃（special_name === "パワーアップ"、100フレームごと）
+      if (attackFrameCounter.current % 100 === 0) {
+        handlePowerUpAttack({
+          app,
+          texts: textsRef.current,
+          powerUpEffects: powerUpEffectsRef.current,
+        });
+      }
+      updatePowerUpEffects({
+        powerUpEffects: powerUpEffectsRef.current,
+      });
+
+      // 各レーザーの更新
       for (let i = lasersRef.current.length - 1; i >= 0; i--) {
         const laser = lasersRef.current[i];
         laser.lifetime -= 1;
@@ -285,6 +313,7 @@ export function PixiCanvas({
           lasersRef.current.splice(i, 1);
         }
       }
+
       // ダメージ表示の更新
       for (let i = damageTextsRef.current.length - 1; i >= 0; i--) {
         const dt = damageTextsRef.current[i];
