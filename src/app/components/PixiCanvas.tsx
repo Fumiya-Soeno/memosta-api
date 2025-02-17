@@ -1,4 +1,3 @@
-// components/PixiCanvas.tsx
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -6,7 +5,7 @@ import * as PIXI from "pixi.js";
 import { fetchApi } from "../../../pages/helpers/api";
 import { UnitDataType } from "../../types/unit";
 
-// 各スキルのインポート
+// 各スキル・必殺技のインポート
 import {
   handleLockOnLaserAttack,
   UnitText as LaserUnitText,
@@ -23,6 +22,11 @@ import {
   updatePenetratingSpreadBullets,
   PenetratingSpreadBullet,
 } from "../skills/PenetratingSpread";
+import {
+  handlePoisonFogAttack,
+  updatePoisonFogs,
+  PoisonFog,
+} from "../specials/PoisonFog";
 
 interface PixiCanvasProps {
   width?: number;
@@ -49,18 +53,19 @@ export function PixiCanvas({
   const lasersRef = useRef<Laser[]>([]);
   const crossBurstsRef = useRef<CrossBurst[]>([]);
   const spreadBulletsRef = useRef<PenetratingSpreadBullet[]>([]);
+  const poisonFogsRef = useRef<PoisonFog[]>([]);
   const damageTextsRef = useRef<DamageText[]>([]);
 
   const sandbagContainerRef = useRef<PIXI.Container | null>(null);
   const sandbagHPBarRef = useRef<PIXI.Graphics | null>(null);
   const sandbagTextRef = useRef<PIXI.Text | null>(null);
-
   const sandBagMaxHP = 1000;
   const currentHPRef = useRef(sandBagMaxHP);
 
   const [unitData, setUnitData] = useState<UnitDataType[] | null>(null);
   const [unitId, setUnitId] = useState<number | null>(null);
 
+  // HPバー更新関数
   const updateHPBar = () => {
     const hpBar = sandbagHPBarRef.current;
     const sandbagText = sandbagTextRef.current;
@@ -83,7 +88,7 @@ export function PixiCanvas({
     hpBar.endFill();
   };
 
-  // unitId, unitData の取得はこれまでと同様
+  // PIXI Application とサンドバッグの生成
   useEffect(() => {
     const app = new PIXI.Application({ width, height, backgroundColor });
     if (pixiContainerRef.current) {
@@ -115,9 +120,12 @@ export function PixiCanvas({
       if (id) setUnitId(id);
     });
 
-    return () => app.destroy(true, true);
+    return () => {
+      app.destroy(true, true);
+    };
   }, [width, height, backgroundColor]);
 
+  // APIからユニットデータ取得
   useEffect(() => {
     if (unitId === null) return;
     fetchApi(
@@ -132,6 +140,7 @@ export function PixiCanvas({
     );
   }, [unitId]);
 
+  // ユニットテキストの生成
   useEffect(() => {
     if (!unitData) return;
     const app = appRef.current;
@@ -159,12 +168,14 @@ export function PixiCanvas({
     textsRef.current = unitTexts;
   }, [unitData, width, height]);
 
+  // メインのアニメーション処理
   const handleStart = () => {
     const app = appRef.current;
     if (!app || animationStartedRef.current) return;
     animationStartedRef.current = true;
 
     app.ticker.add(() => {
+      // ユニットテキストの移動更新（画面端ラッピング）
       textsRef.current.forEach((ut) => {
         ut.text.x += ut.vx;
         ut.text.y += ut.vy;
@@ -175,7 +186,7 @@ export function PixiCanvas({
       });
       attackFrameCounter.current++;
 
-      // ロックオンレーザー攻撃
+      // ロックオンレーザー攻撃（5フレームごと）
       if (attackFrameCounter.current % 5 === 0) {
         handleLockOnLaserAttack({
           app,
@@ -188,7 +199,7 @@ export function PixiCanvas({
         });
       }
 
-      // 十字バースト攻撃
+      // 十字バースト攻撃（9フレームごと）
       if (attackFrameCounter.current % 9 === 0) {
         handleCrossBurstAttack({
           app,
@@ -205,7 +216,7 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // 貫通拡散弾攻撃：10フレームごとに発動
+      // 貫通拡散弾攻撃（10フレームごと）
       if (attackFrameCounter.current % 10 === 0) {
         handlePenetratingSpreadAttack({
           app,
@@ -222,7 +233,24 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // レーザーとダメージ表示の更新
+      // 毒霧攻撃（special_name === "毒霧"、10フレームごと）
+      if (attackFrameCounter.current % 80 === 0) {
+        handlePoisonFogAttack({
+          app,
+          texts: textsRef.current,
+          poisonFogs: poisonFogsRef.current,
+        });
+      }
+      updatePoisonFogs({
+        app,
+        poisonFogs: poisonFogsRef.current,
+        sandbagContainer: sandbagContainerRef.current!,
+        currentHPRef,
+        updateHPBar,
+        damageTexts: damageTextsRef.current,
+      });
+
+      // レーザーの更新
       for (let i = lasersRef.current.length - 1; i >= 0; i--) {
         const laser = lasersRef.current[i];
         laser.lifetime -= 1;
@@ -231,6 +259,8 @@ export function PixiCanvas({
           lasersRef.current.splice(i, 1);
         }
       }
+
+      // ダメージ表示の更新
       for (let i = damageTextsRef.current.length - 1; i >= 0; i--) {
         const dt = damageTextsRef.current[i];
         dt.age++;
