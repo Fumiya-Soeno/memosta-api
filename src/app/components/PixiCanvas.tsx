@@ -43,6 +43,11 @@ import {
   updateEchoBladeEffects,
   EchoBladeEffect,
 } from "../skills/EchoBlade";
+import {
+  handleGuardianFallAttack,
+  updateGuardianFallEffects,
+  GuardianFallEffect,
+} from "../skills/GuardianFall";
 
 // サンドバッグ関連のインポート
 import {
@@ -84,6 +89,7 @@ export function PixiCanvas({
   const earthquakeEffectsRef = useRef<EarthquakeEffect[]>([]);
   const powerUpEffectsRef = useRef<PowerUpEffect[]>([]);
   const echoBladeEffectsRef = useRef<EchoBladeEffect[]>([]);
+  const guardianFallEffectsRef = useRef<GuardianFallEffect[]>([]);
   const damageTextsRef = useRef<DamageText[]>([]);
 
   // サンドバッグ関連
@@ -298,6 +304,25 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
+      // ガーディアンフォール攻撃（skill_name === "ガーディアンフォール"、6フレームごと）
+      if (attackFrameCounter.current % 6 === 0) {
+        // ガーディアンフォールの隕石召喚
+        handleGuardianFallAttack({
+          app,
+          texts: textsRef.current,
+          guardianEffects: guardianFallEffectsRef.current,
+        });
+      }
+      updateGuardianFallEffects({
+        app,
+        guardianEffects: guardianFallEffectsRef.current,
+        sandbagContainer: sandbagDataRef.current!.container,
+        currentHPRef,
+        updateHPBar: () =>
+          updateSandbagHPBar(sandbagDataRef.current!, currentHPRef.current),
+        damageTexts: damageTextsRef.current,
+      });
+
       // パワーアップ攻撃（special_name === "パワーアップ"、40フレームごと）
       if (attackFrameCounter.current % 40 === 0) {
         handlePowerUpAttack({
@@ -319,7 +344,6 @@ export function PixiCanvas({
           lasersRef.current.splice(i, 1);
         }
       }
-
       // ダメージ表示の更新
       for (let i = damageTextsRef.current.length - 1; i >= 0; i--) {
         const dt = damageTextsRef.current[i];
