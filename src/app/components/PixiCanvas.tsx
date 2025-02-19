@@ -1,3 +1,4 @@
+// PixiCanvas.tsx
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -111,6 +112,67 @@ const enemyData: UnitDataType[] = [
   //   special_name: "アースクエイク",
   // },
 ];
+
+// ヘルパー：最も近いターゲットを取得（attacker自身は除外）
+function getNearestTarget(
+  attacker: ExtendedUnitText,
+  targets: ExtendedUnitText[]
+): ExtendedUnitText | null {
+  const validTargets = targets.filter((t) => t !== attacker);
+  if (validTargets.length === 0) return null;
+  let nearest = validTargets[0];
+  let minDist = Math.hypot(
+    attacker.text.x - nearest.text.x,
+    attacker.text.y - nearest.text.y
+  );
+  for (const t of validTargets) {
+    const d = Math.hypot(
+      attacker.text.x - t.text.x,
+      attacker.text.y - t.text.y
+    );
+    if (d < minDist) {
+      minDist = d;
+      nearest = t;
+    }
+  }
+  return nearest;
+}
+
+function processLockOnLaserAttack(
+  attackFrameCounter: number,
+  attacker: ExtendedUnitText,
+  targets: ExtendedUnitText[],
+  app: PIXI.Application,
+  damageTexts: DamageText[],
+  lasers: Laser[]
+) {
+  if (attackFrameCounter % 5 !== 0) return;
+  if (attacker.unit.skill_name !== "ロックオンレーザー") return;
+  const target = getNearestTarget(attacker, targets);
+  if (!target) return;
+  const targetContainer = new PIXI.Container();
+  targetContainer.x = target.text.x;
+  targetContainer.y = target.text.y;
+  handleLockOnLaserAttack({
+    app,
+    texts: [attacker],
+    sandbagContainer: targetContainer,
+    currentHPRef: { current: target.hp },
+    updateHPBar: () => {
+      // 対象のHPバー更新処理（必要なら実装）
+    },
+    damageTexts,
+    lasers,
+  });
+  const dmg = attacker.unit.attack * 0.4;
+  target.hp = Math.max(target.hp - dmg, 0);
+  showDamageText({
+    app,
+    damage: dmg,
+    basePosition: { x: target.text.x, y: target.text.y },
+    damageTexts,
+  });
+}
 
 export function PixiCanvas({
   width = 400,
@@ -265,32 +327,7 @@ export function PixiCanvas({
     });
     enemyTextsRef.current = enemyTexts;
   }, [enemyDataState, width, height]);
-
-  // ヘルパー：最も近いターゲットを取得（attacker自身は除外）
-  function getNearestTarget(
-    attacker: ExtendedUnitText,
-    targets: ExtendedUnitText[]
-  ): ExtendedUnitText | null {
-    const validTargets = targets.filter((t) => t !== attacker);
-    if (validTargets.length === 0) return null;
-    let nearest = validTargets[0];
-    let minDist = Math.hypot(
-      attacker.text.x - nearest.text.x,
-      attacker.text.y - nearest.text.y
-    );
-    for (const t of validTargets) {
-      const d = Math.hypot(
-        attacker.text.x - t.text.x,
-        attacker.text.y - t.text.y
-      );
-      if (d < minDist) {
-        minDist = d;
-        nearest = t;
-      }
-    }
-    return nearest;
-  }
-
+  getNearestTarget;
   // ヘルパー：各ユニットのHPバーを更新
   function updateUnitHPBar(unit: ExtendedUnitText) {
     const barWidth = 30;
@@ -353,70 +390,29 @@ export function PixiCanvas({
 
       attackFrameCounter.current++;
 
-      if (attackFrameCounter.current % 5 === 0) {
-        allyTextsRef.current.forEach((ally) => {
-          // ロックオンレーザー以外はスキップする
-          if (ally.unit.skill_name !== "ロックオンレーザー") return;
-          const target = getNearestTarget(ally, enemyTextsRef.current);
-          if (target) {
-            const targetContainer = new PIXI.Container();
-            targetContainer.x = target.text.x;
-            targetContainer.y = target.text.y;
-            handleLockOnLaserAttack({
-              app,
-              texts: [ally],
-              sandbagContainer: targetContainer,
-              currentHPRef: { current: target.hp },
-              updateHPBar: () => {
-                // 敵ユニットのHPバー更新処理（必要なら実装）
-              },
-              damageTexts: damageTextsRef.current,
-              lasers: lasersRef.current,
-            });
-            const dmg = ally.unit.attack * 0.4;
-            target.hp = Math.max(target.hp - dmg, 0);
-            showDamageText({
-              app,
-              damage: dmg,
-              basePosition: { x: target.text.x, y: target.text.y },
-              damageTexts: damageTextsRef.current,
-            });
-          }
-        });
-      }
+      // 友軍の攻撃
+      allyTextsRef.current.forEach((ally) => {
+        processLockOnLaserAttack(
+          attackFrameCounter.current,
+          ally,
+          enemyTextsRef.current,
+          app,
+          damageTextsRef.current,
+          lasersRef.current
+        );
+      });
 
-      // 例：敵ユニットの攻撃（ロックオンレーザー攻撃、5フレームごと）
-      if (attackFrameCounter.current % 5 === 0) {
-        enemyTextsRef.current.forEach((enemy) => {
-          // ロックオンレーザー以外はスキップする
-          if (enemy.unit.skill_name !== "ロックオンレーザー") return;
-          const target = getNearestTarget(enemy, allyTextsRef.current);
-          if (target) {
-            const targetContainer = new PIXI.Container();
-            targetContainer.x = target.text.x;
-            targetContainer.y = target.text.y;
-            handleLockOnLaserAttack({
-              app,
-              texts: [enemy],
-              sandbagContainer: targetContainer,
-              currentHPRef: { current: target.hp },
-              updateHPBar: () => {
-                // 味方ユニットのHPバー更新処理（必要なら実装）
-              },
-              damageTexts: damageTextsRef.current,
-              lasers: lasersRef.current,
-            });
-            const dmg = enemy.unit.attack * 0.4;
-            target.hp = Math.max(target.hp - dmg, 0);
-            showDamageText({
-              app,
-              damage: dmg,
-              basePosition: { x: target.text.x, y: target.text.y },
-              damageTexts: damageTextsRef.current,
-            });
-          }
-        });
-      }
+      // 敵軍の攻撃
+      enemyTextsRef.current.forEach((enemy) => {
+        processLockOnLaserAttack(
+          attackFrameCounter.current,
+          enemy,
+          allyTextsRef.current,
+          app,
+          damageTextsRef.current,
+          lasersRef.current
+        );
+      });
 
       // ※ 他のスキルについても、各攻撃側のユニットから getNearestTarget() を用いて対象を決定し、各スキル関数を呼び出す
 
