@@ -288,7 +288,7 @@ export function PixiCanvas({
     const app = appRef.current;
     if (!app) return;
     const sortedEnemies = [...enemyDataState].sort(
-      (a, b) => a.position - b.position
+      (a, b) => b.position - a.position
     );
     enemyTextsRef.current.forEach((ut) => {
       app.stage.removeChild(ut.text);
