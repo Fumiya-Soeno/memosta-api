@@ -78,17 +78,17 @@ export interface ExtendedUnitText extends LaserUnitText {
 
 // 仮の敵ユニットデータ（将来的にはAPIから取得）
 const enemyData: UnitDataType[] = [
-  // {
-  //   name: "あ",
-  //   life: 50,
-  //   attack: 3,
-  //   speed: 4,
-  //   vector: 30,
-  //   position: 1,
-  //   element_name: "火",
-  //   skill_name: "十字バースト",
-  //   special_name: "パワーアップ",
-  // },
+  {
+    name: "あ",
+    life: 50,
+    attack: 3,
+    speed: 4,
+    vector: 30,
+    position: 1,
+    element_name: "火",
+    skill_name: "十字バースト",
+    special_name: "パワーアップ",
+  },
   {
     name: "い",
     life: 30,
@@ -100,17 +100,17 @@ const enemyData: UnitDataType[] = [
     skill_name: "ロックオンレーザー",
     special_name: "毒霧",
   },
-  // {
-  //   name: "う",
-  //   life: 35,
-  //   attack: 8,
-  //   speed: 3,
-  //   vector: 90,
-  //   position: 3,
-  //   element_name: "木",
-  //   skill_name: "貫通拡散弾",
-  //   special_name: "アースクエイク",
-  // },
+  {
+    name: "う",
+    life: 35,
+    attack: 8,
+    speed: 3,
+    vector: 90,
+    position: 3,
+    element_name: "木",
+    skill_name: "貫通拡散弾",
+    special_name: "アースクエイク",
+  },
 ];
 
 // ヘルパー：最も近いターゲットを取得（attacker自身は除外）
@@ -412,6 +412,22 @@ export function PixiCanvas({
           damageTextsRef.current,
           lasersRef.current
         );
+      });
+
+      if (attackFrameCounter.current % 9 === 0) {
+        // すべてのユニット（友軍・敵）から、十字バーストを発動
+        handleCrossBurstAttack({
+          app,
+          texts: [...allyTextsRef.current, ...enemyTextsRef.current],
+          crossBursts: crossBurstsRef.current,
+        });
+      }
+      updateCrossBursts({
+        app,
+        crossBursts: crossBurstsRef.current,
+        allyUnits: allyTextsRef.current,
+        enemyUnits: enemyTextsRef.current,
+        damageTexts: damageTextsRef.current,
       });
 
       // ※ 他のスキルについても、各攻撃側のユニットから getNearestTarget() を用いて対象を決定し、各スキル関数を呼び出す
