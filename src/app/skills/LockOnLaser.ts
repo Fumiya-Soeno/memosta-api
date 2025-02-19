@@ -69,11 +69,20 @@ export function handleLockOnLaserAttack(params: {
   );
   if (!attackerUnit) return;
   const attackerPos = { x: attackerUnit.text.x, y: attackerUnit.text.y };
-  const sandbagBounds = sandbagContainer.getBounds();
-  const sandbagCenter = {
-    x: sandbagBounds.x + sandbagBounds.width / 2,
-    y: sandbagBounds.y + sandbagBounds.height / 2,
-  };
+
+  // ターゲットの位置を、sandbagContainer から取得
+  const bounds = sandbagContainer.getBounds();
+  let targetX, targetY;
+  if (bounds.width === 0 && bounds.height === 0) {
+    // getBounds() でサイズが得られない場合は、container の x,y を利用
+    targetX = sandbagContainer.x;
+    targetY = sandbagContainer.y;
+  } else {
+    targetX = bounds.x + bounds.width / 2;
+    targetY = bounds.y + bounds.height / 2;
+  }
+  const sandbagCenter = { x: targetX, y: targetY };
+
   const dx = sandbagCenter.x - attackerPos.x;
   const dy = sandbagCenter.y - attackerPos.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
@@ -103,7 +112,6 @@ export function handleLockOnLaserAttack(params: {
   if (distance < 10) {
     currentHPRef.current = Math.max(currentHPRef.current - damage, 0);
     updateHPBar();
-    // 汎用関数でダメージテキストを表示
     showDamageText({
       app,
       damage,
