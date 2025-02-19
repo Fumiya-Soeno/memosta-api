@@ -353,9 +353,10 @@ export function PixiCanvas({
 
       attackFrameCounter.current++;
 
-      // 例：友軍ユニットの攻撃（ロックオンレーザー攻撃、5フレームごと）
       if (attackFrameCounter.current % 5 === 0) {
         allyTextsRef.current.forEach((ally) => {
+          // ロックオンレーザー以外はスキップする
+          if (ally.unit.skill_name !== "ロックオンレーザー") return;
           const target = getNearestTarget(ally, enemyTextsRef.current);
           if (target) {
             const targetContainer = new PIXI.Container();
@@ -387,6 +388,8 @@ export function PixiCanvas({
       // 例：敵ユニットの攻撃（ロックオンレーザー攻撃、5フレームごと）
       if (attackFrameCounter.current % 5 === 0) {
         enemyTextsRef.current.forEach((enemy) => {
+          // ロックオンレーザー以外はスキップする
+          if (enemy.unit.skill_name !== "ロックオンレーザー") return;
           const target = getNearestTarget(enemy, allyTextsRef.current);
           if (target) {
             const targetContainer = new PIXI.Container();
