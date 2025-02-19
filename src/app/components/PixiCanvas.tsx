@@ -430,6 +430,30 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
+      // 貫通拡散弾攻撃（10フレームごと）
+      if (attackFrameCounter.current % 10 === 0) {
+        [allyTextsRef, enemyTextsRef].forEach((textRef) => {
+          handlePenetratingSpreadAttack({
+            app,
+            texts: textRef.current.filter(
+              (ut) => ut.unit.skill_name === "貫通拡散弾"
+            ),
+            spreadBullets: spreadBulletsRef.current,
+          });
+        });
+      }
+      // 対象となるユニットリストをそれぞれ渡す（例として、友軍は敵ユニットリスト、敵は友軍ユニットリスト）
+      updatePenetratingSpreadBullets({
+        app,
+        spreadBullets: spreadBulletsRef.current,
+        allyUnits: allyTextsRef.current,
+        enemyUnits: enemyTextsRef.current,
+        updateTargetHP: (target, damage) => {
+          target.hp = Math.max(target.hp - damage, 0);
+        },
+        damageTexts: damageTextsRef.current,
+      });
+
       // ※ 他のスキルについても、各攻撃側のユニットから getNearestTarget() を用いて対象を決定し、各スキル関数を呼び出す
 
       // エコーブレード攻撃（skill_name === "エコーブレード"、7フレームごと）
