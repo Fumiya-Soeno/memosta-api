@@ -532,6 +532,30 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
+      // 毒霧攻撃（special_name === "毒霧"、80フレームごと）
+      // 友軍と敵それぞれから、対象ユニットリストをフィルタリングして攻撃を発動
+      if (attackFrameCounter.current % 80 === 0) {
+        [allyTextsRef, enemyTextsRef].forEach((textRef) => {
+          handlePoisonFogAttack({
+            app,
+            texts: textRef.current.filter(
+              (u) => u.unit.special_name === "毒霧"
+            ),
+            poisonFogs: poisonFogsRef.current,
+          });
+        });
+      }
+      updatePoisonFogs({
+        app,
+        poisonFogs: poisonFogsRef.current,
+        allyUnits: allyTextsRef.current,
+        enemyUnits: enemyTextsRef.current,
+        updateTargetHP: (target, damage) => {
+          target.hp = Math.max(target.hp - damage, 0);
+        },
+        damageTexts: damageTextsRef.current,
+      });
+
       // パワーアップ攻撃（special_name === "パワーアップ"、40フレームごと）
       if (attackFrameCounter.current % 40 === 0) {
         allyTextsRef.current.forEach((ally) => {

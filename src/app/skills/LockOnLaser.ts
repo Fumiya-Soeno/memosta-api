@@ -7,6 +7,7 @@ export interface UnitText {
   unit: {
     skill_name: string;
     attack: number;
+    special_name: string;
   };
 }
 
