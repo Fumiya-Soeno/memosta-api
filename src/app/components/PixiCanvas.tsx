@@ -108,7 +108,7 @@ const enemyData: UnitDataType[] = [
     vector: 90,
     position: 3,
     element_name: "木",
-    skill_name: "貫通拡散弾",
+    // skill_name: "貫通拡散弾",
     special_name: "アースクエイク",
   },
 ];
@@ -552,6 +552,45 @@ export function PixiCanvas({
         enemyUnits: enemyTextsRef.current,
         updateTargetHP: (target, damage) => {
           target.hp = Math.max(target.hp - damage, 0);
+        },
+        damageTexts: damageTextsRef.current,
+      });
+
+      // アースクエイク攻撃（special_name === "アースクエイク"、100フレームごと）
+      if (attackFrameCounter.current % 100 === 0) {
+        // 友軍ユニットから "アースクエイク" を抽出して攻撃発動
+        handleEarthquakeAttack({
+          app,
+          texts: allyTextsRef.current
+            .filter((ut) => ut.unit.special_name === "アースクエイク")
+            .map((ut) => ({
+              text: ut.text,
+              unit: { ...ut.unit, team: ut.team },
+            })),
+          earthquakeEffects: earthquakeEffectsRef.current,
+        });
+        // 敵ユニットからも同様に
+        handleEarthquakeAttack({
+          app,
+          texts: enemyTextsRef.current
+            .filter((ut) => ut.unit.special_name === "アースクエイク")
+            .map((ut) => ({
+              text: ut.text,
+              unit: { ...ut.unit, team: ut.team },
+            })),
+          earthquakeEffects: earthquakeEffectsRef.current,
+        });
+      }
+      updateEarthquakeEffects({
+        app,
+        earthquakeEffects: earthquakeEffectsRef.current,
+        allyUnits: allyTextsRef.current,
+        enemyUnits: enemyTextsRef.current,
+        updateTargetHP: (target, damage) => {
+          target.hp = Math.max(target.hp - damage, 0);
+        },
+        updateHPBar: () => {
+          // 各ユニットのHPバーは個別に updateUnitHPBar() で更新
         },
         damageTexts: damageTextsRef.current,
       });
