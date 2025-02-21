@@ -456,48 +456,6 @@ export function PixiCanvas({
 
       // ※ 他のスキルについても、各攻撃側のユニットから getNearestTarget() を用いて対象を決定し、各スキル関数を呼び出す
 
-      // エコーブレード攻撃（skill_name === "エコーブレード"、7フレームごと）
-      if (attackFrameCounter.current % 7 === 0) {
-        allyTextsRef.current.forEach((ally) => {
-          const target = getNearestTarget(ally, enemyTextsRef.current);
-          if (target) {
-            const targetContainer = new PIXI.Container();
-            targetContainer.x = target.text.x;
-            targetContainer.y = target.text.y;
-            handleEchoBladeAttack({
-              app,
-              texts: [ally],
-              sandbagContainer: targetContainer,
-              echoBladeEffects: echoBladeEffectsRef.current,
-            });
-          }
-        });
-        enemyTextsRef.current.forEach((enemy) => {
-          const target = getNearestTarget(enemy, allyTextsRef.current);
-          if (target) {
-            const targetContainer = new PIXI.Container();
-            targetContainer.x = target.text.x;
-            targetContainer.y = target.text.y;
-            handleEchoBladeAttack({
-              app,
-              texts: [enemy],
-              sandbagContainer: targetContainer,
-              echoBladeEffects: echoBladeEffectsRef.current,
-            });
-          }
-        });
-      }
-      updateEchoBladeEffects({
-        app,
-        echoBladeEffects: echoBladeEffectsRef.current,
-        sandbagContainer: {
-          getBounds: () => ({ x: 0, y: 0, width: 0, height: 0 }),
-        } as any,
-        currentHPRef,
-        updateHPBar: () => {},
-        damageTexts: damageTextsRef.current,
-      });
-
       // ガーディアンフォール攻撃（skill_name === "ガーディアンフォール"、6フレームごと）
       if (attackFrameCounter.current % 6 === 0) {
         allyTextsRef.current.forEach((ally) => {
