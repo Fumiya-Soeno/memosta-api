@@ -86,31 +86,31 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "十字バースト",
+    skill_name: "エコーブレード",
     special_name: "パワーアップ",
   },
-  {
-    name: "い",
-    life: 30,
-    attack: 4,
-    speed: 7,
-    vector: 60,
-    position: 2,
-    element_name: "水",
-    skill_name: "ロックオンレーザー",
-    special_name: "毒霧",
-  },
-  {
-    name: "う",
-    life: 35,
-    attack: 8,
-    speed: 3,
-    vector: 90,
-    position: 3,
-    element_name: "木",
-    // skill_name: "貫通拡散弾",
-    special_name: "アースクエイク",
-  },
+  // {
+  //   name: "い",
+  //   life: 30,
+  //   attack: 4,
+  //   speed: 7,
+  //   vector: 60,
+  //   position: 2,
+  //   element_name: "水",
+  //   skill_name: "ロックオンレーザー",
+  //   special_name: "毒霧",
+  // },
+  // {
+  //   name: "う",
+  //   life: 35,
+  //   attack: 8,
+  //   speed: 3,
+  //   vector: 90,
+  //   position: 3,
+  //   element_name: "木",
+  //   // skill_name: "貫通拡散弾",
+  //   special_name: "アースクエイク",
+  // },
 ];
 
 // ヘルパー：最も近いターゲットを取得（attacker自身は除外）
@@ -455,6 +455,55 @@ export function PixiCanvas({
       });
 
       // ※ 他のスキルについても、各攻撃側のユニットから getNearestTarget() を用いて対象を決定し、各スキル関数を呼び出す
+
+      // エコーブレード攻撃（skill_name === "エコーブレード"、7フレームごと）
+      if (attackFrameCounter.current % 7 === 0) {
+        // 友軍ユニットの処理
+        allyTextsRef.current
+          .filter((ally) => ally.unit.skill_name === "エコーブレード")
+          .forEach((ally) => {
+            const target = getNearestTarget(ally, enemyTextsRef.current);
+            if (target) {
+              const targetContainer = new PIXI.Container();
+              targetContainer.x = target.text.x;
+              targetContainer.y = target.text.y;
+              handleEchoBladeAttack({
+                app,
+                texts: [ally],
+                targetContainer,
+                echoBladeEffects: echoBladeEffectsRef.current,
+              });
+            }
+          });
+        // 敵ユニットの処理
+        enemyTextsRef.current
+          .filter((enemy) => enemy.unit.skill_name === "エコーブレード")
+          .forEach((enemy) => {
+            const target = getNearestTarget(enemy, allyTextsRef.current);
+            if (target) {
+              const targetContainer = new PIXI.Container();
+              targetContainer.x = target.text.x;
+              targetContainer.y = target.text.y;
+              handleEchoBladeAttack({
+                app,
+                texts: [enemy],
+                targetContainer,
+                echoBladeEffects: echoBladeEffectsRef.current,
+              });
+            }
+          });
+      }
+
+      updateEchoBladeEffects({
+        app,
+        echoBladeEffects: echoBladeEffectsRef.current,
+        allyUnits: allyTextsRef.current,
+        enemyUnits: enemyTextsRef.current,
+        updateTargetHP: (target, dmg) => {
+          target.hp = Math.max(target.hp - dmg, 0);
+        },
+        damageTexts: damageTextsRef.current,
+      });
 
       // ガーディアンフォール攻撃（skill_name === "ガーディアンフォール"、6フレームごと）
       if (attackFrameCounter.current % 6 === 0) {

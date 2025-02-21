@@ -1,4 +1,3 @@
-// skills/EchoBlade.ts
 import * as PIXI from "pixi.js";
 import { showDamageText, DamageText } from "../utils/DamageTextUtil";
 import { ExtendedUnitText } from "../components/PixiCanvas";
@@ -10,6 +9,7 @@ export interface EchoBladeEffect {
   vy: number;
   lifetime: number;
   damage: number;
+  team: "ally" | "enemy";
 }
 
 // ヘルパー：2点間の距離計算
@@ -24,114 +24,104 @@ function distanceBetween(
 
 /**
  * handleEchoBladeAttack
- * 7フレームごとに、special_name が "エコーブレード" のユニットから、対象（サンドバッグ）の方向へ
- * 1. 斬撃攻撃エフェクト（60%ダメージ、三日月型エフェクト）を発生し即時ダメージを与える。
- * 2. 同方向に衝撃波エフェクト（30%ダメージ、ゆっくり移動、貫通性あり）を発射する。
- * 発射時の自身の位置とターゲット位置を結ぶ直線の角度に合わせて各エフェクトを回転させます。
+ * 7フレームごとに、special_name が "エコーブレード" のユニットから、
+ * 対象（targetContainer で指定された位置）へ攻撃を発動します。
+ * 発射時の自身の位置とターゲット位置を結ぶ直線の角度に合わせて衝撃波エフェクトを回転・発射します。
  */
 export function handleEchoBladeAttack(params: {
   app: PIXI.Application;
   texts: ExtendedUnitText[];
-  sandbagContainer: PIXI.Container;
+  targetContainer: PIXI.Container;
   echoBladeEffects: EchoBladeEffect[];
 }) {
-  // 対象ユニットとして special_name が "エコーブレード" のものを検索
-  const attacker = params.texts.find(
-    (ut) => ut.unit.skill_name === "エコーブレード"
-  );
-  if (!attacker) return;
+  // texts[0] を攻撃発射元として処理
+  const attacker = params.texts[0];
+  if (!attacker || attacker.unit.skill_name !== "エコーブレード") return;
   const attackerPos = { x: attacker.text.x, y: attacker.text.y };
 
-  // サンドバッグの中心を取得
-  const sbBounds = params.sandbagContainer.getBounds();
-  const targetPos = {
-    x: sbBounds.x + sbBounds.width / 2,
-    y: sbBounds.y + sbBounds.height / 2,
-  };
+  // ターゲット位置は targetContainer から取得
+  const bounds = params.targetContainer.getBounds();
+  let targetPos = { x: params.targetContainer.x, y: params.targetContainer.y };
+  if (bounds.width !== 0 || bounds.height !== 0) {
+    targetPos = {
+      x: bounds.x + bounds.width / 2,
+      y: bounds.y + bounds.height / 2,
+    };
+  }
 
-  // 方向ベクトルと角度を計算
   const dx = targetPos.x - attackerPos.x;
   const dy = targetPos.y - attackerPos.y;
-  const dist = Math.sqrt(dx * dx + dy * dy);
   const attackAngle = Math.atan2(dy, dx);
 
-  // ② 衝撃波攻撃エフェクト（30%ダメージ、ゆっくり移動）
+  // 衝撃波攻撃エフェクト（30%ダメージ、ゆっくり移動）
   const shock = new PIXI.Graphics();
   shock.lineStyle(2, 0x0000ff, 1);
   shock.beginFill(0x0000ff, 0.5);
   // 三日月型エフェクト：弧を -45°～45° で描画
-  shock.arc(0, 0, 40, (-45 * Math.PI) / 180, (45 * Math.PI) / 180);
+  shock.arc(0, 0, 60, (-45 * Math.PI) / 180, (45 * Math.PI) / 180);
   shock.endFill();
-  // 回転を発射時の角度に合わせる
   shock.rotation = attackAngle;
   shock.x = attackerPos.x;
   shock.y = attackerPos.y;
   params.app.stage.addChild(shock);
-  // 衝撃波パラメータ：速度 2px/frame、lifetime 60フレーム、30%ダメージ
-  const shockSpeed = 10;
+  const shockSpeed = 4;
   const shockVx = shockSpeed * Math.cos(attackAngle);
   const shockVy = shockSpeed * Math.sin(attackAngle);
   const shockDamage = attacker.unit.attack * 0.3;
-  // ※ここでは lifetime を 60 に設定していますが、必要に応じて調整してください
   params.echoBladeEffects.push({
     graphics: shock,
     vx: shockVx,
     vy: shockVy,
-    lifetime: 600,
+    lifetime: 600, // 600フレーム（必要に応じて調整）
     damage: shockDamage,
+    team: attacker.team,
   });
 }
 
 /**
  * updateEchoBladeEffects
- * 各衝撃波エフェクトを毎フレーム更新し、対象（サンドバッグ）との衝突判定でダメージを与えます。
- * ダメージテキストは汎用関数 showDamageText を利用して表示します。
+ * 各衝撃波エフェクトを毎フレーム更新し、発射元の反対チームのユニットに対して衝突判定を行い、ダメージを与えます。
+ * ダメージテキストは showDamageText を利用して表示します。
  */
 export function updateEchoBladeEffects(params: {
   app: PIXI.Application;
   echoBladeEffects: EchoBladeEffect[];
-  sandbagContainer: PIXI.Container;
-  currentHPRef: { current: number };
-  updateHPBar: () => void;
+  allyUnits: ExtendedUnitText[];
+  enemyUnits: ExtendedUnitText[];
+  updateTargetHP: (target: ExtendedUnitText, damage: number) => void;
   damageTexts: DamageText[];
 }) {
   const {
     app,
     echoBladeEffects,
-    sandbagContainer,
-    currentHPRef,
-    updateHPBar,
+    allyUnits,
+    enemyUnits,
+    updateTargetHP,
     damageTexts,
   } = params;
-  const sbBounds = sandbagContainer.getBounds();
-  const sandbagCenter = {
-    x: sbBounds.x + sbBounds.width / 2,
-    y: sbBounds.y + sbBounds.height / 2,
-  };
-
-  for (let i = echoBladeEffects.length - 1; i >= 0; i--) {
-    const effect = echoBladeEffects[i];
+  echoBladeEffects.forEach((effect, i) => {
     effect.lifetime--;
     effect.graphics.x += effect.vx;
     effect.graphics.y += effect.vy;
-    // 衝突判定：衝撃波の中心とサンドバッグ中心との距離が10px未満ならダメージ
-    const d = distanceBetween(
-      { x: effect.graphics.x, y: effect.graphics.y },
-      sandbagCenter
-    );
-    if (d < 10) {
-      currentHPRef.current = Math.max(currentHPRef.current - effect.damage, 0);
-      updateHPBar();
-      showDamageText({
-        app,
-        damage: effect.damage,
-        basePosition: sandbagCenter,
-        damageTexts,
-      });
-    }
+    const targets = effect.team === "ally" ? enemyUnits : allyUnits;
+    targets.forEach((target) => {
+      const d = distanceBetween(
+        { x: effect.graphics.x, y: effect.graphics.y },
+        { x: target.text.x, y: target.text.y }
+      );
+      if (d < 60) {
+        updateTargetHP(target, effect.damage);
+        showDamageText({
+          app,
+          damage: effect.damage,
+          basePosition: { x: target.text.x, y: target.text.y },
+          damageTexts,
+        });
+      }
+    });
     if (effect.lifetime <= 0) {
       app.stage.removeChild(effect.graphics);
       echoBladeEffects.splice(i, 1);
     }
-  }
+  });
 }
