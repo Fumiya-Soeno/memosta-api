@@ -13,27 +13,23 @@ export interface GuardianFallEffect {
   team: "ally" | "enemy";
 }
 
-// 固定の10地点オフセット（攻撃者の現在位置を基準）
-const offsets = [
-  { dx: -100, dy: -50 },
-  { dx: -50, dy: -80 },
-  { dx: 0, dy: -100 },
-  { dx: 50, dy: -80 },
-  { dx: 100, dy: -50 },
-  { dx: 100, dy: 0 },
-  { dx: 50, dy: 50 },
-  { dx: 0, dy: 80 },
-  { dx: -50, dy: 50 },
-  { dx: -100, dy: 0 },
-];
-// モジュール内でループするためのインデックス
-let guardianFallIndex = 0;
+// 固定の20地点オフセット（攻撃者の現在位置を基準）
+const numPoints = 20;
+const radius = 100; // 円の半径（必要に応じて調整）
+const offsets = Array.from({ length: numPoints }, (_, i) => {
+  const angle = (i * (360 / numPoints) * Math.PI) / 180;
+  return { dx: radius * Math.cos(angle), dy: radius * Math.sin(angle) };
+});
+
+// 友軍用と敵用のインデックスを別々に管理（敵は半分シフト）
+let allyGuardianFallIndex = 0;
+let enemyGuardianFallIndex = 0;
 
 /**
  * handleGuardianFallAttack
  * special_name が "ガーディアンフォール" のユニットから、6フレームごとに天空から隕石を召喚します。
- * 隕石は攻撃者の現在位置を基準とした固定の10地点オフセットを順次利用し、着地位置（targetY）に向けて落下します。
- * 着地後、爆発エフェクトに切り替わり、爆発の持続期間中に発射元の反対側のユニットに対して攻撃判定を行います。
+ * 隕石は攻撃者の現在位置を基準とした固定のオフセットを順次利用し、着地位置（targetY）に向けて落下します。
+ * 着地後、爆発エフェクトに切り替わり、爆発効果の持続期間中に発射元の反対側のユニットに対して攻撃判定を行います。
  * 爆発ダメージは攻撃力の90%です。
  */
 export function handleGuardianFallAttack(params: {
@@ -46,9 +42,15 @@ export function handleGuardianFallAttack(params: {
   );
   if (!attacker) return;
 
-  // ループで固定のオフセットを選択
-  const offset = offsets[guardianFallIndex];
-  guardianFallIndex = (guardianFallIndex + 1) % offsets.length;
+  let offset;
+  if (attacker.team === "ally") {
+    offset = offsets[allyGuardianFallIndex];
+    allyGuardianFallIndex = (allyGuardianFallIndex + 1) % offsets.length;
+  } else {
+    // 敵の場合は、半分ずらす（offset index + numPoints/2）
+    offset = offsets[(enemyGuardianFallIndex + numPoints / 2) % numPoints];
+    enemyGuardianFallIndex = (enemyGuardianFallIndex + 1) % offsets.length;
+  }
 
   // 発射位置：攻撃者の位置からオフセット分ずらした位置を着地目標とする
   const targetX = attacker.text.x + offset.dx;
@@ -97,16 +99,14 @@ export function updateGuardianFallEffects(params: {
     updateTargetHP,
     damageTexts,
   } = params;
-  // 対象ユニットは、発射元の反対側のチーム
+  // それぞれのエフェクトについて処理
   guardianEffects.forEach((effect, i) => {
     if (!effect.isExploded) {
-      // 落下中： y 座標を下げる
       effect.graphics.y += effect.fallingSpeed;
       if (effect.graphics.y >= effect.targetY) {
-        // 着地 -> 爆発エフェクトに切り替え
         effect.isExploded = true;
         effect.graphics.clear();
-        // 初期爆発エフェクト：直径80px（半径40px）を描画
+        // 初期爆発エフェクト：直径80px（半径40px）のエフェクトを描画
         effect.graphics.beginFill(0xff6600, 1);
         effect.graphics.drawCircle(0, 0, 40);
         effect.graphics.endFill();
@@ -114,13 +114,12 @@ export function updateGuardianFallEffects(params: {
         effect.lifetime = 20;
       }
     } else {
-      // 爆発エフェクト中：フェードアウトと拡大効果を適用
       const totalDuration = 20;
       const progress = 1 - effect.lifetime / totalDuration; // 0→1
-      effect.graphics.alpha = 1 - progress; // 透明度線形減少
-      const scaleFactor = 1 + progress * 0.5; // 最大で1.5倍に拡大
+      effect.graphics.alpha = 1 - progress;
+      const scaleFactor = 1 + progress * 0.5; // 最大1.5倍に拡大
       effect.graphics.scale.set(scaleFactor);
-      // 攻撃判定：爆発中心から対象ユニットとの距離が50px未満ならダメージ
+      // 攻撃判定：発射元の反対側のユニットに対して行う
       const explosionCenter = { x: effect.graphics.x, y: effect.graphics.y };
       const targets = effect.team === "ally" ? enemyUnits : allyUnits;
       targets.forEach((target) => {
