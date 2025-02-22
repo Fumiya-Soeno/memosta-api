@@ -86,7 +86,7 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "エコーブレード",
+    skill_name: "ガーディアンフォール",
     special_name: "パワーアップ",
   },
   // {
@@ -505,37 +505,43 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // ガーディアンフォール攻撃（skill_name === "ガーディアンフォール"、6フレームごと）
+      // ガーディアンフォール攻撃（special_name === "ガーディアンフォール"、6フレームごと）
       if (attackFrameCounter.current % 6 === 0) {
-        allyTextsRef.current.forEach((ally) => {
-          const target = getNearestTarget(ally, enemyTextsRef.current);
-          if (target) {
-            handleGuardianFallAttack({
-              app,
-              texts: [ally],
-              guardianEffects: guardianFallEffectsRef.current,
-            });
-          }
-        });
-        enemyTextsRef.current.forEach((enemy) => {
-          const target = getNearestTarget(enemy, allyTextsRef.current);
-          if (target) {
-            handleGuardianFallAttack({
-              app,
-              texts: [enemy],
-              guardianEffects: guardianFallEffectsRef.current,
-            });
-          }
-        });
+        // 友軍ユニットからの攻撃
+        allyTextsRef.current
+          .filter((ally) => ally.unit.skill_name === "ガーディアンフォール")
+          .forEach((ally) => {
+            const target = getNearestTarget(ally, enemyTextsRef.current);
+            if (target) {
+              handleGuardianFallAttack({
+                app,
+                texts: [ally],
+                guardianEffects: guardianFallEffectsRef.current,
+              });
+            }
+          });
+        // 敵ユニットからの攻撃
+        enemyTextsRef.current
+          .filter((enemy) => enemy.unit.skill_name === "ガーディアンフォール")
+          .forEach((enemy) => {
+            const target = getNearestTarget(enemy, allyTextsRef.current);
+            if (target) {
+              handleGuardianFallAttack({
+                app,
+                texts: [enemy],
+                guardianEffects: guardianFallEffectsRef.current,
+              });
+            }
+          });
       }
       updateGuardianFallEffects({
         app,
         guardianEffects: guardianFallEffectsRef.current,
-        sandbagContainer: {
-          getBounds: () => ({ x: 0, y: 0, width: 0, height: 0 }),
-        } as any,
-        currentHPRef,
-        updateHPBar: () => {},
+        allyUnits: allyTextsRef.current,
+        enemyUnits: enemyTextsRef.current,
+        updateTargetHP: (target, damage) => {
+          target.hp = Math.max(target.hp - damage, 0);
+        },
         damageTexts: damageTextsRef.current,
       });
 
