@@ -1,4 +1,3 @@
-// PixiCanvas.tsx
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -49,8 +48,13 @@ import {
   updateGuardianFallEffects,
   GuardianFallEffect,
 } from "../skills/GuardianFall";
+import {
+  handleBlitzShockAttack,
+  updateBlitzShockEffects,
+  BlitzShockEffect,
+} from "../skills/BlitzShock";
 
-// サンドバッグ関連のインポート（今回は「敵ユニット」や「友軍ユニット」を配置するため、個々のユニットとして扱います）
+// サンドバッグ関連のインポート（今回は各ユニットとして扱うため使用しませんが、定数などを参照）
 import {
   createSandbag,
   updateHPBar as updateSandbagHPBar,
@@ -64,7 +68,7 @@ interface PixiCanvasProps {
   backgroundColor?: number;
 }
 
-// ExtendedUnitText に、パワーアップ用のプロパティやHP、所属チーム情報を追加
+// ExtendedUnitText に、パワーアップ用のプロパティ、HP、所属チーム、HPバーを追加
 export interface ExtendedUnitText extends LaserUnitText {
   vx: number;
   vy: number;
@@ -86,7 +90,7 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "ガーディアンフォール",
+    skill_name: "ブリッツショック",
     special_name: "パワーアップ",
   },
   // {
@@ -108,8 +112,8 @@ const enemyData: UnitDataType[] = [
   //   vector: 90,
   //   position: 3,
   //   element_name: "木",
-  //   // skill_name: "貫通拡散弾",
-  //   special_name: "アースクエイク",
+  //   skill_name: "ブリッツショック",
+  //   special_name: "エコーブレード",
   // },
 ];
 
@@ -138,15 +142,40 @@ function getNearestTarget(
   return nearest;
 }
 
+// ヘルパー：最も遠いターゲットを取得
+function getFarthestTarget(
+  attacker: ExtendedUnitText,
+  targets: ExtendedUnitText[]
+): ExtendedUnitText | null {
+  if (targets.length === 0) return null;
+  let farthest = targets[0];
+  let maxDist = Math.hypot(
+    attacker.text.x - farthest.text.x,
+    attacker.text.y - farthest.text.y
+  );
+  for (const t of targets) {
+    const d = Math.hypot(
+      attacker.text.x - t.text.x,
+      attacker.text.y - t.text.y
+    );
+    if (d > maxDist) {
+      maxDist = d;
+      farthest = t;
+    }
+  }
+  return farthest;
+}
+
+// 既存のロックオンレーザー処理の共通関数（リファクタリング済み）
 function processLockOnLaserAttack(
-  attackFrameCounter: number,
+  attackFrame: number,
   attacker: ExtendedUnitText,
   targets: ExtendedUnitText[],
   app: PIXI.Application,
   damageTexts: DamageText[],
   lasers: Laser[]
 ) {
-  if (attackFrameCounter % 5 !== 0) return;
+  if (attackFrame % 5 !== 0) return;
   if (attacker.unit.skill_name !== "ロックオンレーザー") return;
   const target = getNearestTarget(attacker, targets);
   if (!target) return;
@@ -158,9 +187,7 @@ function processLockOnLaserAttack(
     texts: [attacker],
     sandbagContainer: targetContainer,
     currentHPRef: { current: target.hp },
-    updateHPBar: () => {
-      // 対象のHPバー更新処理（必要なら実装）
-    },
+    updateHPBar: () => {},
     damageTexts,
     lasers,
   });
@@ -194,9 +221,9 @@ export function PixiCanvas({
   const powerUpEffectsRef = useRef<PowerUpEffect[]>([]);
   const echoBladeEffectsRef = useRef<EchoBladeEffect[]>([]);
   const guardianFallEffectsRef = useRef<GuardianFallEffect[]>([]);
+  const blitzShockEffectsRef = useRef<BlitzShockEffect[]>([]);
   const damageTextsRef = useRef<DamageText[]>([]);
 
-  // 旧サンドバッグ用 currentHPRef（今回は各ユニット個別管理するので参考用）
   const currentHPRef = useRef(SANDBAG_MAX_HP);
 
   // 友軍ユニット（API取得）と敵ユニット（仮ハードコード）の状態
@@ -327,7 +354,56 @@ export function PixiCanvas({
     });
     enemyTextsRef.current = enemyTexts;
   }, [enemyDataState, width, height]);
-  getNearestTarget;
+
+  // ヘルパー：最も近いターゲットを取得（attacker自身は除外）
+  function getNearestTarget(
+    attacker: ExtendedUnitText,
+    targets: ExtendedUnitText[]
+  ): ExtendedUnitText | null {
+    const validTargets = targets.filter((t) => t !== attacker);
+    if (validTargets.length === 0) return null;
+    let nearest = validTargets[0];
+    let minDist = Math.hypot(
+      attacker.text.x - nearest.text.x,
+      attacker.text.y - nearest.text.y
+    );
+    for (const t of validTargets) {
+      const d = Math.hypot(
+        attacker.text.x - t.text.x,
+        attacker.text.y - t.text.y
+      );
+      if (d < minDist) {
+        minDist = d;
+        nearest = t;
+      }
+    }
+    return nearest;
+  }
+
+  // ヘルパー：最も遠いターゲットを取得
+  function getFarthestTarget(
+    attacker: ExtendedUnitText,
+    targets: ExtendedUnitText[]
+  ): ExtendedUnitText | null {
+    if (targets.length === 0) return null;
+    let farthest = targets[0];
+    let maxDist = Math.hypot(
+      attacker.text.x - farthest.text.x,
+      attacker.text.y - farthest.text.y
+    );
+    for (const t of targets) {
+      const d = Math.hypot(
+        attacker.text.x - t.text.x,
+        attacker.text.y - t.text.y
+      );
+      if (d > maxDist) {
+        maxDist = d;
+        farthest = t;
+      }
+    }
+    return farthest;
+  }
+
   // ヘルパー：各ユニットのHPバーを更新
   function updateUnitHPBar(unit: ExtendedUnitText) {
     const barWidth = 30;
@@ -351,6 +427,9 @@ export function PixiCanvas({
     );
     unit.hpBar.endFill();
   }
+
+  // 新規：ブリッツショック用の型とヘルパーは skills/BlitzShock.ts に実装（下記 import 参照）
+  // ここでは、getFarthestTarget を用いて、一番遠い敵の位置を取得して攻撃する
 
   // メインのアニメーション処理
   const handleStart = () => {
@@ -390,7 +469,7 @@ export function PixiCanvas({
 
       attackFrameCounter.current++;
 
-      // 友軍の攻撃
+      // 友軍の攻撃（ロックオンレーザー、5フレームごと）
       allyTextsRef.current.forEach((ally) => {
         processLockOnLaserAttack(
           attackFrameCounter.current,
@@ -401,8 +480,7 @@ export function PixiCanvas({
           lasersRef.current
         );
       });
-
-      // 敵軍の攻撃
+      // 敵の攻撃（ロックオンレーザー、5フレームごと）
       enemyTextsRef.current.forEach((enemy) => {
         processLockOnLaserAttack(
           attackFrameCounter.current,
@@ -414,8 +492,8 @@ export function PixiCanvas({
         );
       });
 
+      // 十字バースト攻撃（9フレームごと）
       if (attackFrameCounter.current % 9 === 0) {
-        // すべてのユニット（友軍・敵）から、十字バーストを発動
         handleCrossBurstAttack({
           app,
           texts: [...allyTextsRef.current, ...enemyTextsRef.current],
@@ -433,6 +511,7 @@ export function PixiCanvas({
       // 貫通拡散弾攻撃（10フレームごと）
       if (attackFrameCounter.current % 10 === 0) {
         [allyTextsRef, enemyTextsRef].forEach((textRef) => {
+          // skill_name が "貫通拡散弾" のユニットのみ処理
           handlePenetratingSpreadAttack({
             app,
             texts: textRef.current.filter(
@@ -442,7 +521,6 @@ export function PixiCanvas({
           });
         });
       }
-      // 対象となるユニットリストをそれぞれ渡す（例として、友軍は敵ユニットリスト、敵は友軍ユニットリスト）
       updatePenetratingSpreadBullets({
         app,
         spreadBullets: spreadBulletsRef.current,
@@ -454,11 +532,9 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // ※ 他のスキルについても、各攻撃側のユニットから getNearestTarget() を用いて対象を決定し、各スキル関数を呼び出す
-
-      // エコーブレード攻撃（skill_name === "エコーブレード"、7フレームごと）
+      // エコーブレード攻撃（7フレームごと）
       if (attackFrameCounter.current % 7 === 0) {
-        // 友軍ユニットの処理
+        // 友軍側
         allyTextsRef.current
           .filter((ally) => ally.unit.skill_name === "エコーブレード")
           .forEach((ally) => {
@@ -475,7 +551,7 @@ export function PixiCanvas({
               });
             }
           });
-        // 敵ユニットの処理
+        // 敵側
         enemyTextsRef.current
           .filter((enemy) => enemy.unit.skill_name === "エコーブレード")
           .forEach((enemy) => {
@@ -493,7 +569,6 @@ export function PixiCanvas({
             }
           });
       }
-
       updateEchoBladeEffects({
         app,
         echoBladeEffects: echoBladeEffectsRef.current,
@@ -505,9 +580,9 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // ガーディアンフォール攻撃（special_name === "ガーディアンフォール"、6フレームごと）
+      // ガーディアンフォール攻撃（6フレームごと）
       if (attackFrameCounter.current % 6 === 0) {
-        // 友軍ユニットからの攻撃
+        // 友軍
         allyTextsRef.current
           .filter((ally) => ally.unit.skill_name === "ガーディアンフォール")
           .forEach((ally) => {
@@ -520,7 +595,7 @@ export function PixiCanvas({
               });
             }
           });
-        // 敵ユニットからの攻撃
+        // 敵
         enemyTextsRef.current
           .filter((enemy) => enemy.unit.skill_name === "ガーディアンフォール")
           .forEach((enemy) => {
@@ -545,92 +620,54 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // 毒霧攻撃（special_name === "毒霧"、80フレームごと）
-      // 友軍と敵それぞれから、対象ユニットリストをフィルタリングして攻撃を発動
-      if (attackFrameCounter.current % 80 === 0) {
-        [allyTextsRef, enemyTextsRef].forEach((textRef) => {
-          handlePoisonFogAttack({
-            app,
-            texts: textRef.current.filter(
-              (u) => u.unit.special_name === "毒霧"
-            ),
-            poisonFogs: poisonFogsRef.current,
+      // ブリッツショック攻撃（7フレームごと）
+      if (attackFrameCounter.current % 7 === 0) {
+        // 友軍側
+        allyTextsRef.current
+          .filter((ally) => ally.unit.skill_name === "ブリッツショック")
+          .forEach((ally) => {
+            const farthest = getFarthestTarget(ally, enemyTextsRef.current);
+            if (farthest) {
+              const targetContainer = new PIXI.Container();
+              targetContainer.x = farthest.text.x;
+              targetContainer.y = farthest.text.y;
+              // 発射元が友軍なら対象は敵
+              handleBlitzShockAttack({
+                app,
+                texts: [ally],
+                blitzShockEffects: blitzShockEffectsRef.current,
+                farthestTarget: farthest,
+              });
+            }
           });
-        });
+        // 敵側
+        enemyTextsRef.current
+          .filter((enemy) => enemy.unit.skill_name === "ブリッツショック")
+          .forEach((enemy) => {
+            const farthest = getFarthestTarget(enemy, allyTextsRef.current);
+            if (farthest) {
+              const targetContainer = new PIXI.Container();
+              targetContainer.x = farthest.text.x;
+              targetContainer.y = farthest.text.y;
+              // 発射元が敵なら対象は友軍
+              handleBlitzShockAttack({
+                app,
+                texts: [enemy],
+                blitzShockEffects: blitzShockEffectsRef.current,
+                farthestTarget: farthest,
+              });
+            }
+          });
       }
-      updatePoisonFogs({
+      updateBlitzShockEffects({
         app,
-        poisonFogs: poisonFogsRef.current,
+        blitzShockEffects: blitzShockEffectsRef.current,
         allyUnits: allyTextsRef.current,
         enemyUnits: enemyTextsRef.current,
-        updateTargetHP: (target, damage) => {
-          target.hp = Math.max(target.hp - damage, 0);
+        updateTargetHP: (target, dmg) => {
+          target.hp = Math.max(target.hp - dmg, 0);
         },
         damageTexts: damageTextsRef.current,
-      });
-
-      // アースクエイク攻撃（special_name === "アースクエイク"、100フレームごと）
-      if (attackFrameCounter.current % 100 === 0) {
-        // 友軍ユニットから "アースクエイク" を抽出して攻撃発動
-        handleEarthquakeAttack({
-          app,
-          texts: allyTextsRef.current
-            .filter((ut) => ut.unit.special_name === "アースクエイク")
-            .map((ut) => ({
-              text: ut.text,
-              unit: { ...ut.unit, team: ut.team },
-            })),
-          earthquakeEffects: earthquakeEffectsRef.current,
-        });
-        // 敵ユニットからも同様に
-        handleEarthquakeAttack({
-          app,
-          texts: enemyTextsRef.current
-            .filter((ut) => ut.unit.special_name === "アースクエイク")
-            .map((ut) => ({
-              text: ut.text,
-              unit: { ...ut.unit, team: ut.team },
-            })),
-          earthquakeEffects: earthquakeEffectsRef.current,
-        });
-      }
-      updateEarthquakeEffects({
-        app,
-        earthquakeEffects: earthquakeEffectsRef.current,
-        allyUnits: allyTextsRef.current,
-        enemyUnits: enemyTextsRef.current,
-        updateTargetHP: (target, damage) => {
-          target.hp = Math.max(target.hp - damage, 0);
-        },
-        updateHPBar: () => {
-          // 各ユニットのHPバーは個別に updateUnitHPBar() で更新
-        },
-        damageTexts: damageTextsRef.current,
-      });
-
-      // パワーアップ攻撃（special_name === "パワーアップ"、40フレームごと）
-      if (attackFrameCounter.current % 40 === 0) {
-        allyTextsRef.current.forEach((ally) => {
-          if (ally.unit.special_name === "パワーアップ") {
-            handlePowerUpAttack({
-              app,
-              texts: [ally],
-              powerUpEffects: powerUpEffectsRef.current,
-            });
-          }
-        });
-        enemyTextsRef.current.forEach((enemy) => {
-          if (enemy.unit.special_name === "パワーアップ") {
-            handlePowerUpAttack({
-              app,
-              texts: [enemy],
-              powerUpEffects: powerUpEffectsRef.current,
-            });
-          }
-        });
-      }
-      updatePowerUpEffects({
-        powerUpEffects: powerUpEffectsRef.current,
       });
 
       // 各レーザーの更新
