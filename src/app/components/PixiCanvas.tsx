@@ -53,8 +53,13 @@ import {
   updateBlitzShockEffects,
   BlitzShockEffect,
 } from "../skills/BlitzShock";
+import {
+  handleSpiralShotAttack,
+  updateSpiralShotEffects,
+  SpiralShotEffect,
+} from "../skills/SpiralShot";
 
-// サンドバッグ関連のインポート（今回は各ユニットとして扱うため使用しませんが、定数などを参照）
+// サンドバッグ関連のインポート（今回は各ユニットとして扱うため、参照用）
 import {
   createSandbag,
   updateHPBar as updateSandbagHPBar,
@@ -72,8 +77,8 @@ interface PixiCanvasProps {
 export interface ExtendedUnitText extends LaserUnitText {
   vx: number;
   vy: number;
-  powerUpMultiplier: number; // 通常は1.0、バフ中は1.3
-  baseAttack: number; // 元の攻撃力
+  powerUpMultiplier: number;
+  baseAttack: number;
   hp: number;
   maxHp: number;
   team: "ally" | "enemy";
@@ -90,7 +95,7 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "ブリッツショック",
+    skill_name: "スパイラルショット",
     special_name: "パワーアップ",
   },
   // {
@@ -112,8 +117,8 @@ const enemyData: UnitDataType[] = [
   //   vector: 90,
   //   position: 3,
   //   element_name: "木",
-  //   skill_name: "ブリッツショック",
-  //   special_name: "エコーブレード",
+  //   skill_name: "スパイラルショット",
+  //   special_name: "",
   // },
 ];
 
@@ -166,7 +171,7 @@ function getFarthestTarget(
   return farthest;
 }
 
-// 既存のロックオンレーザー処理の共通関数（リファクタリング済み）
+// 既存のロックオンレーザー処理の共通関数
 function processLockOnLaserAttack(
   attackFrame: number,
   attacker: ExtendedUnitText,
@@ -222,6 +227,7 @@ export function PixiCanvas({
   const echoBladeEffectsRef = useRef<EchoBladeEffect[]>([]);
   const guardianFallEffectsRef = useRef<GuardianFallEffect[]>([]);
   const blitzShockEffectsRef = useRef<BlitzShockEffect[]>([]);
+  const spiralShotEffectsRef = useRef<SpiralShotEffect[]>([]);
   const damageTextsRef = useRef<DamageText[]>([]);
 
   const currentHPRef = useRef(SANDBAG_MAX_HP);
@@ -239,13 +245,10 @@ export function PixiCanvas({
       pixiContainerRef.current.appendChild(app.view);
     }
     appRef.current = app;
-
-    // 友軍ユニットデータは API から取得
     fetchApi("/active_unit/show", "GET", (result) => {
       const id = result?.rows[0]?.unit_id;
       if (id) setUnitId(id);
     });
-
     return () => {
       app.destroy(true, true);
     };
@@ -355,56 +358,7 @@ export function PixiCanvas({
     enemyTextsRef.current = enemyTexts;
   }, [enemyDataState, width, height]);
 
-  // ヘルパー：最も近いターゲットを取得（attacker自身は除外）
-  function getNearestTarget(
-    attacker: ExtendedUnitText,
-    targets: ExtendedUnitText[]
-  ): ExtendedUnitText | null {
-    const validTargets = targets.filter((t) => t !== attacker);
-    if (validTargets.length === 0) return null;
-    let nearest = validTargets[0];
-    let minDist = Math.hypot(
-      attacker.text.x - nearest.text.x,
-      attacker.text.y - nearest.text.y
-    );
-    for (const t of validTargets) {
-      const d = Math.hypot(
-        attacker.text.x - t.text.x,
-        attacker.text.y - t.text.y
-      );
-      if (d < minDist) {
-        minDist = d;
-        nearest = t;
-      }
-    }
-    return nearest;
-  }
-
-  // ヘルパー：最も遠いターゲットを取得
-  function getFarthestTarget(
-    attacker: ExtendedUnitText,
-    targets: ExtendedUnitText[]
-  ): ExtendedUnitText | null {
-    if (targets.length === 0) return null;
-    let farthest = targets[0];
-    let maxDist = Math.hypot(
-      attacker.text.x - farthest.text.x,
-      attacker.text.y - farthest.text.y
-    );
-    for (const t of targets) {
-      const d = Math.hypot(
-        attacker.text.x - t.text.x,
-        attacker.text.y - t.text.y
-      );
-      if (d > maxDist) {
-        maxDist = d;
-        farthest = t;
-      }
-    }
-    return farthest;
-  }
-
-  // ヘルパー：各ユニットのHPバーを更新
+  // ヘルパー：各ユニットのHPバー更新
   function updateUnitHPBar(unit: ExtendedUnitText) {
     const barWidth = 30;
     const barHeight = 4;
@@ -428,15 +382,11 @@ export function PixiCanvas({
     unit.hpBar.endFill();
   }
 
-  // 新規：ブリッツショック用の型とヘルパーは skills/BlitzShock.ts に実装（下記 import 参照）
-  // ここでは、getFarthestTarget を用いて、一番遠い敵の位置を取得して攻撃する
-
   // メインのアニメーション処理
   const handleStart = () => {
     const app = appRef.current;
     if (!app || animationStartedRef.current) return;
     animationStartedRef.current = true;
-
     app.ticker.add(() => {
       // ユニットの移動更新とHPバー更新
       [...allyTextsRef.current, ...enemyTextsRef.current].forEach((ut) => {
@@ -511,7 +461,6 @@ export function PixiCanvas({
       // 貫通拡散弾攻撃（10フレームごと）
       if (attackFrameCounter.current % 10 === 0) {
         [allyTextsRef, enemyTextsRef].forEach((textRef) => {
-          // skill_name が "貫通拡散弾" のユニットのみ処理
           handlePenetratingSpreadAttack({
             app,
             texts: textRef.current.filter(
@@ -628,10 +577,6 @@ export function PixiCanvas({
           .forEach((ally) => {
             const farthest = getFarthestTarget(ally, enemyTextsRef.current);
             if (farthest) {
-              const targetContainer = new PIXI.Container();
-              targetContainer.x = farthest.text.x;
-              targetContainer.y = farthest.text.y;
-              // 発射元が友軍なら対象は敵
               handleBlitzShockAttack({
                 app,
                 texts: [ally],
@@ -646,10 +591,6 @@ export function PixiCanvas({
           .forEach((enemy) => {
             const farthest = getFarthestTarget(enemy, allyTextsRef.current);
             if (farthest) {
-              const targetContainer = new PIXI.Container();
-              targetContainer.x = farthest.text.x;
-              targetContainer.y = farthest.text.y;
-              // 発射元が敵なら対象は友軍
               handleBlitzShockAttack({
                 app,
                 texts: [enemy],
@@ -664,6 +605,46 @@ export function PixiCanvas({
         blitzShockEffects: blitzShockEffectsRef.current,
         allyUnits: allyTextsRef.current,
         enemyUnits: enemyTextsRef.current,
+        updateTargetHP: (target, dmg) => {
+          target.hp = Math.max(target.hp - dmg, 0);
+        },
+        damageTexts: damageTextsRef.current,
+      });
+
+      // スパイラルショット攻撃（2フレームごと）
+      if (attackFrameCounter.current % 2 === 0) {
+        // 友軍側
+        allyTextsRef.current
+          .filter((ally) => ally.unit.skill_name === "スパイラルショット")
+          .forEach((ally) => {
+            const target = getNearestTarget(ally, enemyTextsRef.current);
+            if (target) {
+              handleSpiralShotAttack({
+                app,
+                texts: [ally],
+                spiralShotEffects: spiralShotEffectsRef.current,
+                target,
+              });
+            }
+          });
+        // 敵側
+        enemyTextsRef.current
+          .filter((enemy) => enemy.unit.skill_name === "スパイラルショット")
+          .forEach((enemy) => {
+            const target = getNearestTarget(enemy, allyTextsRef.current);
+            if (target) {
+              handleSpiralShotAttack({
+                app,
+                texts: [enemy],
+                spiralShotEffects: spiralShotEffectsRef.current,
+                target,
+              });
+            }
+          });
+      }
+      updateSpiralShotEffects({
+        app,
+        spiralShotEffects: spiralShotEffectsRef.current,
         updateTargetHP: (target, dmg) => {
           target.hp = Math.max(target.hp - dmg, 0);
         },
