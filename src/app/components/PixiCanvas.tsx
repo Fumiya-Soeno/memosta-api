@@ -58,6 +58,11 @@ import {
   updateSpiralShotEffects,
   SpiralShotEffect,
 } from "../skills/SpiralShot";
+import {
+  handleFlameEdgeAttack,
+  updateFlameEdgeEffects,
+  FlameEdgeEffect,
+} from "../skills/FlameEdge";
 
 // サンドバッグ関連のインポート（今回は各ユニットとして扱うため、参照用）
 import {
@@ -95,8 +100,8 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "スパイラルショット",
-    special_name: "パワーアップ",
+    skill_name: "フレイムエッジ",
+    special_name: "",
   },
   // {
   //   name: "い",
@@ -122,7 +127,6 @@ const enemyData: UnitDataType[] = [
   // },
 ];
 
-// ヘルパー：最も近いターゲットを取得（attacker自身は除外）
 function getNearestTarget(
   attacker: ExtendedUnitText,
   targets: ExtendedUnitText[]
@@ -147,7 +151,6 @@ function getNearestTarget(
   return nearest;
 }
 
-// ヘルパー：最も遠いターゲットを取得
 function getFarthestTarget(
   attacker: ExtendedUnitText,
   targets: ExtendedUnitText[]
@@ -171,7 +174,6 @@ function getFarthestTarget(
   return farthest;
 }
 
-// 既存のロックオンレーザー処理の共通関数
 function processLockOnLaserAttack(
   attackFrame: number,
   attacker: ExtendedUnitText,
@@ -228,17 +230,16 @@ export function PixiCanvas({
   const guardianFallEffectsRef = useRef<GuardianFallEffect[]>([]);
   const blitzShockEffectsRef = useRef<BlitzShockEffect[]>([]);
   const spiralShotEffectsRef = useRef<SpiralShotEffect[]>([]);
+  const flameEdgeEffectsRef = useRef<FlameEdgeEffect[]>([]);
   const damageTextsRef = useRef<DamageText[]>([]);
 
   const currentHPRef = useRef(SANDBAG_MAX_HP);
 
-  // 友軍ユニット（API取得）と敵ユニット（仮ハードコード）の状態
   const [allyData, setAllyData] = useState<UnitDataType[] | null>(null);
   const [unitId, setUnitId] = useState<number | null>(null);
   const [enemyDataState, setEnemyDataState] =
     useState<UnitDataType[]>(enemyData);
 
-  // PIXI Application の生成
   useEffect(() => {
     const app = new PIXI.Application({ width, height, backgroundColor });
     if (pixiContainerRef.current) {
@@ -254,7 +255,6 @@ export function PixiCanvas({
     };
   }, [width, height, backgroundColor]);
 
-  // APIから友軍ユニットデータ取得
   useEffect(() => {
     if (unitId === null) return;
     fetchApi(
@@ -269,7 +269,6 @@ export function PixiCanvas({
     );
   }, [unitId]);
 
-  // 友軍ユニットテキストおよびHPバーの生成
   useEffect(() => {
     if (!allyData) return;
     const app = appRef.current;
@@ -313,7 +312,6 @@ export function PixiCanvas({
     allyTextsRef.current = allyTexts;
   }, [allyData, width, height]);
 
-  // 敵ユニットテキストおよびHPバーの生成
   useEffect(() => {
     const app = appRef.current;
     if (!app) return;
@@ -358,7 +356,6 @@ export function PixiCanvas({
     enemyTextsRef.current = enemyTexts;
   }, [enemyDataState, width, height]);
 
-  // ヘルパー：各ユニットのHPバー更新
   function updateUnitHPBar(unit: ExtendedUnitText) {
     const barWidth = 30;
     const barHeight = 4;
@@ -382,13 +379,11 @@ export function PixiCanvas({
     unit.hpBar.endFill();
   }
 
-  // メインのアニメーション処理
   const handleStart = () => {
     const app = appRef.current;
     if (!app || animationStartedRef.current) return;
     animationStartedRef.current = true;
     app.ticker.add(() => {
-      // ユニットの移動更新とHPバー更新
       [...allyTextsRef.current, ...enemyTextsRef.current].forEach((ut) => {
         ut.text.x += ut.vx;
         ut.text.y += ut.vy;
@@ -399,7 +394,6 @@ export function PixiCanvas({
         updateUnitHPBar(ut);
       });
 
-      // HPが0以下のユニットは退場
       allyTextsRef.current = allyTextsRef.current.filter((ut) => {
         if (ut.hp <= 0) {
           app.stage.removeChild(ut.text);
@@ -483,7 +477,6 @@ export function PixiCanvas({
 
       // エコーブレード攻撃（7フレームごと）
       if (attackFrameCounter.current % 7 === 0) {
-        // 友軍側
         allyTextsRef.current
           .filter((ally) => ally.unit.skill_name === "エコーブレード")
           .forEach((ally) => {
@@ -500,7 +493,6 @@ export function PixiCanvas({
               });
             }
           });
-        // 敵側
         enemyTextsRef.current
           .filter((enemy) => enemy.unit.skill_name === "エコーブレード")
           .forEach((enemy) => {
@@ -531,7 +523,6 @@ export function PixiCanvas({
 
       // ガーディアンフォール攻撃（6フレームごと）
       if (attackFrameCounter.current % 6 === 0) {
-        // 友軍
         allyTextsRef.current
           .filter((ally) => ally.unit.skill_name === "ガーディアンフォール")
           .forEach((ally) => {
@@ -544,7 +535,6 @@ export function PixiCanvas({
               });
             }
           });
-        // 敵
         enemyTextsRef.current
           .filter((enemy) => enemy.unit.skill_name === "ガーディアンフォール")
           .forEach((enemy) => {
@@ -571,7 +561,6 @@ export function PixiCanvas({
 
       // ブリッツショック攻撃（7フレームごと）
       if (attackFrameCounter.current % 7 === 0) {
-        // 友軍側
         allyTextsRef.current
           .filter((ally) => ally.unit.skill_name === "ブリッツショック")
           .forEach((ally) => {
@@ -585,7 +574,6 @@ export function PixiCanvas({
               });
             }
           });
-        // 敵側
         enemyTextsRef.current
           .filter((enemy) => enemy.unit.skill_name === "ブリッツショック")
           .forEach((enemy) => {
@@ -613,7 +601,6 @@ export function PixiCanvas({
 
       // スパイラルショット攻撃（2フレームごと）
       if (attackFrameCounter.current % 2 === 0) {
-        // 友軍側
         allyTextsRef.current
           .filter((ally) => ally.unit.skill_name === "スパイラルショット")
           .forEach((ally) => {
@@ -627,7 +614,6 @@ export function PixiCanvas({
               });
             }
           });
-        // 敵側
         enemyTextsRef.current
           .filter((enemy) => enemy.unit.skill_name === "スパイラルショット")
           .forEach((enemy) => {
@@ -645,6 +631,44 @@ export function PixiCanvas({
       updateSpiralShotEffects({
         app,
         spiralShotEffects: spiralShotEffectsRef.current,
+        updateTargetHP: (target, dmg) => {
+          target.hp = Math.max(target.hp - dmg, 0);
+        },
+        damageTexts: damageTextsRef.current,
+      });
+
+      // フレイムエッジ攻撃（8フレームごと）
+      if (attackFrameCounter.current % 8 === 0) {
+        allyTextsRef.current
+          .filter((ally) => ally.unit.skill_name === "フレイムエッジ")
+          .forEach((ally) => {
+            const target = getNearestTarget(ally, enemyTextsRef.current);
+            if (target) {
+              handleFlameEdgeAttack({
+                app,
+                texts: [ally],
+                flameEdgeEffects: flameEdgeEffectsRef.current,
+                target,
+              });
+            }
+          });
+        enemyTextsRef.current
+          .filter((enemy) => enemy.unit.skill_name === "フレイムエッジ")
+          .forEach((enemy) => {
+            const target = getNearestTarget(enemy, allyTextsRef.current);
+            if (target) {
+              handleFlameEdgeAttack({
+                app,
+                texts: [enemy],
+                flameEdgeEffects: flameEdgeEffectsRef.current,
+                target,
+              });
+            }
+          });
+      }
+      updateFlameEdgeEffects({
+        app,
+        flameEdgeEffects: flameEdgeEffectsRef.current,
         updateTargetHP: (target, dmg) => {
           target.hp = Math.max(target.hp - dmg, 0);
         },
