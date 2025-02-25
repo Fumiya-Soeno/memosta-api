@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import { ExtendedUnitText } from "../components/PixiCanvas";
+import { UnitText } from "../../types/UnitText";
 import { DamageText, showDamageText } from "../utils/DamageTextUtil";
 import {
   handleEchoBladeAttack,
@@ -12,9 +12,9 @@ import {
  * 指定した攻撃者から最も近いターゲットを返します（攻撃者自身は除外）。
  */
 function getNearestTarget(
-  attacker: ExtendedUnitText,
-  targets: ExtendedUnitText[]
-): ExtendedUnitText | null {
+  attacker: UnitText,
+  targets: UnitText[]
+): UnitText | null {
   const validTargets = targets.filter((t) => t !== attacker);
   if (validTargets.length === 0) return null;
   let nearest = validTargets[0];
@@ -43,10 +43,10 @@ function getNearestTarget(
  */
 export function processTeamEchoBladeAttacks(params: {
   app: PIXI.Application;
-  allyUnits: ExtendedUnitText[];
-  enemyUnits: ExtendedUnitText[];
+  allyUnits: UnitText[];
+  enemyUnits: UnitText[];
   echoBladeEffects: EchoBladeEffect[];
-  updateTargetHP: (target: ExtendedUnitText, damage: number) => void;
+  updateTargetHP: (target: UnitText, damage: number) => void;
   damageTexts: DamageText[];
   attackFrame: number;
 }) {

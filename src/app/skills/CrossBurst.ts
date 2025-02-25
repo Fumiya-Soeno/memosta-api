@@ -1,7 +1,7 @@
 // skills/CrossBurst.ts
 import * as PIXI from "pixi.js";
 import { showDamageText, DamageText } from "../utils/DamageTextUtil";
-import { UnitText } from "./LockOnLaser";
+import { UnitText } from "../../types/UnitText";
 
 export interface CrossBurst {
   graphics: PIXI.Graphics;

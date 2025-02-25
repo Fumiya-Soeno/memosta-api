@@ -1,15 +1,7 @@
 // skills/LockOnLaser.ts
 import * as PIXI from "pixi.js";
 import { showDamageText, DamageText } from "../utils/DamageTextUtil";
-
-export interface UnitText {
-  text: PIXI.Text;
-  unit: {
-    skill_name: string;
-    attack: number;
-    special_name: string;
-  };
-}
+import { UnitText } from "../../types/UnitText";
 
 export interface Laser {
   graphics: PIXI.Graphics;

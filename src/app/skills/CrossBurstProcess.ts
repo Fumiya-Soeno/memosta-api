@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
 import { DamageText } from "../utils/DamageTextUtil";
-import { UnitText } from "./LockOnLaser";
+import { UnitText } from "../../types/UnitText";
 import {
   handleCrossBurstAttack,
   updateCrossBursts,

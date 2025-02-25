@@ -1,7 +1,7 @@
 // skills/LorenzBurst.ts
 import * as PIXI from "pixi.js";
 import { showDamageText, DamageText } from "../utils/DamageTextUtil";
-import { ExtendedUnitText } from "../components/PixiCanvas";
+import { UnitText } from "../../types/UnitText";
 
 export interface LorenzBurstEffect {
   graphics: PIXI.Graphics;
@@ -20,7 +20,7 @@ export interface LorenzBurstEffect {
  */
 export function handleLorenzBurstAttack(params: {
   app: PIXI.Application;
-  texts: ExtendedUnitText[];
+  texts: UnitText[];
   lorenzBurstEffects: LorenzBurstEffect[];
 }) {
   // Find a unit with the "ローレンツバースト" skill.
@@ -63,9 +63,9 @@ export function handleLorenzBurstAttack(params: {
 export function updateLorenzBurstEffects(params: {
   app: PIXI.Application;
   lorenzBurstEffects: LorenzBurstEffect[];
-  allyUnits: ExtendedUnitText[];
-  enemyUnits: ExtendedUnitText[];
-  updateTargetHP: (target: ExtendedUnitText, damage: number) => void;
+  allyUnits: UnitText[];
+  enemyUnits: UnitText[];
+  updateTargetHP: (target: UnitText, damage: number) => void;
   damageTexts: DamageText[];
 }) {
   const { app, lorenzBurstEffects, updateTargetHP, damageTexts } = params;

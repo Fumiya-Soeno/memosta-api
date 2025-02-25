@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import { ExtendedUnitText } from "../components/PixiCanvas";
+import { UnitText } from "../../types/UnitText";
 import { DamageText, showDamageText } from "../utils/DamageTextUtil";
 import {
   handleBlitzShockAttack,
@@ -12,9 +12,9 @@ import {
  * 攻撃者から見て最も遠いターゲットを返します（攻撃者自身は除外）。
  */
 function getFarthestTarget(
-  attacker: ExtendedUnitText,
-  targets: ExtendedUnitText[]
-): ExtendedUnitText | null {
+  attacker: UnitText,
+  targets: UnitText[]
+): UnitText | null {
   if (targets.length === 0) return null;
   let farthest = targets[0];
   let maxDist = Math.hypot(
@@ -43,12 +43,12 @@ function getFarthestTarget(
  */
 export function processTeamBlitzShockAttacks(params: {
   app: PIXI.Application;
-  allyUnits: ExtendedUnitText[];
-  enemyUnits: ExtendedUnitText[];
+  allyUnits: UnitText[];
+  enemyUnits: UnitText[];
   blitzShockEffects: BlitzShockEffect[];
   damageTexts: DamageText[];
   counter: number;
-  updateTargetHP: (target: ExtendedUnitText, damage: number) => void;
+  updateTargetHP: (target: UnitText, damage: number) => void;
 }) {
   if (params.counter % 7 === 0) {
     // 味方側：攻撃対象は敵ユニット

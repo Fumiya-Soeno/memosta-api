@@ -1,12 +1,12 @@
 import * as PIXI from "pixi.js";
-import { ExtendedUnitText } from "../components/PixiCanvas";
+import { UnitText } from "../../types/UnitText";
 import { showDamageText, DamageText } from "../utils/DamageTextUtil";
 import { Laser, handleLockOnLaserAttack } from "./LockOnLaser";
 
 function getNearestTarget(
-  attacker: ExtendedUnitText,
-  targets: ExtendedUnitText[]
-): ExtendedUnitText | null {
+  attacker: UnitText,
+  targets: UnitText[]
+): UnitText | null {
   const validTargets = targets.filter((t) => t !== attacker);
   if (validTargets.length === 0) return null;
   let nearest = validTargets[0];
@@ -29,8 +29,8 @@ function getNearestTarget(
 
 export function processLockOnLaserAttack(
   attackFrame: number,
-  attacker: ExtendedUnitText,
-  targets: ExtendedUnitText[],
+  attacker: UnitText,
+  targets: UnitText[],
   app: PIXI.Application,
   damageTexts: DamageText[],
   lasers: Laser[]
@@ -67,8 +67,8 @@ export function processLockOnLaserAttack(
  */
 export function processTeamLockOnLaserAttacks(
   attackFrame: number,
-  allies: ExtendedUnitText[],
-  enemies: ExtendedUnitText[],
+  allies: UnitText[],
+  enemies: UnitText[],
   app: PIXI.Application,
   damageTexts: DamageText[],
   lasers: Laser[]

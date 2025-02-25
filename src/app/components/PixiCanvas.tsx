@@ -6,7 +6,8 @@ import { fetchApi } from "../../../pages/helpers/api";
 import { UnitDataType } from "../../types/unit";
 import { DamageText, updateDamageTexts } from "../utils/DamageTextUtil";
 
-import { UnitText as LaserUnitText, Laser } from "../skills/LockOnLaser";
+import { UnitText } from "../../types/UnitText";
+
 import CanvasContainer from "../components/CanvasContainer";
 
 import {
@@ -26,18 +27,6 @@ interface PixiCanvasProps {
   width?: number;
   height?: number;
   backgroundColor?: number;
-}
-
-// ExtendedUnitText に追加プロパティを定義
-export interface ExtendedUnitText extends LaserUnitText {
-  vx: number;
-  vy: number;
-  powerUpMultiplier: number;
-  baseAttack: number;
-  hp: number;
-  maxHp: number;
-  team: "ally" | "enemy";
-  hpBar: PIXI.Graphics;
 }
 
 // 仮の敵ユニットデータ（将来的にはAPIから取得）

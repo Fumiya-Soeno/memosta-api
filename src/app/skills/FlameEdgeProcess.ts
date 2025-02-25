@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import { ExtendedUnitText } from "../components/PixiCanvas";
+import { UnitText } from "../../types/UnitText";
 import { DamageText, showDamageText } from "../utils/DamageTextUtil";
 import {
   handleFlameEdgeAttack,
@@ -11,9 +11,9 @@ import {
  * Helper function: Get the nearest target for FlameEdge attack.
  */
 function getNearestTargetFlameEdge(
-  attacker: ExtendedUnitText,
-  targets: ExtendedUnitText[]
-): ExtendedUnitText | null {
+  attacker: UnitText,
+  targets: UnitText[]
+): UnitText | null {
   const validTargets = targets.filter((t) => t !== attacker);
   if (validTargets.length === 0) return null;
   let nearest = validTargets[0];
@@ -42,10 +42,10 @@ function getNearestTargetFlameEdge(
  */
 export function processTeamFlameEdgeAttacks(params: {
   app: PIXI.Application;
-  allyUnits: ExtendedUnitText[];
-  enemyUnits: ExtendedUnitText[];
+  allyUnits: UnitText[];
+  enemyUnits: UnitText[];
   flameEdgeEffects: FlameEdgeEffect[];
-  updateTargetHP: (target: ExtendedUnitText, damage: number) => void;
+  updateTargetHP: (target: UnitText, damage: number) => void;
   damageTexts: DamageText[];
   attackFrame: number;
 }) {

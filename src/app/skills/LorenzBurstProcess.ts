@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import { ExtendedUnitText } from "../components/PixiCanvas";
+import { UnitText } from "../../types/UnitText";
 import { DamageText, showDamageText } from "../utils/DamageTextUtil";
 import {
   handleLorenzBurstAttack,
@@ -16,10 +16,10 @@ import {
 export function processTeamLorenzBurstAttacks(params: {
   counter: number;
   app: PIXI.Application;
-  allyUnits: ExtendedUnitText[];
-  enemyUnits: ExtendedUnitText[];
+  allyUnits: UnitText[];
+  enemyUnits: UnitText[];
   lorenzBurstEffects: LorenzBurstEffect[];
-  updateTargetHP: (target: ExtendedUnitText, dmg: number) => void;
+  updateTargetHP: (target: UnitText, dmg: number) => void;
   damageTexts: DamageText[];
 }) {
   if (params.counter % 12 === 0) {

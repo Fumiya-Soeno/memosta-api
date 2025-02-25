@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
 import { showDamageText, DamageText } from "../utils/DamageTextUtil";
-import { ExtendedUnitText } from "../components/PixiCanvas";
+import { UnitText } from "../../types/UnitText";
 
 // 型定義：エコーブレード（衝撃波）エフェクト
 export interface EchoBladeEffect {
@@ -30,7 +30,7 @@ function distanceBetween(
  */
 export function handleEchoBladeAttack(params: {
   app: PIXI.Application;
-  texts: ExtendedUnitText[];
+  texts: UnitText[];
   targetContainer: PIXI.Container;
   echoBladeEffects: EchoBladeEffect[];
 }) {
@@ -86,9 +86,9 @@ export function handleEchoBladeAttack(params: {
 export function updateEchoBladeEffects(params: {
   app: PIXI.Application;
   echoBladeEffects: EchoBladeEffect[];
-  allyUnits: ExtendedUnitText[];
-  enemyUnits: ExtendedUnitText[];
-  updateTargetHP: (target: ExtendedUnitText, damage: number) => void;
+  allyUnits: UnitText[];
+  enemyUnits: UnitText[];
+  updateTargetHP: (target: UnitText, damage: number) => void;
   damageTexts: DamageText[];
 }) {
   const {

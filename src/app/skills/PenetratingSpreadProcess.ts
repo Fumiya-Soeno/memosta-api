@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
 import { showDamageText, DamageText } from "../utils/DamageTextUtil";
-import { ExtendedUnitText } from "../components/PixiCanvas";
+import { UnitText } from "../../types/UnitText";
 import {
   PenetratingSpreadBullet,
   handlePenetratingSpreadAttack,
@@ -19,7 +19,7 @@ export interface TeamPenetratingSpreadBullet extends PenetratingSpreadBullet {
  */
 export function handleTeamPenetratingSpreadAttack(params: {
   app: PIXI.Application;
-  teamUnits: ExtendedUnitText[];
+  teamUnits: UnitText[];
   spreadBullets: TeamPenetratingSpreadBullet[];
 }) {
   const units = params.teamUnits.filter(
@@ -48,9 +48,9 @@ export function handleTeamPenetratingSpreadAttack(params: {
 export function updateTeamPenetratingSpreadBullets(params: {
   app: PIXI.Application;
   spreadBullets: TeamPenetratingSpreadBullet[];
-  allyTargets: ExtendedUnitText[];
-  enemyTargets: ExtendedUnitText[];
-  updateTargetHP: (target: ExtendedUnitText, damage: number) => void;
+  allyTargets: UnitText[];
+  enemyTargets: UnitText[];
+  updateTargetHP: (target: UnitText, damage: number) => void;
   damageTexts: DamageText[];
 }) {
   const { app, spreadBullets, updateTargetHP, damageTexts } = params;
@@ -95,10 +95,10 @@ export function updateTeamPenetratingSpreadBullets(params: {
  */
 export function processTeamPenetratingSpreadAttacks(params: {
   app: PIXI.Application;
-  allyUnits: ExtendedUnitText[];
-  enemyUnits: ExtendedUnitText[];
+  allyUnits: UnitText[];
+  enemyUnits: UnitText[];
   spreadBullets: TeamPenetratingSpreadBullet[];
-  updateTargetHP: (target: ExtendedUnitText, damage: number) => void;
+  updateTargetHP: (target: UnitText, damage: number) => void;
   damageTexts: DamageText[];
   counter: number;
 }) {

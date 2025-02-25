@@ -1,7 +1,7 @@
 // skills/BlitzShock.ts
 import * as PIXI from "pixi.js";
 import { showDamageText, DamageText } from "../utils/DamageTextUtil";
-import { ExtendedUnitText } from "../components/PixiCanvas";
+import { UnitText } from "../../types/UnitText";
 
 export interface BlitzShockEffect {
   graphics: PIXI.Graphics;
@@ -45,9 +45,9 @@ function drawJaggedLine(graphics: PIXI.Graphics, totalLength: number): void {
  */
 export function handleBlitzShockAttack(params: {
   app: PIXI.Application;
-  texts: ExtendedUnitText[]; // 発射元（通常は1体）
+  texts: UnitText[]; // 発射元（通常は1体）
   blitzShockEffects: BlitzShockEffect[];
-  farthestTarget: ExtendedUnitText;
+  farthestTarget: UnitText;
 }) {
   const attacker = params.texts[0];
   if (!attacker || attacker.unit.skill_name !== "ブリッツショック") return;
@@ -95,9 +95,9 @@ export function handleBlitzShockAttack(params: {
 export function updateBlitzShockEffects(params: {
   app: PIXI.Application;
   blitzShockEffects: BlitzShockEffect[];
-  allyUnits: ExtendedUnitText[];
-  enemyUnits: ExtendedUnitText[];
-  updateTargetHP: (target: ExtendedUnitText, damage: number) => void;
+  allyUnits: UnitText[];
+  enemyUnits: UnitText[];
+  updateTargetHP: (target: UnitText, damage: number) => void;
   damageTexts: DamageText[];
 }) {
   const {

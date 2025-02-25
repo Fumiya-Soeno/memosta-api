@@ -1,7 +1,7 @@
 // skills/FlameEdge.ts
 import * as PIXI from "pixi.js";
 import { showDamageText, DamageText } from "../utils/DamageTextUtil";
-import { ExtendedUnitText } from "../components/PixiCanvas";
+import { UnitText } from "../../types/UnitText";
 
 export interface FlameEdgeEffect {
   graphics: PIXI.Graphics;
@@ -14,7 +14,7 @@ export interface FlameEdgeEffect {
   impact: boolean;
   lifetime: number; // impact phase lifetime (frames)
   damage: number;
-  target: ExtendedUnitText;
+  target: UnitText;
   team: "ally" | "enemy";
 }
 
@@ -46,9 +46,9 @@ function drawCrescent(graphics: PIXI.Graphics, radius: number): void {
  */
 export function handleFlameEdgeAttack(params: {
   app: PIXI.Application;
-  texts: ExtendedUnitText[];
+  texts: UnitText[];
   flameEdgeEffects: FlameEdgeEffect[];
-  target: ExtendedUnitText;
+  target: UnitText;
 }) {
   const attacker = params.texts[0];
   if (!attacker || attacker.unit.skill_name !== "フレイムエッジ") return;
@@ -93,7 +93,7 @@ export function handleFlameEdgeAttack(params: {
 export function updateFlameEdgeEffects(params: {
   app: PIXI.Application;
   flameEdgeEffects: FlameEdgeEffect[];
-  updateTargetHP: (target: ExtendedUnitText, damage: number) => void;
+  updateTargetHP: (target: UnitText, damage: number) => void;
   damageTexts: DamageText[];
 }) {
   const { app, flameEdgeEffects, updateTargetHP, damageTexts } = params;

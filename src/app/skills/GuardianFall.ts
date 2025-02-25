@@ -1,7 +1,7 @@
 // skills/GuardianFall.ts
 import * as PIXI from "pixi.js";
 import { showDamageText, DamageText } from "../utils/DamageTextUtil";
-import { ExtendedUnitText } from "../components/PixiCanvas";
+import { UnitText } from "../../types/UnitText";
 
 export interface GuardianFallEffect {
   graphics: PIXI.Graphics;
@@ -34,7 +34,7 @@ let enemyGuardianFallIndex = 0;
  */
 export function handleGuardianFallAttack(params: {
   app: PIXI.Application;
-  texts: ExtendedUnitText[];
+  texts: UnitText[];
   guardianEffects: GuardianFallEffect[];
 }) {
   const attacker = params.texts.find(
@@ -86,9 +86,9 @@ export function handleGuardianFallAttack(params: {
 export function updateGuardianFallEffects(params: {
   app: PIXI.Application;
   guardianEffects: GuardianFallEffect[];
-  allyUnits: ExtendedUnitText[];
-  enemyUnits: ExtendedUnitText[];
-  updateTargetHP: (target: ExtendedUnitText, damage: number) => void;
+  allyUnits: UnitText[];
+  enemyUnits: UnitText[];
+  updateTargetHP: (target: UnitText, damage: number) => void;
   damageTexts: DamageText[];
 }) {
   const {

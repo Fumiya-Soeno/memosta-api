@@ -1,7 +1,7 @@
 // skills/SpiralShot.ts
 import * as PIXI from "pixi.js";
 import { showDamageText, DamageText } from "../utils/DamageTextUtil";
-import { ExtendedUnitText } from "../components/PixiCanvas";
+import { UnitText } from "../../types/UnitText";
 
 export interface SpiralShotEffect {
   graphics: PIXI.Graphics;
@@ -16,7 +16,7 @@ export interface SpiralShotEffect {
   impact: boolean;
   damage: number;
   team: "ally" | "enemy";
-  target?: ExtendedUnitText; // 発射時に決定したターゲット
+  target?: UnitText; // 発射時に決定したターゲット
 }
 
 /**
@@ -27,9 +27,9 @@ export interface SpiralShotEffect {
  */
 export function handleSpiralShotAttack(params: {
   app: PIXI.Application;
-  texts: ExtendedUnitText[];
+  texts: UnitText[];
   spiralShotEffects: SpiralShotEffect[];
-  target: ExtendedUnitText;
+  target: UnitText;
 }) {
   const attacker = params.texts[0];
   if (!attacker || attacker.unit.skill_name !== "スパイラルショット") return;
@@ -83,7 +83,7 @@ export function handleSpiralShotAttack(params: {
 export function updateSpiralShotEffects(params: {
   app: PIXI.Application;
   spiralShotEffects: SpiralShotEffect[];
-  updateTargetHP: (target: ExtendedUnitText, damage: number) => void;
+  updateTargetHP: (target: UnitText, damage: number) => void;
   damageTexts: DamageText[];
 }) {
   const { app, spiralShotEffects, updateTargetHP, damageTexts } = params;
