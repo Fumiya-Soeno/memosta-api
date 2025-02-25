@@ -1,4 +1,3 @@
-// SkillManager.ts
 import * as PIXI from "pixi.js";
 import { processTeamLockOnLaserAttacks } from "./LockOnLaserProcess";
 import { processTeamCrossBurstAttacks } from "./CrossBurstProcess";
@@ -9,6 +8,7 @@ import { processTeamBlitzShockAttacks } from "./BlitzShockProcess";
 import { processTeamSpiralShotAttacks } from "./SpiralShotProcess";
 import { processTeamFlameEdgeAttacks } from "./FlameEdgeProcess";
 import { processTeamLorenzBurstAttacks } from "./LorenzBurstProcess";
+import { processTeamParabolicLauncherAttacks } from "./ParabolicLauncherProcess";
 
 export class SkillManager {
   constructor(
@@ -24,6 +24,7 @@ export class SkillManager {
     public spiralShotEffects: any[],
     public flameEdgeEffects: any[],
     public lorenzBurstEffects: any[],
+    public parabolicLauncherEffects: any[],
     public damageTexts: any[],
     public counter: number
   ) {}
@@ -121,6 +122,17 @@ export class SkillManager {
         target.hp = Math.max(target.hp - dmg, 0);
       },
       damageTexts: this.damageTexts,
+    });
+    processTeamParabolicLauncherAttacks({
+      app: this.app,
+      allyUnits: this.allyUnits,
+      enemyUnits: this.enemyUnits,
+      parabolicLauncherEffects: this.parabolicLauncherEffects,
+      damageTexts: this.damageTexts,
+      counter: this.counter,
+      updateTargetHP: (target: any, dmg: number) => {
+        target.hp = Math.max(target.hp - dmg, 0);
+      },
     });
   }
 }

@@ -28,7 +28,7 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "ロックオンレーザー",
+    skill_name: "パラボリックランチャー",
     special_name: "パワーアップ",
   },
 ];
@@ -55,6 +55,7 @@ export function PixiCanvas({
   const spiralShotEffectsRef = useRef<any[]>([]); // SpiralShotEffect型略
   const flameEdgeEffectsRef = useRef<any[]>([]);
   const lorenzBurstEffectsRef = useRef<any[]>([]);
+  const parabolicLauncherEffects = useRef<any[]>([]);
 
   const poisonFogsRef = useRef<any[]>([]); // PoisonFog型略
   const earthquakeEffectsRef = useRef<any[]>([]); // EarthquakeEffect型略
@@ -231,6 +232,7 @@ export function PixiCanvas({
         spiralShotEffectsRef.current,
         flameEdgeEffectsRef.current,
         lorenzBurstEffectsRef.current,
+        parabolicLauncherEffects.current,
         damageTextsRef.current,
         attackFrameCounter.current
       );
