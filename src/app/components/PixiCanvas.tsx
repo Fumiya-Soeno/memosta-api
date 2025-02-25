@@ -20,12 +20,7 @@ import { processTeamLorenzBurstAttacks } from "../skills/LorenzBurstProcess";
 
 import { processTeamPoisonFogAttacks } from "../specials/PoisonFogProcess";
 import { processTeamEarthquakeAttacks } from "../specials/EarthquakeProcess";
-
-import {
-  handlePowerUpAttack,
-  updatePowerUpEffects,
-  PowerUpEffect,
-} from "../specials/PowerUp";
+import { processTeamPowerUpAttacks } from "../specials/PowerUpProcess";
 
 interface PixiCanvasProps {
   width?: number;
@@ -43,8 +38,8 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "",
-    special_name: "アースクエイク",
+    skill_name: "ロックオンレーザー",
+    special_name: "パワーアップ",
   },
 ];
 
@@ -389,6 +384,14 @@ export function PixiCanvas({
         updateTargetHP: (target, dmg) => {
           target.hp = Math.max(target.hp - dmg, 0);
         },
+      });
+
+      processTeamPowerUpAttacks({
+        app,
+        allyUnits: allyTextsRef.current,
+        enemyUnits: enemyTextsRef.current,
+        powerUpEffects: powerUpEffectsRef.current,
+        counter: attackFrameCounter.current,
       });
 
       // ダメージ表示の更新
