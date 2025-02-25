@@ -12,6 +12,7 @@ import {
   UnitText as LaserUnitText,
   Laser,
 } from "../skills/LockOnLaser";
+import { processLockOnLaserAttack } from "../skills/LockOnLaserProcess";
 import {
   handleCrossBurstAttack,
   updateCrossBursts,
@@ -69,21 +70,13 @@ import {
   LorenzBurstEffect,
 } from "../skills/LorenzBurst";
 
-// (Optional) Sandbag-related imports if needed (here for constants only)
-import {
-  createSandbag,
-  updateHPBar as updateSandbagHPBar,
-  Sandbag,
-  SANDBAG_MAX_HP,
-} from "../sandbag/Sandbag";
-
 interface PixiCanvasProps {
   width?: number;
   height?: number;
   backgroundColor?: number;
 }
 
-// ExtendedUnitText includes additional properties such as HP, team, and HP bar.
+// ExtendedUnitText に追加プロパティを定義
 export interface ExtendedUnitText extends LaserUnitText {
   vx: number;
   vy: number;
@@ -95,7 +88,7 @@ export interface ExtendedUnitText extends LaserUnitText {
   hpBar: PIXI.Graphics;
 }
 
-// Dummy enemy data (to be replaced by API calls in the future)
+// 仮の敵ユニットデータ（将来的にはAPIから取得）
 const enemyData: UnitDataType[] = [
   {
     name: "あ",
@@ -105,31 +98,9 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "ローレンツバースト",
+    skill_name: "ロックオンレーザー",
     special_name: "",
   },
-  // {
-  //   name: "い",
-  //   life: 30,
-  //   attack: 4,
-  //   speed: 7,
-  //   vector: 60,
-  //   position: 2,
-  //   element_name: "水",
-  //   skill_name: "ロックオンレーザー",
-  //   special_name: "毒霧",
-  // },
-  // {
-  //   name: "う",
-  //   life: 35,
-  //   attack: 8,
-  //   speed: 3,
-  //   vector: 90,
-  //   position: 3,
-  //   element_name: "木",
-  //   skill_name: "スパイラルショット",
-  //   special_name: "",
-  // },
 ];
 
 function getNearestTarget(
@@ -179,40 +150,6 @@ function getFarthestTarget(
   return farthest;
 }
 
-function processLockOnLaserAttack(
-  attackFrame: number,
-  attacker: ExtendedUnitText,
-  targets: ExtendedUnitText[],
-  app: PIXI.Application,
-  damageTexts: DamageText[],
-  lasers: Laser[]
-) {
-  if (attackFrame % 5 !== 0) return;
-  if (attacker.unit.skill_name !== "ロックオンレーザー") return;
-  const target = getNearestTarget(attacker, targets);
-  if (!target) return;
-  const targetContainer = new PIXI.Container();
-  targetContainer.x = target.text.x;
-  targetContainer.y = target.text.y;
-  handleLockOnLaserAttack({
-    app,
-    texts: [attacker],
-    sandbagContainer: targetContainer,
-    currentHPRef: { current: target.hp },
-    updateHPBar: () => {},
-    damageTexts,
-    lasers,
-  });
-  const dmg = attacker.unit.attack * 0.4;
-  target.hp = Math.max(target.hp - dmg, 0);
-  showDamageText({
-    app,
-    damage: dmg,
-    basePosition: { x: target.text.x, y: target.text.y },
-    damageTexts,
-  });
-}
-
 export function PixiCanvas({
   width = 400,
   height = 600,
@@ -238,8 +175,6 @@ export function PixiCanvas({
   const flameEdgeEffectsRef = useRef<FlameEdgeEffect[]>([]);
   const lorenzBurstEffectsRef = useRef<LorenzBurstEffect[]>([]);
   const damageTextsRef = useRef<DamageText[]>([]);
-
-  const currentHPRef = useRef(SANDBAG_MAX_HP);
 
   const [allyData, setAllyData] = useState<UnitDataType[] | null>(null);
   const [unitId, setUnitId] = useState<number | null>(null);
@@ -385,40 +320,6 @@ export function PixiCanvas({
     unit.hpBar.endFill();
   }
 
-  function processLockOnLaserAttack(
-    attackFrame: number,
-    attacker: ExtendedUnitText,
-    targets: ExtendedUnitText[],
-    app: PIXI.Application,
-    damageTexts: DamageText[],
-    lasers: Laser[]
-  ) {
-    if (attackFrame % 5 !== 0) return;
-    if (attacker.unit.skill_name !== "ロックオンレーザー") return;
-    const target = getNearestTarget(attacker, targets);
-    if (!target) return;
-    const targetContainer = new PIXI.Container();
-    targetContainer.x = target.text.x;
-    targetContainer.y = target.text.y;
-    handleLockOnLaserAttack({
-      app,
-      texts: [attacker],
-      sandbagContainer: targetContainer,
-      currentHPRef: { current: target.hp },
-      updateHPBar: () => {},
-      damageTexts,
-      lasers,
-    });
-    const dmg = attacker.unit.attack * 0.4;
-    target.hp = Math.max(target.hp - dmg, 0);
-    showDamageText({
-      app,
-      damage: dmg,
-      basePosition: { x: target.text.x, y: target.text.y },
-      damageTexts,
-    });
-  }
-
   const handleStart = () => {
     const app = appRef.current;
     if (!app || animationStartedRef.current) return;
@@ -453,7 +354,7 @@ export function PixiCanvas({
 
       attackFrameCounter.current++;
 
-      // 友軍の攻撃（ロックオンレーザー、5フレームごと）
+      // 友軍のロックオンレーザー攻撃
       allyTextsRef.current.forEach((ally) => {
         processLockOnLaserAttack(
           attackFrameCounter.current,
@@ -464,7 +365,7 @@ export function PixiCanvas({
           lasersRef.current
         );
       });
-      // 敵の攻撃（ロックオンレーザー、5フレームごと）
+      // 敵のロックオンレーザー攻撃
       enemyTextsRef.current.forEach((enemy) => {
         processLockOnLaserAttack(
           attackFrameCounter.current,
@@ -476,7 +377,8 @@ export function PixiCanvas({
         );
       });
 
-      // 十字バースト攻撃（9フレームごと）
+      // その他各スキルの呼び出しは（例として）以下の通り
+      // 十字バースト攻撃
       if (attackFrameCounter.current % 9 === 0) {
         handleCrossBurstAttack({
           app,
@@ -492,16 +394,24 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // 貫通拡散弾攻撃（10フレームごと）
+      // 貫通拡散弾攻撃
       if (attackFrameCounter.current % 10 === 0) {
         [allyTextsRef, enemyTextsRef].forEach((textRef) => {
-          handlePenetratingSpreadAttack({
-            app,
-            texts: textRef.current.filter(
-              (ut) => ut.unit.skill_name === "貫通拡散弾"
-            ),
-            spreadBullets: spreadBulletsRef.current,
-          });
+          // skill_name が "貫通拡散弾" のユニットのみ処理
+          // （process内でフィルタリングも行っています）
+          // ここでは各ユニットグループごとに1行で呼び出す
+          // ※同様の形で他スキルも処理する
+          import("../skills/PenetratingSpread").then(
+            ({ handlePenetratingSpreadAttack }) => {
+              handlePenetratingSpreadAttack({
+                app,
+                texts: textRef.current.filter(
+                  (ut) => ut.unit.skill_name === "貫通拡散弾"
+                ),
+                spreadBullets: spreadBulletsRef.current,
+              });
+            }
+          );
         });
       }
       updatePenetratingSpreadBullets({
@@ -515,7 +425,7 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // エコーブレード攻撃（7フレームごと）
+      // エコーブレード攻撃
       if (attackFrameCounter.current % 7 === 0) {
         allyTextsRef.current
           .filter((ally) => ally.unit.skill_name === "エコーブレード")
@@ -561,7 +471,7 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // ガーディアンフォール攻撃（6フレームごと）
+      // ガーディアンフォール攻撃
       if (attackFrameCounter.current % 6 === 0) {
         allyTextsRef.current
           .filter((ally) => ally.unit.skill_name === "ガーディアンフォール")
@@ -599,7 +509,7 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // ブリッツショック攻撃（7フレームごと）
+      // ブリッツショック攻撃
       if (attackFrameCounter.current % 7 === 0) {
         allyTextsRef.current
           .filter((ally) => ally.unit.skill_name === "ブリッツショック")
