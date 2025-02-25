@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import * as PIXI from "pixi.js";
 import { fetchApi } from "../../../pages/helpers/api";
 import { UnitDataType } from "../../types/unit";
-import { showDamageText, DamageText } from "../utils/DamageTextUtil";
+import { DamageText } from "../utils/DamageTextUtil";
 
 // Skill and special effect imports
 import { UnitText as LaserUnitText, Laser } from "../skills/LockOnLaser";
@@ -13,11 +13,7 @@ import { processTeamCrossBurstAttacks } from "../skills/CrossBurstProcess";
 import { processTeamPenetratingSpreadAttacks } from "../skills/PenetratingSpreadProcess";
 import { processTeamEchoBladeAttacks } from "../skills/EchoBladeProcess";
 import { processTeamGuardianFallAttacks } from "../skills/GuardianFallProcess";
-import {
-  handleBlitzShockAttack,
-  updateBlitzShockEffects,
-  BlitzShockEffect,
-} from "../skills/BlitzShock";
+import { processTeamBlitzShockAttacks } from "../skills/BlitzShockProcess";
 import {
   handleSpiralShotAttack,
   updateSpiralShotEffects,
@@ -62,7 +58,7 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "ガーディアンフォール",
+    skill_name: "ブリッツショック",
     special_name: "",
   },
 ];
@@ -104,17 +100,17 @@ export function PixiCanvas({
 
   const attackFrameCounter = useRef(0);
   const lasersRef = useRef<Laser[]>([]);
-  const crossBurstsRef = useRef<any[]>([]); // CrossBurst型略
-  const spreadBulletsRef = useRef<any[]>([]); // PenetratingSpreadBullet型略
-  const poisonFogsRef = useRef<any[]>([]); // PoisonFog型略
-  const earthquakeEffectsRef = useRef<any[]>([]); // EarthquakeEffect型略
-  const powerUpEffectsRef = useRef<any[]>([]); // PowerUpEffect型略
-  const echoBladeEffectsRef = useRef<any[]>([]); // EchoBladeEffect型略
-  const guardianFallEffectsRef = useRef<any[]>([]); // GuardianFallEffect型略
-  const blitzShockEffectsRef = useRef<any[]>([]); // BlitzShockEffect型略
-  const spiralShotEffectsRef = useRef<any[]>([]); // SpiralShotEffect型略
-  const flameEdgeEffectsRef = useRef<any[]>([]); // FlameEdgeEffect型略
-  const lorenzBurstEffectsRef = useRef<any[]>([]); // LorenzBurstEffect型略
+  const crossBurstsRef = useRef<any[]>([]); // 型省略
+  const spreadBulletsRef = useRef<any[]>([]); // 型省略
+  const poisonFogsRef = useRef<any[]>([]); // 型省略
+  const earthquakeEffectsRef = useRef<any[]>([]); // 型省略
+  const powerUpEffectsRef = useRef<any[]>([]); // 型省略
+  const echoBladeEffectsRef = useRef<any[]>([]); // 型省略
+  const guardianFallEffectsRef = useRef<any[]>([]); // 型省略
+  const blitzShockEffectsRef = useRef<any[]>([]); // 型省略
+  const spiralShotEffectsRef = useRef<SpiralShotEffect[]>([]);
+  const flameEdgeEffectsRef = useRef<FlameEdgeEffect[]>([]);
+  const lorenzBurstEffectsRef = useRef<LorenzBurstEffect[]>([]);
   const damageTextsRef = useRef<DamageText[]>([]);
 
   const [allyData, setAllyData] = useState<UnitDataType[] | null>(null);
@@ -266,6 +262,7 @@ export function PixiCanvas({
     if (!app || animationStartedRef.current) return;
     animationStartedRef.current = true;
     app.ticker.add(() => {
+      // ユニットの移動更新とHPバー更新
       [...allyTextsRef.current, ...enemyTextsRef.current].forEach((ut) => {
         ut.text.x += ut.vx;
         ut.text.y += ut.vy;
@@ -276,6 +273,7 @@ export function PixiCanvas({
         updateUnitHPBar(ut);
       });
 
+      // HPが0以下のユニットは退場
       allyTextsRef.current = allyTextsRef.current.filter((ut) => {
         if (ut.hp <= 0) {
           app.stage.removeChild(ut.text);
@@ -341,7 +339,7 @@ export function PixiCanvas({
         attackFrame: attackFrameCounter.current,
       });
 
-      // ガーディアンフォール攻撃（プロセス関数で1行呼び出し）
+      // ガーディアンフォール攻撃
       processTeamGuardianFallAttacks({
         app,
         allyUnits: allyTextsRef.current,
@@ -355,43 +353,16 @@ export function PixiCanvas({
       });
 
       // ブリッツショック攻撃
-      if (attackFrameCounter.current % 7 === 0) {
-        allyTextsRef.current
-          .filter((ally) => ally.unit.skill_name === "ブリッツショック")
-          .forEach((ally) => {
-            const farthest = getFarthestTarget(ally, enemyTextsRef.current);
-            if (farthest) {
-              handleBlitzShockAttack({
-                app,
-                texts: [ally],
-                blitzShockEffects: blitzShockEffectsRef.current,
-                farthestTarget: farthest,
-              });
-            }
-          });
-        enemyTextsRef.current
-          .filter((enemy) => enemy.unit.skill_name === "ブリッツショック")
-          .forEach((enemy) => {
-            const farthest = getFarthestTarget(enemy, allyTextsRef.current);
-            if (farthest) {
-              handleBlitzShockAttack({
-                app,
-                texts: [enemy],
-                blitzShockEffects: blitzShockEffectsRef.current,
-                farthestTarget: farthest,
-              });
-            }
-          });
-      }
-      updateBlitzShockEffects({
+      processTeamBlitzShockAttacks({
         app,
-        blitzShockEffects: blitzShockEffectsRef.current,
         allyUnits: allyTextsRef.current,
         enemyUnits: enemyTextsRef.current,
+        blitzShockEffects: blitzShockEffectsRef.current,
+        damageTexts: damageTextsRef.current,
+        counter: attackFrameCounter.current,
         updateTargetHP: (target, dmg) => {
           target.hp = Math.max(target.hp - dmg, 0);
         },
-        damageTexts: damageTextsRef.current,
       });
 
       // スパイラルショット攻撃
