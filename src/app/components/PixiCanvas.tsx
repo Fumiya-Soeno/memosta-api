@@ -1,3 +1,4 @@
+// PixiCanvas.tsx
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -10,16 +11,7 @@ import { DamageText } from "../utils/DamageTextUtil";
 import { UnitText as LaserUnitText, Laser } from "../skills/LockOnLaser";
 import { processTeamLockOnLaserAttacks } from "../skills/LockOnLaserProcess";
 import { processTeamCrossBurstAttacks } from "../skills/CrossBurstProcess";
-import {
-  handleCrossBurstAttack,
-  updateCrossBursts,
-  CrossBurst,
-} from "../skills/CrossBurst";
-import {
-  handlePenetratingSpreadAttack,
-  updatePenetratingSpreadBullets,
-  PenetratingSpreadBullet,
-} from "../skills/PenetratingSpread";
+import { processTeamPenetratingSpreadAttacks } from "../skills/PenetratingSpreadProcess";
 import {
   handlePoisonFogAttack,
   updatePoisonFogs,
@@ -95,7 +87,7 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "十字バースト",
+    skill_name: "貫通拡散弾",
     special_name: "",
   },
 ];
@@ -369,35 +361,16 @@ export function PixiCanvas({
         counter: attackFrameCounter.current,
       });
 
-      // 貫通拡散弾攻撃
-      if (attackFrameCounter.current % 10 === 0) {
-        [allyTextsRef, enemyTextsRef].forEach((textRef) => {
-          // skill_name が "貫通拡散弾" のユニットのみ処理
-          // （process内でフィルタリングも行っています）
-          // ここでは各ユニットグループごとに1行で呼び出す
-          // ※同様の形で他スキルも処理する
-          import("../skills/PenetratingSpread").then(
-            ({ handlePenetratingSpreadAttack }) => {
-              handlePenetratingSpreadAttack({
-                app,
-                texts: textRef.current.filter(
-                  (ut) => ut.unit.skill_name === "貫通拡散弾"
-                ),
-                spreadBullets: spreadBulletsRef.current,
-              });
-            }
-          );
-        });
-      }
-      updatePenetratingSpreadBullets({
+      processTeamPenetratingSpreadAttacks({
         app,
-        spreadBullets: spreadBulletsRef.current,
         allyUnits: allyTextsRef.current,
         enemyUnits: enemyTextsRef.current,
-        updateTargetHP: (target, damage) => {
-          target.hp = Math.max(target.hp - damage, 0);
+        spreadBullets: spreadBulletsRef.current,
+        updateTargetHP: (target, dmg) => {
+          target.hp = Math.max(target.hp - dmg, 0);
         },
         damageTexts: damageTextsRef.current,
+        counter: attackFrameCounter.current,
       });
 
       // エコーブレード攻撃
