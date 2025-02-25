@@ -9,6 +9,7 @@ import { DamageText } from "../utils/DamageTextUtil";
 // Skill and special effect imports
 import { UnitText as LaserUnitText, Laser } from "../skills/LockOnLaser";
 import { processTeamLockOnLaserAttacks } from "../skills/LockOnLaserProcess";
+import { processTeamCrossBurstAttacks } from "../skills/CrossBurstProcess";
 import {
   handleCrossBurstAttack,
   updateCrossBursts,
@@ -94,7 +95,7 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "ロックオンレーザー",
+    skill_name: "十字バースト",
     special_name: "",
   },
 ];
@@ -350,7 +351,6 @@ export function PixiCanvas({
 
       attackFrameCounter.current++;
 
-      // PixiCanvas.tsx 内のアニメーションループ中
       processTeamLockOnLaserAttacks(
         attackFrameCounter.current,
         allyTextsRef.current,
@@ -360,21 +360,13 @@ export function PixiCanvas({
         lasersRef.current
       );
 
-      // その他各スキルの呼び出しは（例として）以下の通り
-      // 十字バースト攻撃
-      if (attackFrameCounter.current % 9 === 0) {
-        handleCrossBurstAttack({
-          app,
-          texts: [...allyTextsRef.current, ...enemyTextsRef.current],
-          crossBursts: crossBurstsRef.current,
-        });
-      }
-      updateCrossBursts({
+      processTeamCrossBurstAttacks({
         app,
+        allies: allyTextsRef.current,
+        enemies: enemyTextsRef.current,
         crossBursts: crossBurstsRef.current,
-        allyUnits: allyTextsRef.current,
-        enemyUnits: enemyTextsRef.current,
         damageTexts: damageTextsRef.current,
+        counter: attackFrameCounter.current,
       });
 
       // 貫通拡散弾攻撃
