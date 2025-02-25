@@ -8,19 +8,8 @@ import { DamageText, updateDamageTexts } from "../utils/DamageTextUtil";
 
 import CanvasContainer from "../components/CanvasContainer";
 
-import { processTeamLockOnLaserAttacks } from "../skills/LockOnLaserProcess";
-import { processTeamCrossBurstAttacks } from "../skills/CrossBurstProcess";
-import { processTeamPenetratingSpreadAttacks } from "../skills/PenetratingSpreadProcess";
-import { processTeamEchoBladeAttacks } from "../skills/EchoBladeProcess";
-import { processTeamGuardianFallAttacks } from "../skills/GuardianFallProcess";
-import { processTeamBlitzShockAttacks } from "../skills/BlitzShockProcess";
-import { processTeamSpiralShotAttacks } from "../skills/SpiralShotProcess";
-import { processTeamFlameEdgeAttacks } from "../skills/FlameEdgeProcess";
-import { processTeamLorenzBurstAttacks } from "../skills/LorenzBurstProcess";
-
-import { processTeamPoisonFogAttacks } from "../specials/PoisonFogProcess";
-import { processTeamEarthquakeAttacks } from "../specials/EarthquakeProcess";
-import { processTeamPowerUpAttacks } from "../specials/PowerUpProcess";
+import { SkillManager } from "../skills/SkillManager";
+import { SpecialManager } from "../specials/SpecialManager";
 
 interface PixiCanvasProps {
   width?: number;
@@ -55,6 +44,7 @@ export function PixiCanvas({
   const animationStartedRef = useRef(false);
 
   const attackFrameCounter = useRef(0);
+
   const lasersRef = useRef<any[]>([]);
   const crossBurstsRef = useRef<any[]>([]); // CrossBurst型略
   const spreadBulletsRef = useRef<any[]>([]); // PenetratingSpreadBullet型略
@@ -250,149 +240,37 @@ export function PixiCanvas({
 
       attackFrameCounter.current++;
 
-      // 各チームのロックオンレーザー攻撃
-      processTeamLockOnLaserAttacks(
-        attackFrameCounter.current,
+      const skillManager = new SkillManager(
+        app,
         allyTextsRef.current,
         enemyTextsRef.current,
-        app,
+        lasersRef.current,
+        crossBurstsRef.current,
+        spreadBulletsRef.current,
+        echoBladeEffectsRef.current,
+        guardianFallEffectsRef.current,
+        blitzShockEffectsRef.current,
+        spiralShotEffectsRef.current,
+        flameEdgeEffectsRef.current,
+        lorenzBurstEffectsRef.current,
         damageTextsRef.current,
-        lasersRef.current
+        attackFrameCounter.current
+      );
+      const specialManager = new SpecialManager(
+        app,
+        allyTextsRef.current,
+        enemyTextsRef.current,
+        poisonFogsRef.current,
+        earthquakeEffectsRef.current,
+        powerUpEffectsRef.current,
+        damageTextsRef.current,
+        attackFrameCounter.current
       );
 
-      // 十字バースト攻撃
-      processTeamCrossBurstAttacks({
-        app,
-        allies: allyTextsRef.current,
-        enemies: enemyTextsRef.current,
-        crossBursts: crossBurstsRef.current,
-        damageTexts: damageTextsRef.current,
-        counter: attackFrameCounter.current,
-      });
-
-      // 貫通拡散弾攻撃
-      processTeamPenetratingSpreadAttacks({
-        app,
-        allyUnits: allyTextsRef.current,
-        enemyUnits: enemyTextsRef.current,
-        spreadBullets: spreadBulletsRef.current,
-        updateTargetHP: (target, dmg) => {
-          target.hp = Math.max(target.hp - dmg, 0);
-        },
-        damageTexts: damageTextsRef.current,
-        counter: attackFrameCounter.current,
-      });
-
-      // エコーブレード攻撃
-      processTeamEchoBladeAttacks({
-        app,
-        allyUnits: allyTextsRef.current,
-        enemyUnits: enemyTextsRef.current,
-        echoBladeEffects: echoBladeEffectsRef.current,
-        updateTargetHP: (target, dmg) => {
-          target.hp = Math.max(target.hp - dmg, 0);
-        },
-        damageTexts: damageTextsRef.current,
-        attackFrame: attackFrameCounter.current,
-      });
-
-      // ガーディアンフォール攻撃
-      processTeamGuardianFallAttacks({
-        app,
-        allyUnits: allyTextsRef.current,
-        enemyUnits: enemyTextsRef.current,
-        guardianEffects: guardianFallEffectsRef.current,
-        updateTargetHP: (target, dmg) => {
-          target.hp = Math.max(target.hp - dmg, 0);
-        },
-        damageTexts: damageTextsRef.current,
-        counter: attackFrameCounter.current,
-      });
-
-      // ブリッツショック攻撃
-      processTeamBlitzShockAttacks({
-        app,
-        allyUnits: allyTextsRef.current,
-        enemyUnits: enemyTextsRef.current,
-        blitzShockEffects: blitzShockEffectsRef.current,
-        damageTexts: damageTextsRef.current,
-        counter: attackFrameCounter.current,
-        updateTargetHP: (target, dmg) => {
-          target.hp = Math.max(target.hp - dmg, 0);
-        },
-      });
-
-      // スパイラルショット攻撃
-      processTeamSpiralShotAttacks({
-        counter: attackFrameCounter.current,
-        app,
-        allyUnits: allyTextsRef.current,
-        enemyUnits: enemyTextsRef.current,
-        spiralShotEffects: spiralShotEffectsRef.current,
-        updateTargetHP: (target, dmg) => {
-          target.hp = Math.max(target.hp - dmg, 0);
-        },
-        damageTexts: damageTextsRef.current,
-      });
-
-      // ローレンツバースト攻撃
-      processTeamLorenzBurstAttacks({
-        counter: attackFrameCounter.current,
-        app,
-        allyUnits: allyTextsRef.current,
-        enemyUnits: enemyTextsRef.current,
-        lorenzBurstEffects: lorenzBurstEffectsRef.current,
-        updateTargetHP: (target, dmg) => {
-          target.hp = Math.max(target.hp - dmg, 0);
-        },
-        damageTexts: damageTextsRef.current,
-      });
-
-      // フレイムエッジ攻撃（プロセス関数に逃がす）
-      processTeamFlameEdgeAttacks({
-        app,
-        allyUnits: allyTextsRef.current,
-        enemyUnits: enemyTextsRef.current,
-        flameEdgeEffects: flameEdgeEffectsRef.current,
-        updateTargetHP: (target, dmg) => {
-          target.hp = Math.max(target.hp - dmg, 0);
-        },
-        damageTexts: damageTextsRef.current,
-        attackFrame: attackFrameCounter.current,
-      });
-
-      // 毒霧攻撃（special_name === "毒霧"、80フレームごと）
-      processTeamPoisonFogAttacks({
-        app,
-        allyUnits: allyTextsRef.current,
-        enemyUnits: enemyTextsRef.current,
-        poisonFogs: poisonFogsRef.current,
-        damageTexts: damageTextsRef.current,
-        counter: attackFrameCounter.current,
-        updateTargetHP: (target, dmg) => {
-          target.hp = Math.max(target.hp - dmg, 0);
-        },
-      });
-
-      processTeamEarthquakeAttacks({
-        app,
-        allyUnits: allyTextsRef.current as any,
-        enemyUnits: enemyTextsRef.current as any,
-        earthquakeEffects: earthquakeEffectsRef.current,
-        damageTexts: damageTextsRef.current,
-        counter: attackFrameCounter.current,
-        updateTargetHP: (target, dmg) => {
-          target.hp = Math.max(target.hp - dmg, 0);
-        },
-      });
-
-      processTeamPowerUpAttacks({
-        app,
-        allyUnits: allyTextsRef.current,
-        enemyUnits: enemyTextsRef.current,
-        powerUpEffects: powerUpEffectsRef.current,
-        counter: attackFrameCounter.current,
-      });
+      skillManager.counter = attackFrameCounter.current;
+      skillManager.update();
+      specialManager.counter = attackFrameCounter.current;
+      specialManager.update();
 
       // ダメージ表示の更新
       updateDamageTexts(app, damageTextsRef.current);
