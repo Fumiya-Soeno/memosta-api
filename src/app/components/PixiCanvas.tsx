@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import * as PIXI from "pixi.js";
 import { fetchApi } from "../../../pages/helpers/api";
 import { UnitDataType } from "../../types/unit";
-import { DamageText } from "../utils/DamageTextUtil";
+import { showDamageText, DamageText } from "../utils/DamageTextUtil";
 
 // Skill and special effect imports
 import { UnitText as LaserUnitText, Laser } from "../skills/LockOnLaser";
@@ -15,7 +15,6 @@ import { processTeamEchoBladeAttacks } from "../skills/EchoBladeProcess";
 import { processTeamGuardianFallAttacks } from "../skills/GuardianFallProcess";
 import { processTeamBlitzShockAttacks } from "../skills/BlitzShockProcess";
 import { processTeamSpiralShotAttacks } from "../skills/SpiralShotProcess";
-
 import {
   handleFlameEdgeAttack,
   updateFlameEdgeEffects,
@@ -26,6 +25,7 @@ import {
   updateLorenzBurstEffects,
   LorenzBurstEffect,
 } from "../skills/LorenzBurst";
+import { processTeamLorenzBurstAttacks } from "../skills/LorenzBurstProcess";
 
 interface PixiCanvasProps {
   width?: number;
@@ -55,7 +55,7 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "スパイラルショット",
+    skill_name: "ローレンツバースト",
     special_name: "",
   },
 ];
@@ -97,15 +97,15 @@ export function PixiCanvas({
 
   const attackFrameCounter = useRef(0);
   const lasersRef = useRef<Laser[]>([]);
-  const crossBurstsRef = useRef<any[]>([]); // 型省略
-  const spreadBulletsRef = useRef<any[]>([]); // 型省略
-  const poisonFogsRef = useRef<any[]>([]); // 型省略
-  const earthquakeEffectsRef = useRef<any[]>([]); // 型省略
-  const powerUpEffectsRef = useRef<any[]>([]); // 型省略
-  const echoBladeEffectsRef = useRef<any[]>([]); // 型省略
-  const guardianFallEffectsRef = useRef<any[]>([]); // 型省略
-  const blitzShockEffectsRef = useRef<any[]>([]); // 型省略
-  const spiralShotEffectsRef = useRef<SpiralShotEffect[]>([]);
+  const crossBurstsRef = useRef<any[]>([]);
+  const spreadBulletsRef = useRef<any[]>([]);
+  const poisonFogsRef = useRef<any[]>([]);
+  const earthquakeEffectsRef = useRef<any[]>([]);
+  const powerUpEffectsRef = useRef<any[]>([]);
+  const echoBladeEffectsRef = useRef<any[]>([]);
+  const guardianFallEffectsRef = useRef<any[]>([]);
+  const blitzShockEffectsRef = useRef<any[]>([]);
+  const spiralShotEffectsRef = useRef<any[]>([]);
   const flameEdgeEffectsRef = useRef<FlameEdgeEffect[]>([]);
   const lorenzBurstEffectsRef = useRef<LorenzBurstEffect[]>([]);
   const damageTextsRef = useRef<DamageText[]>([]);
@@ -375,32 +375,13 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // ローレンツバースト攻撃
-      if (attackFrameCounter.current % 12 === 0) {
-        allyTextsRef.current
-          .filter((ally) => ally.unit.skill_name === "ローレンツバースト")
-          .forEach((ally) => {
-            handleLorenzBurstAttack({
-              app,
-              texts: [ally],
-              lorenzBurstEffects: lorenzBurstEffectsRef.current,
-            });
-          });
-        enemyTextsRef.current
-          .filter((enemy) => enemy.unit.skill_name === "ローレンツバースト")
-          .forEach((enemy) => {
-            handleLorenzBurstAttack({
-              app,
-              texts: [enemy],
-              lorenzBurstEffects: lorenzBurstEffectsRef.current,
-            });
-          });
-      }
-      updateLorenzBurstEffects({
+      // ローレンツバースト攻撃（プロセス関数で1行呼び出し）
+      processTeamLorenzBurstAttacks({
+        counter: attackFrameCounter.current,
         app,
-        lorenzBurstEffects: lorenzBurstEffectsRef.current,
         allyUnits: allyTextsRef.current,
         enemyUnits: enemyTextsRef.current,
+        lorenzBurstEffects: lorenzBurstEffectsRef.current,
         updateTargetHP: (target, dmg) => {
           target.hp = Math.max(target.hp - dmg, 0);
         },
