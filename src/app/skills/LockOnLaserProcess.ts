@@ -93,6 +93,7 @@ export function processTeamLockOnLaserAttacks(
       lasers
     );
   });
+  updateLasers(app, lasers);
 }
 
 /**
@@ -102,7 +103,7 @@ export function processTeamLockOnLaserAttacks(
  * @param app PIXI.Application のインスタンス
  * @param lasers 更新対象のレーザー配列
  */
-export function updateLasers(app: PIXI.Application, lasers: Laser[]): void {
+function updateLasers(app: PIXI.Application, lasers: Laser[]): void {
   for (let i = lasers.length - 1; i >= 0; i--) {
     const laser = lasers[i];
     laser.lifetime -= 1;

@@ -6,14 +6,9 @@ import { fetchApi } from "../../../pages/helpers/api";
 import { UnitDataType } from "../../types/unit";
 import { DamageText, updateDamageTexts } from "../utils/DamageTextUtil";
 
-import { UnitText } from "../../types/UnitText";
-
 import CanvasContainer from "../components/CanvasContainer";
 
-import {
-  processTeamLockOnLaserAttacks,
-  updateLasers,
-} from "../skills/LockOnLaserProcess";
+import { processTeamLockOnLaserAttacks } from "../skills/LockOnLaserProcess";
 import { processTeamCrossBurstAttacks } from "../skills/CrossBurstProcess";
 import { processTeamPenetratingSpreadAttacks } from "../skills/PenetratingSpreadProcess";
 import { processTeamEchoBladeAttacks } from "../skills/EchoBladeProcess";
@@ -83,7 +78,7 @@ export function PixiCanvas({
       pixiContainerRef.current.appendChild(app.view);
     }
     appRef.current = app;
-    fetchApi("/active_unit/show", "GET", (result) => {
+    fetchApi("/active_unit/show", "GET", (result: any) => {
       const id = result?.rows[0]?.unit_id;
       if (id) setUnitId(id);
     });
@@ -260,7 +255,6 @@ export function PixiCanvas({
         damageTextsRef.current,
         lasersRef.current
       );
-      updateLasers(app, lasersRef.current);
 
       // 十字バースト攻撃
       processTeamCrossBurstAttacks({
