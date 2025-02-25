@@ -94,3 +94,21 @@ export function processTeamLockOnLaserAttacks(
     );
   });
 }
+
+/**
+ * updateLasers
+ * レーザーの lifetime を減少させ、寿命が尽きたレーザーはステージから削除し、配列から除去します。
+ *
+ * @param app PIXI.Application のインスタンス
+ * @param lasers 更新対象のレーザー配列
+ */
+export function updateLasers(app: PIXI.Application, lasers: Laser[]): void {
+  for (let i = lasers.length - 1; i >= 0; i--) {
+    const laser = lasers[i];
+    laser.lifetime -= 1;
+    if (laser.lifetime <= 0) {
+      app.stage.removeChild(laser.graphics);
+      lasers.splice(i, 1);
+    }
+  }
+}

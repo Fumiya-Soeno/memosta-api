@@ -62,3 +62,29 @@ export function showDamageText(params: {
     peakHeight,
   });
 }
+
+/**
+ * updateDamageTexts
+ * 各ダメージテキストオブジェクトの age を更新し、表示の透明度や位置を変更します。
+ * lifetime を超えたテキストはステージから削除し、配列から除去します。
+ *
+ * @param app PIXI.Application のインスタンス
+ * @param damageTexts ダメージテキストオブジェクトの配列
+ */
+export function updateDamageTexts(
+  app: PIXI.Application,
+  damageTexts: DamageText[]
+): void {
+  for (let i = damageTexts.length - 1; i >= 0; i--) {
+    const dt = damageTexts[i];
+    dt.age++;
+    const progress = dt.age / dt.lifetime;
+    dt.text.alpha = 1 - progress;
+    dt.text.x = dt.startX + dt.hVel * dt.age;
+    dt.text.y = dt.startY - 4 * dt.peakHeight * progress * (1 - progress);
+    if (dt.age >= dt.lifetime) {
+      app.stage.removeChild(dt.text);
+      damageTexts.splice(i, 1);
+    }
+  }
+}

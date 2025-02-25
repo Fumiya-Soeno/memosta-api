@@ -4,11 +4,15 @@ import React, { useEffect, useRef, useState } from "react";
 import * as PIXI from "pixi.js";
 import { fetchApi } from "../../../pages/helpers/api";
 import { UnitDataType } from "../../types/unit";
-import { DamageText } from "../utils/DamageTextUtil";
+import { DamageText, updateDamageTexts } from "../utils/DamageTextUtil";
 
-// Skill and special effect imports
 import { UnitText as LaserUnitText, Laser } from "../skills/LockOnLaser";
-import { processTeamLockOnLaserAttacks } from "../skills/LockOnLaserProcess";
+import CanvasContainer from "../components/CanvasContainer";
+
+import {
+  processTeamLockOnLaserAttacks,
+  updateLasers,
+} from "../skills/LockOnLaserProcess";
 import { processTeamCrossBurstAttacks } from "../skills/CrossBurstProcess";
 import { processTeamPenetratingSpreadAttacks } from "../skills/PenetratingSpreadProcess";
 import { processTeamEchoBladeAttacks } from "../skills/EchoBladeProcess";
@@ -46,7 +50,7 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "フレイムエッジ",
+    skill_name: "ロックオンレーザー",
     special_name: "",
   },
 ];
@@ -58,23 +62,25 @@ export function PixiCanvas({
 }: PixiCanvasProps) {
   const pixiContainerRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<PIXI.Application | null>(null);
-  const allyTextsRef = useRef<ExtendedUnitText[]>([]);
-  const enemyTextsRef = useRef<ExtendedUnitText[]>([]);
+  const allyTextsRef = useRef<any[]>([]);
+  const enemyTextsRef = useRef<any[]>([]);
   const animationStartedRef = useRef(false);
 
   const attackFrameCounter = useRef(0);
-  const lasersRef = useRef<Laser[]>([]);
+  const lasersRef = useRef<any[]>([]);
   const crossBurstsRef = useRef<any[]>([]); // CrossBurst型略
   const spreadBulletsRef = useRef<any[]>([]); // PenetratingSpreadBullet型略
-  const poisonFogsRef = useRef<any[]>([]); // PoisonFog型略
-  const earthquakeEffectsRef = useRef<any[]>([]); // EarthquakeEffect型略
-  const powerUpEffectsRef = useRef<any[]>([]); // PowerUpEffect型略
   const echoBladeEffectsRef = useRef<any[]>([]); // EchoBladeEffect型略
   const guardianFallEffectsRef = useRef<any[]>([]); // GuardianFallEffect型略
   const blitzShockEffectsRef = useRef<any[]>([]); // BlitzShockEffect型略
   const spiralShotEffectsRef = useRef<any[]>([]); // SpiralShotEffect型略
   const flameEdgeEffectsRef = useRef<any[]>([]);
   const lorenzBurstEffectsRef = useRef<any[]>([]);
+
+  const poisonFogsRef = useRef<any[]>([]); // PoisonFog型略
+  const earthquakeEffectsRef = useRef<any[]>([]); // EarthquakeEffect型略
+  const powerUpEffectsRef = useRef<any[]>([]); // PowerUpEffect型略
+
   const damageTextsRef = useRef<DamageText[]>([]);
 
   const [allyData, setAllyData] = useState<UnitDataType[] | null>(null);
@@ -122,7 +128,7 @@ export function PixiCanvas({
     });
     allyTextsRef.current = [];
     const textStyle = { fontSize: 20, fill: 0x000000, fontWeight: "bold" };
-    const allyTexts: ExtendedUnitText[] = sortedAllies.map((unit) => {
+    const allyTexts: any[] = sortedAllies.map((unit) => {
       const text = new PIXI.Text(unit.name, textStyle);
       text.anchor.set(0.5);
       const angle = ((unit.vector + 180) * Math.PI) / 180;
@@ -166,7 +172,7 @@ export function PixiCanvas({
     });
     enemyTextsRef.current = [];
     const textStyle = { fontSize: 20, fill: 0xff0000, fontWeight: "bold" };
-    const enemyTexts: ExtendedUnitText[] = sortedEnemies.map((unit) => {
+    const enemyTexts: any[] = sortedEnemies.map((unit) => {
       const text = new PIXI.Text(unit.name, textStyle);
       text.anchor.set(0.5);
       const angle = (unit.vector * Math.PI) / 180;
@@ -198,7 +204,7 @@ export function PixiCanvas({
     enemyTextsRef.current = enemyTexts;
   }, [enemyDataState, width, height]);
 
-  function updateUnitHPBar(unit: ExtendedUnitText) {
+  function updateUnitHPBar(unit: any) {
     const barWidth = 30;
     const barHeight = 4;
     const ratio = unit.hp / unit.maxHp;
@@ -265,6 +271,7 @@ export function PixiCanvas({
         damageTextsRef.current,
         lasersRef.current
       );
+      updateLasers(app, lasersRef.current);
 
       // 十字バースト攻撃
       processTeamCrossBurstAttacks({
@@ -367,41 +374,10 @@ export function PixiCanvas({
         attackFrame: attackFrameCounter.current,
       });
 
-      // 各レーザーの更新
-      for (let i = lasersRef.current.length - 1; i >= 0; i--) {
-        const laser = lasersRef.current[i];
-        laser.lifetime -= 1;
-        if (laser.lifetime <= 0) {
-          app.stage.removeChild(laser.graphics);
-          lasersRef.current.splice(i, 1);
-        }
-      }
-
       // ダメージ表示の更新
-      for (let i = damageTextsRef.current.length - 1; i >= 0; i--) {
-        const dt = damageTextsRef.current[i];
-        dt.age++;
-        const progress = dt.age / dt.lifetime;
-        dt.text.alpha = 1 - progress;
-        dt.text.x = dt.startX + dt.hVel * dt.age;
-        dt.text.y = dt.startY - 4 * dt.peakHeight * progress * (1 - progress);
-        if (dt.age >= dt.lifetime) {
-          app.stage.removeChild(dt.text);
-          damageTextsRef.current.splice(i, 1);
-        }
-      }
+      updateDamageTexts(app, damageTextsRef.current);
     });
   };
 
-  return (
-    <div className="flex flex-col items-center">
-      <div ref={pixiContainerRef} className="mb-4" />
-      <button
-        onClick={handleStart}
-        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-      >
-        Start
-      </button>
-    </div>
-  );
+  return <CanvasContainer ref={pixiContainerRef} onStart={handleStart} />;
 }
