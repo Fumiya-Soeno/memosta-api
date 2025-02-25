@@ -1,17 +1,17 @@
-// PixiCanvas.tsx
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
 import * as PIXI from "pixi.js";
 import { fetchApi } from "../../../pages/helpers/api";
 import { UnitDataType } from "../../types/unit";
-import { DamageText } from "../utils/DamageTextUtil";
+import { showDamageText, DamageText } from "../utils/DamageTextUtil";
 
 // Skill and special effect imports
 import { UnitText as LaserUnitText, Laser } from "../skills/LockOnLaser";
 import { processTeamLockOnLaserAttacks } from "../skills/LockOnLaserProcess";
 import { processTeamCrossBurstAttacks } from "../skills/CrossBurstProcess";
 import { processTeamPenetratingSpreadAttacks } from "../skills/PenetratingSpreadProcess";
+import { processTeamEchoBladeAttacks } from "../skills/EchoBladeProcess";
 import {
   handlePoisonFogAttack,
   updatePoisonFogs,
@@ -28,11 +28,6 @@ import {
   updatePowerUpEffects,
   PowerUpEffect,
 } from "../specials/PowerUp";
-import {
-  handleEchoBladeAttack,
-  updateEchoBladeEffects,
-  EchoBladeEffect,
-} from "../skills/EchoBlade";
 import {
   handleGuardianFallAttack,
   updateGuardianFallEffects,
@@ -87,7 +82,7 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "貫通拡散弾",
+    skill_name: "エコーブレード",
     special_name: "",
   },
 ];
@@ -116,29 +111,6 @@ function getNearestTarget(
   return nearest;
 }
 
-function getFarthestTarget(
-  attacker: ExtendedUnitText,
-  targets: ExtendedUnitText[]
-): ExtendedUnitText | null {
-  if (targets.length === 0) return null;
-  let farthest = targets[0];
-  let maxDist = Math.hypot(
-    attacker.text.x - farthest.text.x,
-    attacker.text.y - farthest.text.y
-  );
-  for (const t of targets) {
-    const d = Math.hypot(
-      attacker.text.x - t.text.x,
-      attacker.text.y - t.text.y
-    );
-    if (d > maxDist) {
-      maxDist = d;
-      farthest = t;
-    }
-  }
-  return farthest;
-}
-
 export function PixiCanvas({
   width = 400,
   height = 600,
@@ -152,8 +124,8 @@ export function PixiCanvas({
 
   const attackFrameCounter = useRef(0);
   const lasersRef = useRef<Laser[]>([]);
-  const crossBurstsRef = useRef<CrossBurst[]>([]);
-  const spreadBulletsRef = useRef<PenetratingSpreadBullet[]>([]);
+  const crossBurstsRef = useRef<any[]>([]); // CrossBurst型略
+  const spreadBulletsRef = useRef<any[]>([]); // PenetratingSpreadBullet型略
   const poisonFogsRef = useRef<PoisonFog[]>([]);
   const earthquakeEffectsRef = useRef<EarthquakeEffect[]>([]);
   const powerUpEffectsRef = useRef<PowerUpEffect[]>([]);
@@ -343,6 +315,7 @@ export function PixiCanvas({
 
       attackFrameCounter.current++;
 
+      // 各チームのロックオンレーザー攻撃
       processTeamLockOnLaserAttacks(
         attackFrameCounter.current,
         allyTextsRef.current,
@@ -352,6 +325,7 @@ export function PixiCanvas({
         lasersRef.current
       );
 
+      // 十字バースト攻撃
       processTeamCrossBurstAttacks({
         app,
         allies: allyTextsRef.current,
@@ -361,6 +335,7 @@ export function PixiCanvas({
         counter: attackFrameCounter.current,
       });
 
+      // 貫通拡散弾攻撃
       processTeamPenetratingSpreadAttacks({
         app,
         allyUnits: allyTextsRef.current,
@@ -374,49 +349,16 @@ export function PixiCanvas({
       });
 
       // エコーブレード攻撃
-      if (attackFrameCounter.current % 7 === 0) {
-        allyTextsRef.current
-          .filter((ally) => ally.unit.skill_name === "エコーブレード")
-          .forEach((ally) => {
-            const target = getNearestTarget(ally, enemyTextsRef.current);
-            if (target) {
-              const targetContainer = new PIXI.Container();
-              targetContainer.x = target.text.x;
-              targetContainer.y = target.text.y;
-              handleEchoBladeAttack({
-                app,
-                texts: [ally],
-                targetContainer,
-                echoBladeEffects: echoBladeEffectsRef.current,
-              });
-            }
-          });
-        enemyTextsRef.current
-          .filter((enemy) => enemy.unit.skill_name === "エコーブレード")
-          .forEach((enemy) => {
-            const target = getNearestTarget(enemy, allyTextsRef.current);
-            if (target) {
-              const targetContainer = new PIXI.Container();
-              targetContainer.x = target.text.x;
-              targetContainer.y = target.text.y;
-              handleEchoBladeAttack({
-                app,
-                texts: [enemy],
-                targetContainer,
-                echoBladeEffects: echoBladeEffectsRef.current,
-              });
-            }
-          });
-      }
-      updateEchoBladeEffects({
+      processTeamEchoBladeAttacks({
         app,
-        echoBladeEffects: echoBladeEffectsRef.current,
         allyUnits: allyTextsRef.current,
         enemyUnits: enemyTextsRef.current,
+        echoBladeEffects: echoBladeEffectsRef.current,
         updateTargetHP: (target, dmg) => {
           target.hp = Math.max(target.hp - dmg, 0);
         },
         damageTexts: damageTextsRef.current,
+        attackFrame: attackFrameCounter.current,
       });
 
       // ガーディアンフォール攻撃
@@ -497,7 +439,7 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // スパイラルショット攻撃（2フレームごと）
+      // スパイラルショット攻撃
       if (attackFrameCounter.current % 2 === 0) {
         allyTextsRef.current
           .filter((ally) => ally.unit.skill_name === "スパイラルショット")
@@ -535,7 +477,7 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // ローレンツバースト攻撃（12フレームごと）
+      // ローレンツバースト攻撃
       if (attackFrameCounter.current % 12 === 0) {
         allyTextsRef.current
           .filter((ally) => ally.unit.skill_name === "ローレンツバースト")
@@ -567,7 +509,7 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // フレイムエッジ攻撃（8フレームごと）
+      // フレイムエッジ攻撃
       if (attackFrameCounter.current % 8 === 0) {
         allyTextsRef.current
           .filter((ally) => ally.unit.skill_name === "フレイムエッジ")
