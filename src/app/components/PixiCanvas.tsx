@@ -14,11 +14,8 @@ import { processTeamPenetratingSpreadAttacks } from "../skills/PenetratingSpread
 import { processTeamEchoBladeAttacks } from "../skills/EchoBladeProcess";
 import { processTeamGuardianFallAttacks } from "../skills/GuardianFallProcess";
 import { processTeamBlitzShockAttacks } from "../skills/BlitzShockProcess";
-import {
-  handleSpiralShotAttack,
-  updateSpiralShotEffects,
-  SpiralShotEffect,
-} from "../skills/SpiralShot";
+import { processTeamSpiralShotAttacks } from "../skills/SpiralShotProcess";
+
 import {
   handleFlameEdgeAttack,
   updateFlameEdgeEffects,
@@ -58,7 +55,7 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "ブリッツショック",
+    skill_name: "スパイラルショット",
     special_name: "",
   },
 ];
@@ -366,36 +363,11 @@ export function PixiCanvas({
       });
 
       // スパイラルショット攻撃
-      if (attackFrameCounter.current % 2 === 0) {
-        allyTextsRef.current
-          .filter((ally) => ally.unit.skill_name === "スパイラルショット")
-          .forEach((ally) => {
-            const target = getNearestTarget(ally, enemyTextsRef.current);
-            if (target) {
-              handleSpiralShotAttack({
-                app,
-                texts: [ally],
-                spiralShotEffects: spiralShotEffectsRef.current,
-                target,
-              });
-            }
-          });
-        enemyTextsRef.current
-          .filter((enemy) => enemy.unit.skill_name === "スパイラルショット")
-          .forEach((enemy) => {
-            const target = getNearestTarget(enemy, allyTextsRef.current);
-            if (target) {
-              handleSpiralShotAttack({
-                app,
-                texts: [enemy],
-                spiralShotEffects: spiralShotEffectsRef.current,
-                target,
-              });
-            }
-          });
-      }
-      updateSpiralShotEffects({
+      processTeamSpiralShotAttacks({
+        counter: attackFrameCounter.current,
         app,
+        allyUnits: allyTextsRef.current,
+        enemyUnits: enemyTextsRef.current,
         spiralShotEffects: spiralShotEffectsRef.current,
         updateTargetHP: (target, dmg) => {
           target.hp = Math.max(target.hp - dmg, 0);
