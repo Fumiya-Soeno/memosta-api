@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import * as PIXI from "pixi.js";
 import { fetchApi } from "../../../pages/helpers/api";
 import { UnitDataType } from "../../types/unit";
-import { showDamageText, DamageText } from "../utils/DamageTextUtil";
+import { DamageText } from "../utils/DamageTextUtil";
 
 // Skill and special effect imports
 import { UnitText as LaserUnitText, Laser } from "../skills/LockOnLaser";
@@ -51,30 +51,6 @@ const enemyData: UnitDataType[] = [
   },
 ];
 
-function getNearestTarget(
-  attacker: ExtendedUnitText,
-  targets: ExtendedUnitText[]
-): ExtendedUnitText | null {
-  const validTargets = targets.filter((t) => t !== attacker);
-  if (validTargets.length === 0) return null;
-  let nearest = validTargets[0];
-  let minDist = Math.hypot(
-    attacker.text.x - nearest.text.x,
-    attacker.text.y - nearest.text.y
-  );
-  for (const t of validTargets) {
-    const d = Math.hypot(
-      attacker.text.x - t.text.x,
-      attacker.text.y - t.text.y
-    );
-    if (d < minDist) {
-      minDist = d;
-      nearest = t;
-    }
-  }
-  return nearest;
-}
-
 export function PixiCanvas({
   width = 400,
   height = 600,
@@ -97,8 +73,8 @@ export function PixiCanvas({
   const guardianFallEffectsRef = useRef<any[]>([]); // GuardianFallEffect型略
   const blitzShockEffectsRef = useRef<any[]>([]); // BlitzShockEffect型略
   const spiralShotEffectsRef = useRef<any[]>([]); // SpiralShotEffect型略
-  const flameEdgeEffectsRef = useRef<FlameEdgeEffect[]>([]);
-  const lorenzBurstEffectsRef = useRef<LorenzBurstEffect[]>([]);
+  const flameEdgeEffectsRef = useRef<any[]>([]);
+  const lorenzBurstEffectsRef = useRef<any[]>([]);
   const damageTextsRef = useRef<DamageText[]>([]);
 
   const [allyData, setAllyData] = useState<UnitDataType[] | null>(null);
