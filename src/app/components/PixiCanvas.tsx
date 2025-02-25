@@ -12,27 +12,7 @@ import { processTeamLockOnLaserAttacks } from "../skills/LockOnLaserProcess";
 import { processTeamCrossBurstAttacks } from "../skills/CrossBurstProcess";
 import { processTeamPenetratingSpreadAttacks } from "../skills/PenetratingSpreadProcess";
 import { processTeamEchoBladeAttacks } from "../skills/EchoBladeProcess";
-import {
-  handlePoisonFogAttack,
-  updatePoisonFogs,
-  PoisonFog,
-} from "../specials/PoisonFog";
-import {
-  handleEarthquakeAttack,
-  updateEarthquakeEffects,
-  EarthquakeEffect,
-  EarthquakeUnit,
-} from "../specials/Earthquake";
-import {
-  handlePowerUpAttack,
-  updatePowerUpEffects,
-  PowerUpEffect,
-} from "../specials/PowerUp";
-import {
-  handleGuardianFallAttack,
-  updateGuardianFallEffects,
-  GuardianFallEffect,
-} from "../skills/GuardianFall";
+import { processTeamGuardianFallAttacks } from "../skills/GuardianFallProcess";
 import {
   handleBlitzShockAttack,
   updateBlitzShockEffects,
@@ -82,7 +62,7 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "エコーブレード",
+    skill_name: "ガーディアンフォール",
     special_name: "",
   },
 ];
@@ -126,15 +106,15 @@ export function PixiCanvas({
   const lasersRef = useRef<Laser[]>([]);
   const crossBurstsRef = useRef<any[]>([]); // CrossBurst型略
   const spreadBulletsRef = useRef<any[]>([]); // PenetratingSpreadBullet型略
-  const poisonFogsRef = useRef<PoisonFog[]>([]);
-  const earthquakeEffectsRef = useRef<EarthquakeEffect[]>([]);
-  const powerUpEffectsRef = useRef<PowerUpEffect[]>([]);
-  const echoBladeEffectsRef = useRef<EchoBladeEffect[]>([]);
-  const guardianFallEffectsRef = useRef<GuardianFallEffect[]>([]);
-  const blitzShockEffectsRef = useRef<BlitzShockEffect[]>([]);
-  const spiralShotEffectsRef = useRef<SpiralShotEffect[]>([]);
-  const flameEdgeEffectsRef = useRef<FlameEdgeEffect[]>([]);
-  const lorenzBurstEffectsRef = useRef<LorenzBurstEffect[]>([]);
+  const poisonFogsRef = useRef<any[]>([]); // PoisonFog型略
+  const earthquakeEffectsRef = useRef<any[]>([]); // EarthquakeEffect型略
+  const powerUpEffectsRef = useRef<any[]>([]); // PowerUpEffect型略
+  const echoBladeEffectsRef = useRef<any[]>([]); // EchoBladeEffect型略
+  const guardianFallEffectsRef = useRef<any[]>([]); // GuardianFallEffect型略
+  const blitzShockEffectsRef = useRef<any[]>([]); // BlitzShockEffect型略
+  const spiralShotEffectsRef = useRef<any[]>([]); // SpiralShotEffect型略
+  const flameEdgeEffectsRef = useRef<any[]>([]); // FlameEdgeEffect型略
+  const lorenzBurstEffectsRef = useRef<any[]>([]); // LorenzBurstEffect型略
   const damageTextsRef = useRef<DamageText[]>([]);
 
   const [allyData, setAllyData] = useState<UnitDataType[] | null>(null);
@@ -361,42 +341,17 @@ export function PixiCanvas({
         attackFrame: attackFrameCounter.current,
       });
 
-      // ガーディアンフォール攻撃
-      if (attackFrameCounter.current % 6 === 0) {
-        allyTextsRef.current
-          .filter((ally) => ally.unit.skill_name === "ガーディアンフォール")
-          .forEach((ally) => {
-            const target = getNearestTarget(ally, enemyTextsRef.current);
-            if (target) {
-              handleGuardianFallAttack({
-                app,
-                texts: [ally],
-                guardianEffects: guardianFallEffectsRef.current,
-              });
-            }
-          });
-        enemyTextsRef.current
-          .filter((enemy) => enemy.unit.skill_name === "ガーディアンフォール")
-          .forEach((enemy) => {
-            const target = getNearestTarget(enemy, allyTextsRef.current);
-            if (target) {
-              handleGuardianFallAttack({
-                app,
-                texts: [enemy],
-                guardianEffects: guardianFallEffectsRef.current,
-              });
-            }
-          });
-      }
-      updateGuardianFallEffects({
+      // ガーディアンフォール攻撃（プロセス関数で1行呼び出し）
+      processTeamGuardianFallAttacks({
         app,
-        guardianEffects: guardianFallEffectsRef.current,
         allyUnits: allyTextsRef.current,
         enemyUnits: enemyTextsRef.current,
-        updateTargetHP: (target, damage) => {
-          target.hp = Math.max(target.hp - damage, 0);
+        guardianEffects: guardianFallEffectsRef.current,
+        updateTargetHP: (target, dmg) => {
+          target.hp = Math.max(target.hp - dmg, 0);
         },
         damageTexts: damageTextsRef.current,
+        counter: attackFrameCounter.current,
       });
 
       // ブリッツショック攻撃
