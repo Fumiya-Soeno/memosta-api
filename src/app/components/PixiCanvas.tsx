@@ -6,7 +6,7 @@ import { fetchApi } from "../../../pages/helpers/api";
 import { UnitDataType } from "../../types/unit";
 import { showDamageText, DamageText } from "../utils/DamageTextUtil";
 
-// 各スキル・必殺技のインポート
+// Skill and special effect imports
 import {
   handleLockOnLaserAttack,
   UnitText as LaserUnitText,
@@ -63,8 +63,13 @@ import {
   updateFlameEdgeEffects,
   FlameEdgeEffect,
 } from "../skills/FlameEdge";
+import {
+  handleLorenzBurstAttack,
+  updateLorenzBurstEffects,
+  LorenzBurstEffect,
+} from "../skills/LorenzBurst";
 
-// サンドバッグ関連のインポート（今回は各ユニットとして扱うため、参照用）
+// (Optional) Sandbag-related imports if needed (here for constants only)
 import {
   createSandbag,
   updateHPBar as updateSandbagHPBar,
@@ -78,7 +83,7 @@ interface PixiCanvasProps {
   backgroundColor?: number;
 }
 
-// ExtendedUnitText に、パワーアップ用のプロパティ、HP、所属チーム、HPバーを追加
+// ExtendedUnitText includes additional properties such as HP, team, and HP bar.
 export interface ExtendedUnitText extends LaserUnitText {
   vx: number;
   vy: number;
@@ -90,7 +95,7 @@ export interface ExtendedUnitText extends LaserUnitText {
   hpBar: PIXI.Graphics;
 }
 
-// 仮の敵ユニットデータ（将来的にはAPIから取得）
+// Dummy enemy data (to be replaced by API calls in the future)
 const enemyData: UnitDataType[] = [
   {
     name: "あ",
@@ -100,7 +105,7 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "フレイムエッジ",
+    skill_name: "ローレンツバースト",
     special_name: "",
   },
   // {
@@ -231,6 +236,7 @@ export function PixiCanvas({
   const blitzShockEffectsRef = useRef<BlitzShockEffect[]>([]);
   const spiralShotEffectsRef = useRef<SpiralShotEffect[]>([]);
   const flameEdgeEffectsRef = useRef<FlameEdgeEffect[]>([]);
+  const lorenzBurstEffectsRef = useRef<LorenzBurstEffect[]>([]);
   const damageTextsRef = useRef<DamageText[]>([]);
 
   const currentHPRef = useRef(SANDBAG_MAX_HP);
@@ -377,6 +383,40 @@ export function PixiCanvas({
       barHeight
     );
     unit.hpBar.endFill();
+  }
+
+  function processLockOnLaserAttack(
+    attackFrame: number,
+    attacker: ExtendedUnitText,
+    targets: ExtendedUnitText[],
+    app: PIXI.Application,
+    damageTexts: DamageText[],
+    lasers: Laser[]
+  ) {
+    if (attackFrame % 5 !== 0) return;
+    if (attacker.unit.skill_name !== "ロックオンレーザー") return;
+    const target = getNearestTarget(attacker, targets);
+    if (!target) return;
+    const targetContainer = new PIXI.Container();
+    targetContainer.x = target.text.x;
+    targetContainer.y = target.text.y;
+    handleLockOnLaserAttack({
+      app,
+      texts: [attacker],
+      sandbagContainer: targetContainer,
+      currentHPRef: { current: target.hp },
+      updateHPBar: () => {},
+      damageTexts,
+      lasers,
+    });
+    const dmg = attacker.unit.attack * 0.4;
+    target.hp = Math.max(target.hp - dmg, 0);
+    showDamageText({
+      app,
+      damage: dmg,
+      basePosition: { x: target.text.x, y: target.text.y },
+      damageTexts,
+    });
   }
 
   const handleStart = () => {
@@ -631,6 +671,38 @@ export function PixiCanvas({
       updateSpiralShotEffects({
         app,
         spiralShotEffects: spiralShotEffectsRef.current,
+        updateTargetHP: (target, dmg) => {
+          target.hp = Math.max(target.hp - dmg, 0);
+        },
+        damageTexts: damageTextsRef.current,
+      });
+
+      // ローレンツバースト攻撃（12フレームごと）
+      if (attackFrameCounter.current % 12 === 0) {
+        allyTextsRef.current
+          .filter((ally) => ally.unit.skill_name === "ローレンツバースト")
+          .forEach((ally) => {
+            handleLorenzBurstAttack({
+              app,
+              texts: [ally],
+              lorenzBurstEffects: lorenzBurstEffectsRef.current,
+            });
+          });
+        enemyTextsRef.current
+          .filter((enemy) => enemy.unit.skill_name === "ローレンツバースト")
+          .forEach((enemy) => {
+            handleLorenzBurstAttack({
+              app,
+              texts: [enemy],
+              lorenzBurstEffects: lorenzBurstEffectsRef.current,
+            });
+          });
+      }
+      updateLorenzBurstEffects({
+        app,
+        lorenzBurstEffects: lorenzBurstEffectsRef.current,
+        allyUnits: allyTextsRef.current,
+        enemyUnits: enemyTextsRef.current,
         updateTargetHP: (target, dmg) => {
           target.hp = Math.max(target.hp - dmg, 0);
         },
