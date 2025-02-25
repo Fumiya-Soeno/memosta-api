@@ -18,6 +18,20 @@ import { processTeamSpiralShotAttacks } from "../skills/SpiralShotProcess";
 import { processTeamFlameEdgeAttacks } from "../skills/FlameEdgeProcess";
 import { processTeamLorenzBurstAttacks } from "../skills/LorenzBurstProcess";
 
+import { processTeamPoisonFogAttacks } from "../specials/PoisonFogProcess";
+
+import {
+  handleEarthquakeAttack,
+  updateEarthquakeEffects,
+  EarthquakeEffect,
+  EarthquakeUnit,
+} from "../specials/Earthquake";
+import {
+  handlePowerUpAttack,
+  updatePowerUpEffects,
+  PowerUpEffect,
+} from "../specials/PowerUp";
+
 interface PixiCanvasProps {
   width?: number;
   height?: number;
@@ -34,8 +48,8 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "ロックオンレーザー",
-    special_name: "",
+    skill_name: "",
+    special_name: "毒霧",
   },
 ];
 
@@ -355,6 +369,19 @@ export function PixiCanvas({
         },
         damageTexts: damageTextsRef.current,
         attackFrame: attackFrameCounter.current,
+      });
+
+      // 毒霧攻撃（special_name === "毒霧"、80フレームごと）
+      processTeamPoisonFogAttacks({
+        app,
+        allyUnits: allyTextsRef.current,
+        enemyUnits: enemyTextsRef.current,
+        poisonFogs: poisonFogsRef.current,
+        damageTexts: damageTextsRef.current,
+        counter: attackFrameCounter.current,
+        updateTargetHP: (target, dmg) => {
+          target.hp = Math.max(target.hp - dmg, 0);
+        },
       });
 
       // ダメージ表示の更新
