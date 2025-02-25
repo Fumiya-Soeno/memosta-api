@@ -5,6 +5,7 @@ import * as PIXI from "pixi.js";
 import { fetchApi } from "../../../pages/helpers/api";
 import { UnitDataType } from "../../types/unit";
 import { DamageText, updateDamageTexts } from "../utils/DamageTextUtil";
+import { updateUnitHPBar } from "../utils/updateHPBar";
 
 import CanvasContainer from "../components/CanvasContainer";
 
@@ -181,29 +182,6 @@ export function PixiCanvas({
     });
     enemyTextsRef.current = enemyTexts;
   }, [enemyDataState, width, height]);
-
-  function updateUnitHPBar(unit: any) {
-    const barWidth = 30;
-    const barHeight = 4;
-    const ratio = unit.hp / unit.maxHp;
-    unit.hpBar.clear();
-    unit.hpBar.beginFill(0x00ff00);
-    unit.hpBar.drawRect(
-      unit.text.x - barWidth / 2,
-      unit.text.y + 10,
-      barWidth * ratio,
-      barHeight
-    );
-    unit.hpBar.endFill();
-    unit.hpBar.beginFill(0xff0000);
-    unit.hpBar.drawRect(
-      unit.text.x - barWidth / 2 + barWidth * ratio,
-      unit.text.y + 10,
-      barWidth * (1 - ratio),
-      barHeight
-    );
-    unit.hpBar.endFill();
-  }
 
   const handleStart = () => {
     const app = appRef.current;
