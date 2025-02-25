@@ -15,16 +15,7 @@ import { processTeamEchoBladeAttacks } from "../skills/EchoBladeProcess";
 import { processTeamGuardianFallAttacks } from "../skills/GuardianFallProcess";
 import { processTeamBlitzShockAttacks } from "../skills/BlitzShockProcess";
 import { processTeamSpiralShotAttacks } from "../skills/SpiralShotProcess";
-import {
-  handleFlameEdgeAttack,
-  updateFlameEdgeEffects,
-  FlameEdgeEffect,
-} from "../skills/FlameEdge";
-import {
-  handleLorenzBurstAttack,
-  updateLorenzBurstEffects,
-  LorenzBurstEffect,
-} from "../skills/LorenzBurst";
+import { processTeamFlameEdgeAttacks } from "../skills/FlameEdgeProcess";
 import { processTeamLorenzBurstAttacks } from "../skills/LorenzBurstProcess";
 
 interface PixiCanvasProps {
@@ -55,7 +46,7 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "ローレンツバースト",
+    skill_name: "フレイムエッジ",
     special_name: "",
   },
 ];
@@ -97,15 +88,15 @@ export function PixiCanvas({
 
   const attackFrameCounter = useRef(0);
   const lasersRef = useRef<Laser[]>([]);
-  const crossBurstsRef = useRef<any[]>([]);
-  const spreadBulletsRef = useRef<any[]>([]);
-  const poisonFogsRef = useRef<any[]>([]);
-  const earthquakeEffectsRef = useRef<any[]>([]);
-  const powerUpEffectsRef = useRef<any[]>([]);
-  const echoBladeEffectsRef = useRef<any[]>([]);
-  const guardianFallEffectsRef = useRef<any[]>([]);
-  const blitzShockEffectsRef = useRef<any[]>([]);
-  const spiralShotEffectsRef = useRef<any[]>([]);
+  const crossBurstsRef = useRef<any[]>([]); // CrossBurst型略
+  const spreadBulletsRef = useRef<any[]>([]); // PenetratingSpreadBullet型略
+  const poisonFogsRef = useRef<any[]>([]); // PoisonFog型略
+  const earthquakeEffectsRef = useRef<any[]>([]); // EarthquakeEffect型略
+  const powerUpEffectsRef = useRef<any[]>([]); // PowerUpEffect型略
+  const echoBladeEffectsRef = useRef<any[]>([]); // EchoBladeEffect型略
+  const guardianFallEffectsRef = useRef<any[]>([]); // GuardianFallEffect型略
+  const blitzShockEffectsRef = useRef<any[]>([]); // BlitzShockEffect型略
+  const spiralShotEffectsRef = useRef<any[]>([]); // SpiralShotEffect型略
   const flameEdgeEffectsRef = useRef<FlameEdgeEffect[]>([]);
   const lorenzBurstEffectsRef = useRef<LorenzBurstEffect[]>([]);
   const damageTextsRef = useRef<DamageText[]>([]);
@@ -270,7 +261,6 @@ export function PixiCanvas({
         updateUnitHPBar(ut);
       });
 
-      // HPが0以下のユニットは退場
       allyTextsRef.current = allyTextsRef.current.filter((ut) => {
         if (ut.hp <= 0) {
           app.stage.removeChild(ut.text);
@@ -375,7 +365,7 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // ローレンツバースト攻撃（プロセス関数で1行呼び出し）
+      // ローレンツバースト攻撃
       processTeamLorenzBurstAttacks({
         counter: attackFrameCounter.current,
         app,
@@ -388,42 +378,17 @@ export function PixiCanvas({
         damageTexts: damageTextsRef.current,
       });
 
-      // フレイムエッジ攻撃
-      if (attackFrameCounter.current % 8 === 0) {
-        allyTextsRef.current
-          .filter((ally) => ally.unit.skill_name === "フレイムエッジ")
-          .forEach((ally) => {
-            const target = getNearestTarget(ally, enemyTextsRef.current);
-            if (target) {
-              handleFlameEdgeAttack({
-                app,
-                texts: [ally],
-                flameEdgeEffects: flameEdgeEffectsRef.current,
-                target,
-              });
-            }
-          });
-        enemyTextsRef.current
-          .filter((enemy) => enemy.unit.skill_name === "フレイムエッジ")
-          .forEach((enemy) => {
-            const target = getNearestTarget(enemy, allyTextsRef.current);
-            if (target) {
-              handleFlameEdgeAttack({
-                app,
-                texts: [enemy],
-                flameEdgeEffects: flameEdgeEffectsRef.current,
-                target,
-              });
-            }
-          });
-      }
-      updateFlameEdgeEffects({
+      // フレイムエッジ攻撃（プロセス関数に逃がす）
+      processTeamFlameEdgeAttacks({
         app,
+        allyUnits: allyTextsRef.current,
+        enemyUnits: enemyTextsRef.current,
         flameEdgeEffects: flameEdgeEffectsRef.current,
         updateTargetHP: (target, dmg) => {
           target.hp = Math.max(target.hp - dmg, 0);
         },
         damageTexts: damageTextsRef.current,
+        attackFrame: attackFrameCounter.current,
       });
 
       // 各レーザーの更新
