@@ -4,15 +4,11 @@ import React, { useEffect, useRef, useState } from "react";
 import * as PIXI from "pixi.js";
 import { fetchApi } from "../../../pages/helpers/api";
 import { UnitDataType } from "../../types/unit";
-import { showDamageText, DamageText } from "../utils/DamageTextUtil";
+import { DamageText } from "../utils/DamageTextUtil";
 
 // Skill and special effect imports
-import {
-  handleLockOnLaserAttack,
-  UnitText as LaserUnitText,
-  Laser,
-} from "../skills/LockOnLaser";
-import { processLockOnLaserAttack } from "../skills/LockOnLaserProcess";
+import { UnitText as LaserUnitText, Laser } from "../skills/LockOnLaser";
+import { processTeamLockOnLaserAttacks } from "../skills/LockOnLaserProcess";
 import {
   handleCrossBurstAttack,
   updateCrossBursts,
@@ -354,28 +350,15 @@ export function PixiCanvas({
 
       attackFrameCounter.current++;
 
-      // 友軍のロックオンレーザー攻撃
-      allyTextsRef.current.forEach((ally) => {
-        processLockOnLaserAttack(
-          attackFrameCounter.current,
-          ally,
-          enemyTextsRef.current,
-          app,
-          damageTextsRef.current,
-          lasersRef.current
-        );
-      });
-      // 敵のロックオンレーザー攻撃
-      enemyTextsRef.current.forEach((enemy) => {
-        processLockOnLaserAttack(
-          attackFrameCounter.current,
-          enemy,
-          allyTextsRef.current,
-          app,
-          damageTextsRef.current,
-          lasersRef.current
-        );
-      });
+      // PixiCanvas.tsx 内のアニメーションループ中
+      processTeamLockOnLaserAttacks(
+        attackFrameCounter.current,
+        allyTextsRef.current,
+        enemyTextsRef.current,
+        app,
+        damageTextsRef.current,
+        lasersRef.current
+      );
 
       // その他各スキルの呼び出しは（例として）以下の通り
       // 十字バースト攻撃

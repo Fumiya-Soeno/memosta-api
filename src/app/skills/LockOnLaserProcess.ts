@@ -27,11 +27,6 @@ function getNearestTarget(
   return nearest;
 }
 
-/**
- * processLockOnLaserAttack
- * 指定された攻撃フレームに、ロックオンレーザー攻撃を実行します。
- * 対象は attacker から見て最も近いターゲットとなります。
- */
 export function processLockOnLaserAttack(
   attackFrame: number,
   attacker: ExtendedUnitText,
@@ -63,5 +58,39 @@ export function processLockOnLaserAttack(
     damage: dmg,
     basePosition: { x: target.text.x, y: target.text.y },
     damageTexts,
+  });
+}
+
+/**
+ * processTeamLockOnLaserAttacks
+ * 友軍と敵の双方からロックオンレーザー攻撃を実行します。
+ */
+export function processTeamLockOnLaserAttacks(
+  attackFrame: number,
+  allies: ExtendedUnitText[],
+  enemies: ExtendedUnitText[],
+  app: PIXI.Application,
+  damageTexts: DamageText[],
+  lasers: Laser[]
+) {
+  allies.forEach((ally) => {
+    processLockOnLaserAttack(
+      attackFrame,
+      ally,
+      enemies,
+      app,
+      damageTexts,
+      lasers
+    );
+  });
+  enemies.forEach((enemy) => {
+    processLockOnLaserAttack(
+      attackFrame,
+      enemy,
+      allies,
+      app,
+      damageTexts,
+      lasers
+    );
   });
 }
