@@ -1,5 +1,6 @@
 import * as PIXI from "pixi.js";
 import { showDamageText } from "../utils/DamageTextUtil";
+import { UnitText } from "@/types/UnitText";
 
 export interface EarthquakeEffect {
   graphics: PIXI.Graphics;
@@ -7,15 +8,6 @@ export interface EarthquakeEffect {
   lifetime: number;
   damage: number;
   team: "ally" | "enemy"; // 発射元のチーム
-}
-
-export interface EarthquakeUnit {
-  text: PIXI.Text;
-  unit: {
-    special_name: string;
-    attack: number;
-    team: "ally" | "enemy";
-  };
 }
 
 /**
@@ -26,7 +18,7 @@ export interface EarthquakeUnit {
  */
 export function handleEarthquakeAttack(params: {
   app: PIXI.Application;
-  texts: EarthquakeUnit[];
+  texts: UnitText[];
   earthquakeEffects: EarthquakeEffect[];
 }) {
   params.texts.forEach((attacker) => {
@@ -60,7 +52,6 @@ export function updateEarthquakeEffects(params: {
   allyUnits: any[]; // ExtendedUnitText[]（友軍ユニット）
   enemyUnits: any[]; // ExtendedUnitText[]（敵ユニット）
   updateTargetHP: (target: any, damage: number) => void;
-  updateHPBar: () => void;
   damageTexts: any[]; // DamageText[]
 }) {
   const {
@@ -69,7 +60,6 @@ export function updateEarthquakeEffects(params: {
     allyUnits,
     enemyUnits,
     updateTargetHP,
-    updateHPBar,
     damageTexts,
   } = params;
   earthquakeEffects.forEach((eq, i) => {

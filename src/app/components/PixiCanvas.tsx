@@ -19,13 +19,8 @@ import { processTeamFlameEdgeAttacks } from "../skills/FlameEdgeProcess";
 import { processTeamLorenzBurstAttacks } from "../skills/LorenzBurstProcess";
 
 import { processTeamPoisonFogAttacks } from "../specials/PoisonFogProcess";
+import { processTeamEarthquakeAttacks } from "../specials/EarthquakeProcess";
 
-import {
-  handleEarthquakeAttack,
-  updateEarthquakeEffects,
-  EarthquakeEffect,
-  EarthquakeUnit,
-} from "../specials/Earthquake";
 import {
   handlePowerUpAttack,
   updatePowerUpEffects,
@@ -49,7 +44,7 @@ const enemyData: UnitDataType[] = [
     position: 1,
     element_name: "火",
     skill_name: "",
-    special_name: "毒霧",
+    special_name: "アースクエイク",
   },
 ];
 
@@ -377,6 +372,18 @@ export function PixiCanvas({
         allyUnits: allyTextsRef.current,
         enemyUnits: enemyTextsRef.current,
         poisonFogs: poisonFogsRef.current,
+        damageTexts: damageTextsRef.current,
+        counter: attackFrameCounter.current,
+        updateTargetHP: (target, dmg) => {
+          target.hp = Math.max(target.hp - dmg, 0);
+        },
+      });
+
+      processTeamEarthquakeAttacks({
+        app,
+        allyUnits: allyTextsRef.current as any,
+        enemyUnits: enemyTextsRef.current as any,
+        earthquakeEffects: earthquakeEffectsRef.current,
         damageTexts: damageTextsRef.current,
         counter: attackFrameCounter.current,
         updateTargetHP: (target, dmg) => {
