@@ -38,8 +38,8 @@ export function handleDoppelgangerAttack(params: {
   // Clone the unit data and modify it for the duplicate.
   const duplicateUnit: UnitText = {
     text: duplicateText,
-    hp: 10,
-    maxHp: 10,
+    hp: 30,
+    maxHp: 30,
     vx: 0,
     vy: 0,
     hpBar: duplicateHPBar,
@@ -47,8 +47,8 @@ export function handleDoppelgangerAttack(params: {
     unit: {
       ...params.unit.unit,
       attack: params.unit.unit.attack / 5,
-      life: 10,
-      skill_name: "ロックオンレーザー", // Duplicate only uses LockOnLaser
+      life: 30,
+      skill_name: params.unit.unit.skill_name,
       special_name: "", // No further duplication
       vector: params.unit.unit.vector,
       team, // keep same team
