@@ -8,6 +8,7 @@ import { processTeamMeteorAttacks } from "./MeteorProcess";
 import { processTeamRegenAttacks } from "./RegenProcess";
 import { processTeamHealingAttacks } from "./HealingProcess";
 import { processTeamShadowDiveAttacks } from "./ShadowDiveProcess";
+import { processTeamVortexBreakAttacks } from "./VortexBreakProcess";
 
 export class SpecialManager {
   constructor(
@@ -22,6 +23,7 @@ export class SpecialManager {
     public regenEffects: any[],
     public healingEffects: any[],
     public shadowDiveEffects: any[],
+    public vortexBreakEffects: any[],
     public damageTexts: any[],
     public counter: number
   ) {}
@@ -97,6 +99,17 @@ export class SpecialManager {
       allyUnits: this.allyUnits,
       enemyUnits: this.enemyUnits,
       shadowDiveEffects: this.shadowDiveEffects,
+      damageTexts: this.damageTexts,
+      counter: this.counter,
+      updateTargetHP: (target: any, dmg: number) => {
+        target.hp = Math.max(target.hp - dmg, 0);
+      },
+    });
+    processTeamVortexBreakAttacks({
+      app: this.app,
+      allyUnits: this.allyUnits,
+      enemyUnits: this.enemyUnits,
+      vortexBreakEffects: this.vortexBreakEffects,
       damageTexts: this.damageTexts,
       counter: this.counter,
       updateTargetHP: (target: any, dmg: number) => {

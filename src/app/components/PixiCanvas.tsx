@@ -29,7 +29,7 @@ const enemyData: UnitDataType[] = [
     position: 1,
     element_name: "火",
     skill_name: "",
-    special_name: "シャドウダイブ",
+    special_name: "ボルテックスブレイク",
   },
 ];
 
@@ -65,6 +65,7 @@ export function PixiCanvas({
   const regenEffectsRef = useRef<any[]>([]);
   const healingEffectsRef = useRef<any[]>([]);
   const shadowDiveEffectsRef = useRef<any[]>([]);
+  const vortexBreakEffectsRef = useRef<any[]>([]);
 
   const damageTextsRef = useRef<DamageText[]>([]);
 
@@ -253,6 +254,7 @@ export function PixiCanvas({
         regenEffectsRef.current,
         healingEffectsRef.current,
         shadowDiveEffectsRef.current,
+        vortexBreakEffectsRef.current,
         damageTextsRef.current,
         attackFrameCounter.current
       );
