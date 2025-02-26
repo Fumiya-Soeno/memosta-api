@@ -28,6 +28,9 @@ export function createUnitTexts(
     : { fontSize: 20, fill: 0xff0000, fontWeight: "bold" };
 
   // 各ユニットから UnitText オブジェクトを生成
+
+  const unitMultiplier = 6 / units.length;
+
   const unitTexts: UnitText[] = sortedUnits.map((unit) => {
     const text = new PIXI.Text(unit.name, textStyle);
     text.anchor.set(0.5);
@@ -46,9 +49,9 @@ export function createUnitTexts(
       vx,
       vy,
       powerUpMultiplier: 1.0,
-      baseAttack: unit.attack,
-      hp: unit.life,
-      maxHp: unit.life,
+      baseAttack: unit.attack * unitMultiplier,
+      hp: unit.life * unitMultiplier,
+      maxHp: unit.life * unitMultiplier,
       team: isAlly ? "ally" : "enemy",
       hpBar,
     };
