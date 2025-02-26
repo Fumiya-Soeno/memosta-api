@@ -1,3 +1,4 @@
+// DamageTextUtil.ts
 import * as PIXI from "pixi.js";
 
 export interface DamageText {
@@ -12,8 +13,12 @@ export interface DamageText {
 
 /**
  * showDamageText
- * 指定の位置を基準に、ダメージテキストを生成しステージに追加します。
- * デフォルトでは lifetime: 30フレーム、ランダムオフセット ±20px、水平ドリフト -1～+1px/frame、peakHeight 20px で表示します。
+ * Generates a damage text at the specified base position and adds it to the stage.
+ * Defaults: lifetime: 30 frames, random offset ±20px, horizontal drift -1 to +1 px/frame, peakHeight 20px.
+ * If a negative damage value is provided, it is treated as healing:
+ * - The text is colored green.
+ * - A plus sign is prepended.
+ * - A fixed horizontal velocity is used so that the healing text animates.
  */
 export function showDamageText(params: {
   app: PIXI.Application;
@@ -36,15 +41,22 @@ export function showDamageText(params: {
     peakHeight = 20,
   } = params;
 
+  const isHealing = damage < 0;
+  const textColor = isHealing ? 0x00ff00 : 0xff0000;
+  const displayValue = isHealing
+    ? Math.abs(damage).toFixed(1)
+    : damage.toFixed(1);
+
   const dmgText = new PIXI.Text(
-    damage.toFixed(1),
+    displayValue,
     new PIXI.TextStyle({
       fontSize: 16,
-      fill: 0xff0000,
+      fill: textColor,
       fontWeight: "bold",
     })
   );
   dmgText.anchor.set(0.5);
+
   const randomOffsetX = Math.random() * (offsetRange * 2) - offsetRange;
   const randomOffsetY = Math.random() * (offsetRange * 2) - offsetRange;
   const startX = basePosition.x + randomOffsetX;
@@ -52,24 +64,28 @@ export function showDamageText(params: {
   dmgText.x = startX;
   dmgText.y = startY;
   app.stage.addChild(dmgText);
+
+  // For healing text, force a non-zero horizontal velocity (e.g., 1)
+  const hVel = isHealing ? 1 : Math.random() * hVelRange - hVelRange / 2;
+
   damageTexts.push({
     text: dmgText,
     age: 0,
     lifetime,
     startX,
     startY,
-    hVel: Math.random() * hVelRange - hVelRange / 2,
+    hVel,
     peakHeight,
   });
 }
 
 /**
  * updateDamageTexts
- * 各ダメージテキストオブジェクトの age を更新し、表示の透明度や位置を変更します。
- * lifetime を超えたテキストはステージから削除し、配列から除去します。
+ * Updates each damage text's age and adjusts its alpha and position based on its progress.
+ * Once a text's lifetime is exceeded, it is removed from the stage and the array.
  *
- * @param app PIXI.Application のインスタンス
- * @param damageTexts ダメージテキストオブジェクトの配列
+ * @param app PIXI.Application instance
+ * @param damageTexts Array of DamageText objects
  */
 export function updateDamageTexts(
   app: PIXI.Application,

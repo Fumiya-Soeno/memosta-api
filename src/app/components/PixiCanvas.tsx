@@ -28,8 +28,8 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "",
-    special_name: "メテオ",
+    skill_name: "ロックオンレーザー",
+    special_name: "リジェネ",
   },
 ];
 
@@ -62,6 +62,7 @@ export function PixiCanvas({
   const powerUpEffectsRef = useRef<any[]>([]); // PowerUpEffect型略
   const damageWallEffectsRef = useRef<any[]>([]);
   const meteorEffectsRef = useRef<any[]>([]);
+  const regenEffectsRef = useRef<any[]>([]);
 
   const damageTextsRef = useRef<DamageText[]>([]);
 
@@ -247,6 +248,7 @@ export function PixiCanvas({
         powerUpEffectsRef.current,
         damageWallEffectsRef.current,
         meteorEffectsRef.current,
+        regenEffectsRef.current,
         damageTextsRef.current,
         attackFrameCounter.current
       );
