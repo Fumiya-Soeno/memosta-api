@@ -5,6 +5,7 @@ import { processTeamPowerUpAttacks } from "./PowerUpProcess";
 import { processTeamDamageWallAttacks } from "./DamageWallProcess";
 import { processTeamMeteorAttacks } from "./MeteorProcess";
 import { processTeamRegenAttacks } from "./RegenProcess";
+import { processTeamHealingAttacks } from "./HealingProcess";
 
 export class SpecialManager {
   constructor(
@@ -73,8 +74,14 @@ export class SpecialManager {
         target.hp = Math.max(target.hp - dmg, 0);
       },
     });
-    // NEW: Regen processing every 10 frames
     processTeamRegenAttacks({
+      app: this.app,
+      allyUnits: this.allyUnits,
+      enemyUnits: this.enemyUnits,
+      damageTexts: this.damageTexts,
+      counter: this.counter,
+    });
+    processTeamHealingAttacks({
       app: this.app,
       allyUnits: this.allyUnits,
       enemyUnits: this.enemyUnits,

@@ -28,8 +28,8 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "ロックオンレーザー",
-    special_name: "リジェネ",
+    skill_name: "",
+    special_name: "ヒーリング",
   },
 ];
 
