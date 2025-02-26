@@ -7,20 +7,20 @@ export interface EarthquakeEffect {
   age: number;
   lifetime: number;
   damage: number;
-  team: "ally" | "enemy"; // 発射元のチーム
+  team: "ally" | "enemy"; // Triggering unit's team
 }
 
 /**
  * handleEarthquakeAttack
- * special_name が "アースクエイク" のユニットを対象として、100フレームごとに画面全体に
- * 威力50%の地震攻撃を発生させる。全画面を覆うオーバーレイを生成し、最初の2フレームに
- * 発射元の反対側のユニットに攻撃ダメージを与える。
+ * For units with special_name "アースクエイク", every 100 frames,
+ * an earthquake attack is triggered that covers the entire screen.
+ * The overlay is applied for the first 2 frames to damage only units on the opposite team.
  */
 export function handleEarthquakeAttack(params: {
   app: PIXI.Application;
   texts: UnitText[];
   earthquakeEffects: EarthquakeEffect[];
-}) {
+}): void {
   params.texts.forEach((attacker) => {
     if (attacker.unit.special_name !== "アースクエイク") return;
     const damage = attacker.unit.attack * 2.0;
@@ -30,30 +30,31 @@ export function handleEarthquakeAttack(params: {
     overlay.endFill();
     overlay.alpha = 1;
     params.app.stage.addChild(overlay);
+    // FIX: Use attacker.team (top-level) rather than attacker.unit.team
     params.earthquakeEffects.push({
       graphics: overlay,
       age: 0,
       lifetime: 20,
       damage,
-      team: attacker.unit.team,
+      team: attacker.team,
     });
   });
 }
 
 /**
  * updateEarthquakeEffects
- * 各 EarthquakeEffect を毎フレーム更新し、最初の2フレームは発射元の反対側のユニットに
- * 攻撃ダメージを与え、その後フェードアウトして消滅します。ダメージテキストの表示は
- * 汎用関数 showDamageText を利用します。
+ * Updates each EarthquakeEffect every frame.
+ * For the first 2 frames, damage is applied to units on the opposite team.
+ * Then the overlay fades out and is removed.
  */
 export function updateEarthquakeEffects(params: {
   app: PIXI.Application;
   earthquakeEffects: EarthquakeEffect[];
-  allyUnits: any[]; // ExtendedUnitText[]（友軍ユニット）
-  enemyUnits: any[]; // ExtendedUnitText[]（敵ユニット）
-  updateTargetHP: (target: any, damage: number) => void;
+  allyUnits: UnitText[];
+  enemyUnits: UnitText[];
+  updateTargetHP: (target: UnitText, damage: number) => void;
   damageTexts: any[]; // DamageText[]
-}) {
+}): void {
   const {
     app,
     earthquakeEffects,
@@ -64,10 +65,10 @@ export function updateEarthquakeEffects(params: {
   } = params;
   earthquakeEffects.forEach((eq, i) => {
     eq.age++;
-    // 対象となるユニットは、発射元の反対側のチーム
+    // Determine targets: if the triggering team is ally, damage enemy units; otherwise, damage ally units.
     const targets = eq.team === "ally" ? enemyUnits : allyUnits;
     if (eq.age <= 2) {
-      targets.forEach((target: any) => {
+      targets.forEach((target: UnitText) => {
         updateTargetHP(target, eq.damage);
         showDamageText({
           app,
