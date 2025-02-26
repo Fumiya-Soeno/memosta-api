@@ -1,8 +1,9 @@
-// SpecialManager.ts
+// specials/SpecialManager.ts
 import * as PIXI from "pixi.js";
 import { processTeamPoisonFogAttacks } from "./PoisonFogProcess";
 import { processTeamEarthquakeAttacks } from "./EarthquakeProcess";
 import { processTeamPowerUpAttacks } from "./PowerUpProcess";
+import { processTeamDamageWallAttacks } from "./DamageWallProcess";
 
 export class SpecialManager {
   constructor(
@@ -12,6 +13,7 @@ export class SpecialManager {
     public poisonFogs: any[],
     public earthquakeEffects: any[],
     public powerUpEffects: any[],
+    public damageWallEffects: any[],
     public damageTexts: any[],
     public counter: number
   ) {}
@@ -45,6 +47,18 @@ export class SpecialManager {
       enemyUnits: this.enemyUnits,
       powerUpEffects: this.powerUpEffects,
       counter: this.counter,
+    });
+    // 新たにダメージウォールの処理を追加
+    processTeamDamageWallAttacks({
+      app: this.app,
+      allyUnits: this.allyUnits,
+      enemyUnits: this.enemyUnits,
+      damageTexts: this.damageTexts,
+      damageWallEffects: this.damageWallEffects,
+      counter: this.counter,
+      updateTargetHP: (target: any, dmg: number) => {
+        target.hp = Math.max(target.hp - dmg, 0);
+      },
     });
   }
 }

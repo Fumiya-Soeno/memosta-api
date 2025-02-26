@@ -28,8 +28,8 @@ const enemyData: UnitDataType[] = [
     vector: 30,
     position: 1,
     element_name: "火",
-    skill_name: "パラボリックランチャー",
-    special_name: "パワーアップ",
+    skill_name: "",
+    special_name: "ダメージウォール",
   },
 ];
 
@@ -60,6 +60,7 @@ export function PixiCanvas({
   const poisonFogsRef = useRef<any[]>([]); // PoisonFog型略
   const earthquakeEffectsRef = useRef<any[]>([]); // EarthquakeEffect型略
   const powerUpEffectsRef = useRef<any[]>([]); // PowerUpEffect型略
+  const damageWallEffectsRef = useRef<any[]>([]);
 
   const damageTextsRef = useRef<DamageText[]>([]);
 
@@ -243,6 +244,7 @@ export function PixiCanvas({
         poisonFogsRef.current,
         earthquakeEffectsRef.current,
         powerUpEffectsRef.current,
+        damageWallEffectsRef.current,
         damageTextsRef.current,
         attackFrameCounter.current
       );
