@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   const body = req.body;
 
   const unitName = body.name;
-  const unitNameArray = [...new Set(unitName.split(""))]; // 重複した文字は削除
+  const unitNameArray = unitName.split("");
 
   const unitObject = [];
 
