@@ -4,6 +4,7 @@ import { processTeamPoisonFogAttacks } from "./PoisonFogProcess";
 import { processTeamEarthquakeAttacks } from "./EarthquakeProcess";
 import { processTeamPowerUpAttacks } from "./PowerUpProcess";
 import { processTeamDamageWallAttacks } from "./DamageWallProcess";
+import { processTeamMeteorAttacks } from "./MeteorProcess";
 
 export class SpecialManager {
   constructor(
@@ -14,6 +15,7 @@ export class SpecialManager {
     public earthquakeEffects: any[],
     public powerUpEffects: any[],
     public damageWallEffects: any[],
+    public meteorEffects: any[],
     public damageTexts: any[],
     public counter: number
   ) {}
@@ -48,13 +50,23 @@ export class SpecialManager {
       powerUpEffects: this.powerUpEffects,
       counter: this.counter,
     });
-    // 新たにダメージウォールの処理を追加
     processTeamDamageWallAttacks({
       app: this.app,
       allyUnits: this.allyUnits,
       enemyUnits: this.enemyUnits,
-      damageTexts: this.damageTexts,
       damageWallEffects: this.damageWallEffects,
+      damageTexts: this.damageTexts,
+      counter: this.counter,
+      updateTargetHP: (target: any, dmg: number) => {
+        target.hp = Math.max(target.hp - dmg, 0);
+      },
+    });
+    processTeamMeteorAttacks({
+      app: this.app,
+      allyUnits: this.allyUnits,
+      enemyUnits: this.enemyUnits,
+      meteorEffects: this.meteorEffects,
+      damageTexts: this.damageTexts,
       counter: this.counter,
       updateTargetHP: (target: any, dmg: number) => {
         target.hp = Math.max(target.hp - dmg, 0);

@@ -29,7 +29,7 @@ const enemyData: UnitDataType[] = [
     position: 1,
     element_name: "火",
     skill_name: "",
-    special_name: "ダメージウォール",
+    special_name: "メテオ",
   },
 ];
 
@@ -61,6 +61,7 @@ export function PixiCanvas({
   const earthquakeEffectsRef = useRef<any[]>([]); // EarthquakeEffect型略
   const powerUpEffectsRef = useRef<any[]>([]); // PowerUpEffect型略
   const damageWallEffectsRef = useRef<any[]>([]);
+  const meteorEffectsRef = useRef<any[]>([]);
 
   const damageTextsRef = useRef<DamageText[]>([]);
 
@@ -245,6 +246,7 @@ export function PixiCanvas({
         earthquakeEffectsRef.current,
         powerUpEffectsRef.current,
         damageWallEffectsRef.current,
+        meteorEffectsRef.current,
         damageTextsRef.current,
         attackFrameCounter.current
       );
