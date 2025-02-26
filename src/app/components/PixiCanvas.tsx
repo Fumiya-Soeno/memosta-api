@@ -29,7 +29,7 @@ const enemyData: UnitDataType[] = [
     position: 1,
     element_name: "火",
     skill_name: "",
-    special_name: "ヒーリング",
+    special_name: "シャドウダイブ",
   },
 ];
 
@@ -63,6 +63,8 @@ export function PixiCanvas({
   const damageWallEffectsRef = useRef<any[]>([]);
   const meteorEffectsRef = useRef<any[]>([]);
   const regenEffectsRef = useRef<any[]>([]);
+  const healingEffectsRef = useRef<any[]>([]);
+  const shadowDiveEffectsRef = useRef<any[]>([]);
 
   const damageTextsRef = useRef<DamageText[]>([]);
 
@@ -249,6 +251,8 @@ export function PixiCanvas({
         damageWallEffectsRef.current,
         meteorEffectsRef.current,
         regenEffectsRef.current,
+        healingEffectsRef.current,
+        shadowDiveEffectsRef.current,
         damageTextsRef.current,
         attackFrameCounter.current
       );

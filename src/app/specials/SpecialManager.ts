@@ -1,3 +1,4 @@
+// specials/SpecialManager.ts
 import * as PIXI from "pixi.js";
 import { processTeamPoisonFogAttacks } from "./PoisonFogProcess";
 import { processTeamEarthquakeAttacks } from "./EarthquakeProcess";
@@ -6,6 +7,7 @@ import { processTeamDamageWallAttacks } from "./DamageWallProcess";
 import { processTeamMeteorAttacks } from "./MeteorProcess";
 import { processTeamRegenAttacks } from "./RegenProcess";
 import { processTeamHealingAttacks } from "./HealingProcess";
+import { processTeamShadowDiveAttacks } from "./ShadowDiveProcess";
 
 export class SpecialManager {
   constructor(
@@ -18,6 +20,8 @@ export class SpecialManager {
     public damageWallEffects: any[],
     public meteorEffects: any[],
     public regenEffects: any[],
+    public healingEffects: any[],
+    public shadowDiveEffects: any[],
     public damageTexts: any[],
     public counter: number
   ) {}
@@ -87,6 +91,17 @@ export class SpecialManager {
       enemyUnits: this.enemyUnits,
       damageTexts: this.damageTexts,
       counter: this.counter,
+    });
+    processTeamShadowDiveAttacks({
+      app: this.app,
+      allyUnits: this.allyUnits,
+      enemyUnits: this.enemyUnits,
+      shadowDiveEffects: this.shadowDiveEffects,
+      damageTexts: this.damageTexts,
+      counter: this.counter,
+      updateTargetHP: (target: any, dmg: number) => {
+        target.hp = Math.max(target.hp - dmg, 0);
+      },
     });
   }
 }
