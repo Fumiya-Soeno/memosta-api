@@ -6,6 +6,7 @@ import { fetchApi } from "../../../pages/helpers/api";
 import { UnitDataType } from "../../types/unit";
 import { DamageText, updateDamageTexts } from "../utils/DamageTextUtil";
 import { updateUnitHPBar } from "../utils/updateHPBar";
+import { createUnitTexts } from "../helpers/UnitTextHelper";
 
 import CanvasContainer from "../components/CanvasContainer";
 
@@ -17,21 +18,6 @@ interface PixiCanvasProps {
   height?: number;
   backgroundColor?: number;
 }
-
-// 仮の敵ユニットデータ（将来的にはAPIから取得）
-const enemyData: UnitDataType[] = [
-  {
-    name: "あ",
-    life: 50,
-    attack: 3,
-    speed: 4,
-    vector: 30,
-    position: 1,
-    element_name: "火",
-    skill_name: "十字バースト",
-    special_name: "ドッペルゲンガー",
-  },
-];
 
 export function PixiCanvas({
   width = 400,
@@ -47,19 +33,19 @@ export function PixiCanvas({
   const attackFrameCounter = useRef(0);
 
   const lasersRef = useRef<any[]>([]);
-  const crossBurstsRef = useRef<any[]>([]); // CrossBurst型略
-  const spreadBulletsRef = useRef<any[]>([]); // PenetratingSpreadBullet型略
-  const echoBladeEffectsRef = useRef<any[]>([]); // EchoBladeEffect型略
-  const guardianFallEffectsRef = useRef<any[]>([]); // GuardianFallEffect型略
-  const blitzShockEffectsRef = useRef<any[]>([]); // BlitzShockEffect型略
-  const spiralShotEffectsRef = useRef<any[]>([]); // SpiralShotEffect型略
+  const crossBurstsRef = useRef<any[]>([]);
+  const spreadBulletsRef = useRef<any[]>([]);
+  const echoBladeEffectsRef = useRef<any[]>([]);
+  const guardianFallEffectsRef = useRef<any[]>([]);
+  const blitzShockEffectsRef = useRef<any[]>([]);
+  const spiralShotEffectsRef = useRef<any[]>([]);
   const flameEdgeEffectsRef = useRef<any[]>([]);
   const lorenzBurstEffectsRef = useRef<any[]>([]);
   const parabolicLauncherEffects = useRef<any[]>([]);
 
-  const poisonFogsRef = useRef<any[]>([]); // PoisonFog型略
-  const earthquakeEffectsRef = useRef<any[]>([]); // EarthquakeEffect型略
-  const powerUpEffectsRef = useRef<any[]>([]); // PowerUpEffect型略
+  const poisonFogsRef = useRef<any[]>([]);
+  const earthquakeEffectsRef = useRef<any[]>([]);
+  const powerUpEffectsRef = useRef<any[]>([]);
   const damageWallEffectsRef = useRef<any[]>([]);
   const meteorEffectsRef = useRef<any[]>([]);
   const regenEffectsRef = useRef<any[]>([]);
@@ -71,9 +57,9 @@ export function PixiCanvas({
   const damageTextsRef = useRef<DamageText[]>([]);
 
   const [allyData, setAllyData] = useState<UnitDataType[] | null>(null);
+  const [enemyData, setEnemyData] = useState<UnitDataType[] | null>(null);
+
   const [unitId, setUnitId] = useState<number | null>(null);
-  const [enemyDataState, setEnemyDataState] =
-    useState<UnitDataType[]>(enemyData);
 
   useEffect(() => {
     const app = new PIXI.Application({ width, height, backgroundColor });
@@ -105,91 +91,45 @@ export function PixiCanvas({
   }, [unitId]);
 
   useEffect(() => {
+    fetchApi(
+      "/enemy_unit/show",
+      "GET",
+      (result: { records: UnitDataType[] }) => {
+        setEnemyData(result.records);
+      },
+      (error: unknown) => {
+        console.error("APIエラー:", error);
+      }
+    );
+  }, []);
+
+  // 味方ユニットテキストの生成と配置
+  useEffect(() => {
     if (!allyData) return;
     const app = appRef.current;
     if (!app) return;
-    const sortedAllies = [...allyData].sort((a, b) => a.position - b.position);
+    // 既存の味方テキストを削除
     allyTextsRef.current.forEach((ut) => {
       app.stage.removeChild(ut.text);
       app.stage.removeChild(ut.hpBar);
     });
-    allyTextsRef.current = [];
-    const textStyle = { fontSize: 20, fill: 0x000000, fontWeight: "bold" };
-    const allyTexts: any[] = sortedAllies.map((unit) => {
-      const text = new PIXI.Text(unit.name, textStyle);
-      text.anchor.set(0.5);
-      const angle = ((unit.vector + 180) * Math.PI) / 180;
-      const vx = unit.speed * Math.cos(angle);
-      const vy = unit.speed * Math.sin(angle);
-      const hpBar = new PIXI.Graphics();
-      app.stage.addChild(hpBar);
-      return {
-        text,
-        unit,
-        vx,
-        vy,
-        powerUpMultiplier: 1.0,
-        baseAttack: unit.attack,
-        hp: unit.life,
-        maxHp: unit.life,
-        team: "ally",
-        hpBar,
-      };
-    });
-    const totalWidth = allyTexts.reduce((sum, ut) => sum + ut.text.width, 0);
-    let currentX = app.screen.width / 2 - totalWidth / 2;
-    allyTexts.forEach((ut) => {
-      ut.text.x = currentX + ut.text.width / 2;
-      ut.text.y = (app.screen.height * 3) / 4;
-      currentX += ut.text.width;
-      app.stage.addChild(ut.text);
-    });
-    allyTextsRef.current = allyTexts;
+    // ヘルパー関数を使用して味方テキストを作成
+    allyTextsRef.current = createUnitTexts(app, allyData, true);
   }, [allyData, width, height]);
 
+  // 敵ユニットテキストの生成と配置
   useEffect(() => {
+    if (!enemyData) return;
     const app = appRef.current;
     if (!app) return;
-    const sortedEnemies = [...enemyDataState].sort(
-      (a, b) => b.position - a.position
-    );
+    // 既存の敵テキストを削除
     enemyTextsRef.current.forEach((ut) => {
       app.stage.removeChild(ut.text);
       app.stage.removeChild(ut.hpBar);
     });
-    enemyTextsRef.current = [];
-    const textStyle = { fontSize: 20, fill: 0xff0000, fontWeight: "bold" };
-    const enemyTexts: any[] = sortedEnemies.map((unit) => {
-      const text = new PIXI.Text(unit.name, textStyle);
-      text.anchor.set(0.5);
-      const angle = (unit.vector * Math.PI) / 180;
-      const vx = unit.speed * Math.cos(angle);
-      const vy = unit.speed * Math.sin(angle);
-      const hpBar = new PIXI.Graphics();
-      app.stage.addChild(hpBar);
-      return {
-        text,
-        unit,
-        vx,
-        vy,
-        powerUpMultiplier: 1.0,
-        baseAttack: unit.attack,
-        hp: unit.life,
-        maxHp: unit.life,
-        team: "enemy",
-        hpBar,
-      };
-    });
-    const totalWidth = enemyTexts.reduce((sum, ut) => sum + ut.text.width, 0);
-    let currentX = app.screen.width / 2 - totalWidth / 2;
-    enemyTexts.forEach((ut) => {
-      ut.text.x = currentX + ut.text.width / 2;
-      ut.text.y = app.screen.height / 4;
-      currentX += ut.text.width;
-      app.stage.addChild(ut.text);
-    });
-    enemyTextsRef.current = enemyTexts;
-  }, [enemyDataState, width, height]);
+    // ヘルパー関数を使用して敵テキストを作成
+    enemyTextsRef.current = createUnitTexts(app, enemyData, false);
+  }, [enemyData, width, height]);
 
   const handleStart = () => {
     const app = appRef.current;
