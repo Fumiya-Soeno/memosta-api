@@ -63,6 +63,26 @@ const Unit = () => {
     );
   };
 
+  // 「削除」ボタンでユニットを削除
+  const handleDelete = (id: number) => {
+    fetchApi(
+      "/unit/delete",
+      "DELETE",
+      (result: any) => {
+        console.log("Unit deleted:", result);
+        setUnits((prev) => prev.filter((unit) => unit.id !== id));
+        // Optionally clear active unit if deleted
+        if (activeUnitId === id) {
+          setActiveUnitId(null);
+        }
+      },
+      (error: unknown) => {
+        console.error("unit/delete APIエラー:", error);
+      },
+      { unitId: id } // Set body.unitId to the unit's id
+    );
+  };
+
   return (
     <Template>
       <div className="w-full h-[calc(100vh-60px)] flex justify-center">
@@ -81,17 +101,30 @@ const Unit = () => {
                       <span className="text-blue-500 font-bold">(Active)</span>
                     )}
                   </div>
-                  {activeUnitId !== unit.id && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation(); // クリックイベントの伝播を停止
-                        handleSetActive(unit.id);
-                      }}
-                      className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                    >
-                      Set Active
-                    </button>
-                  )}
+                  <div className="space-x-2">
+                    {activeUnitId !== unit.id && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSetActive(unit.id);
+                        }}
+                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                      >
+                        Set Active
+                      </button>
+                    )}
+                    {activeUnitId !== unit.id && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(unit.id);
+                        }}
+                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                      >
+                        削除
+                      </button>
+                    )}
+                  </div>
                 </li>
               ))
             ) : (

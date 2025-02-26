@@ -85,3 +85,7 @@ export async function createCharacter(params) {
 export async function createUnitCharacter(unitId, characterId, position) {
   await sql`INSERT INTO unit_characters (unit_id, character_id, position) VALUES (${unitId}, ${characterId}, ${position});`;
 }
+
+export async function deleteUnit(userId, unitId) {
+  return await sql`DELETE FROM units WHERE user_id = ${userId} AND id = ${unitId};`;
+}
