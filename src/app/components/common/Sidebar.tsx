@@ -38,7 +38,7 @@ export function Sidebar() {
     <aside className="w-52 bg-gray-100 h-full p-4 shadow-md">
       <nav>
         <ul className="list-none p-0">
-          <SidebarLink href="#" text="ユニット登録" />
+          <SidebarLink href="/unit/new" text="ユニット登録" />
           <SidebarLink href="/unit/show" text="ユニット管理" />
         </ul>
       </nav>
