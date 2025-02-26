@@ -55,3 +55,33 @@ export async function updateActiveUnit(userId, unitId) {
     UPDATE active_unit SET unit_id = ${unitId} WHERE user_id = ${userId}
 `;
 }
+
+export async function createUnit(userId) {
+  const result =
+    await sql`INSERT INTO units (user_id) VALUES (${userId}) RETURNING id;`;
+  return result.rows[0].id;
+}
+
+export async function createCharacter(params) {
+  const result = await sql`
+    WITH ins AS (
+      INSERT INTO characters (name, life, attack, speed, vector, element, skill, special)
+      SELECT ${params.name}, ${params.life}, ${params.attack}, ${params.speed}, ${params.vector}, ${params.element}, ${params.skill}, ${params.special}
+      WHERE NOT EXISTS (
+        SELECT 1 FROM characters WHERE name = ${params.name}
+      )
+      RETURNING id
+    )
+    SELECT id FROM ins
+    UNION ALL
+    SELECT id FROM characters
+    WHERE name = ${params.name} AND NOT EXISTS (SELECT 1 FROM ins)
+    LIMIT 1
+  `;
+
+  return result.rows[0].id;
+}
+
+export async function createUnitCharacter(unitId, characterId, position) {
+  await sql`INSERT INTO unit_characters (unit_id, character_id, position) VALUES (${unitId}, ${characterId}, ${position});`;
+}

@@ -27,16 +27,7 @@ const NewUnit = () => {
       "/unit/create",
       "POST",
       (result: any) => {
-        console.log("ユニット作成成功:", result);
-        // 作成したユニットIDが返ってくる場合は編集画面へ遷移
-
-        return;
-
-        if (result?.unit?.id) {
-          router.push(`/unit/edit?id=${result.unit.id}`);
-        } else {
-          router.push("/unit");
-        }
+        router.push(`/unit/edit?id=${result.unitId}`);
       },
       (error: unknown) => {
         console.error("APIエラー:", error);
