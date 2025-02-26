@@ -7,11 +7,9 @@ import { MeteorEffect, handleMeteorAttack } from "./Meteor";
 /**
  * processTeamMeteorAttacks
  *
- * Every 120 frames, if any unit with special_name "メテオ" exists (ally side is preferred),
+ * Every 120 frames, if a unit with special_name "メテオ" exists (ally side is preferred),
  * a meteor attack is triggered via handleMeteorAttack.
- * Then, existing meteor effects are updated:
- * During the falling phase (first 20 frames), the meteor moves from y = -150 to the screen center.
- * Once falling is complete, units within a 300px diameter area around the center receive damage.
+ * Then, the existing meteor effects are updated.
  */
 export function processTeamMeteorAttacks(params: {
   app: PIXI.Application;
@@ -54,6 +52,7 @@ export function processTeamMeteorAttacks(params: {
     meteorEffects: params.meteorEffects,
     damageTexts: params.damageTexts,
     updateTargetHP: params.updateTargetHP,
+    // Only target units from the opposite team
     allyUnits: params.allyUnits,
     enemyUnits: params.enemyUnits,
   });
@@ -63,9 +62,9 @@ export function processTeamMeteorAttacks(params: {
  * updateTeamMeteorEffects
  *
  * For each meteor effect:
- * - During the falling phase (first 20 frames), interpolate the y-position from start to the screen center.
- * - Once falling is complete, apply damage to all units within a 150px radius of the center,
- *   then gradually fade out the meteor effect.
+ * - During the falling phase (first 20 frames), the meteor falls from y = -150 to the screen center.
+ * - After falling is complete, damage is applied only to units from the opposite team within a 150px radius of the center.
+ *   The meteor then fades out gradually.
  */
 function updateTeamMeteorEffects(params: {
   app: PIXI.Application;
@@ -84,10 +83,11 @@ function updateTeamMeteorEffects(params: {
       const progress = effect.age / effect.fallingDuration;
       effect.graphics.y = -150 + progress * (targetY + 150);
     } else {
-      // Impact phase: apply damage to all units within radius 150 of the center
+      // Impact phase: apply damage only to units from the opposite team
       const explosionCenter = { x: params.app.screen.width / 2, y: targetY };
-      const allUnits = [...params.allyUnits, ...params.enemyUnits];
-      allUnits.forEach((unit) => {
+      const targets =
+        effect.team === "ally" ? params.enemyUnits : params.allyUnits;
+      targets.forEach((unit) => {
         const dx = unit.text.x - explosionCenter.x;
         const dy = unit.text.y - explosionCenter.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
