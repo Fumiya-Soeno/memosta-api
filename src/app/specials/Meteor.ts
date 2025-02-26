@@ -1,4 +1,3 @@
-// specials/Meteor.ts
 import * as PIXI from "pixi.js";
 import { UnitText } from "../../types/UnitText";
 
@@ -6,7 +5,7 @@ export interface MeteorEffect {
   graphics: PIXI.Graphics;
   age: number;
   fallingDuration: number; // Number of frames for falling (20 frames)
-  damage: number; // 300% of the unit's attack
+  damage: number; // 700% of the unit's attack
   team: "ally" | "enemy"; // The triggering unit's team
   exploded: boolean; // Flag to indicate if explosion phase has started
 }
@@ -27,8 +26,9 @@ export function handleMeteorAttack(params: {
   const startY = -50; // Start with a small circle above the screen
   const targetY = params.app.screen.height / 2;
   const fallingDuration = 20;
+  // FIX: Use the team from the unit (not unit.unit.team)
+  const team = params.unit.team;
   const damage = params.unit.unit.attack * 7.0; // 700% damage
-  const team = params.unit.unit.team;
 
   // Create a small meteor graphic (circle with radius 25 => 50px diameter)
   const meteorGraphic = new PIXI.Graphics();
