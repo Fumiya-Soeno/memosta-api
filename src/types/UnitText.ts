@@ -26,4 +26,5 @@ export interface UnitText {
   team: "ally" | "enemy";
   // HPバー表示用のグラフィックスオブジェクト
   hpBar: PIXI.Graphics;
+  isDuplicate: boolean;
 }

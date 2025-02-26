@@ -9,6 +9,7 @@ import { processTeamRegenAttacks } from "./RegenProcess";
 import { processTeamHealingAttacks } from "./HealingProcess";
 import { processTeamShadowDiveAttacks } from "./ShadowDiveProcess";
 import { processTeamVortexBreakAttacks } from "./VortexBreakProcess";
+import { processTeamDoppelgangerAttacks } from "./DoppelgangerProcess";
 
 export class SpecialManager {
   constructor(
@@ -24,6 +25,7 @@ export class SpecialManager {
     public healingEffects: any[],
     public shadowDiveEffects: any[],
     public vortexBreakEffects: any[],
+    public doppelgangerUnits: any[],
     public damageTexts: any[],
     public counter: number
   ) {}
@@ -115,6 +117,13 @@ export class SpecialManager {
       updateTargetHP: (target: any, dmg: number) => {
         target.hp = Math.max(target.hp - dmg, 0);
       },
+    });
+    processTeamDoppelgangerAttacks({
+      app: this.app,
+      allyUnits: this.allyUnits,
+      enemyUnits: this.enemyUnits,
+      doppelgangerUnits: this.doppelgangerUnits,
+      counter: this.counter,
     });
   }
 }
