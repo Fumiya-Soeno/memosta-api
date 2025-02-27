@@ -68,13 +68,18 @@ export function PixiCanvas({
   useEffect(() => {
     const app = new PIXI.Application({ width, height, backgroundColor });
     if (pixiContainerRef.current) {
-      pixiContainerRef.current.appendChild(app.view);
+      pixiContainerRef.current.appendChild(app.view as HTMLCanvasElement);
     }
     appRef.current = app;
-    fetchApi("/active_unit/show", "GET", (result: any) => {
-      const id = result?.rows[0]?.unit_id;
-      if (id) setUnitId(id);
-    });
+    fetchApi(
+      "/active_unit/show",
+      "GET",
+      (result: any) => {
+        const id = result?.rows[0]?.unit_id;
+        if (id) setUnitId(id);
+      },
+      () => {}
+    );
     return () => {
       app.destroy(true, true);
     };
