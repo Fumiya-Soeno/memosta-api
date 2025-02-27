@@ -295,7 +295,7 @@ export function PixiCanvas({
       },
       () => {}
     );
-  });
+  }, []);
 
   return <CanvasContainer ref={pixiContainerRef} onStart={handleStart} />;
 }
