@@ -77,9 +77,9 @@ export async function getActiveEnemyUnit(unitId = null) {
   if (unitId) {
     enemy = await getCharactersByUnitIdWithoutUserId(unitId);
   } else {
-    const result = await sql`SELECT id FROM units ORDER BY id DESC LIMIT 1`;
-    const unitId = result.rows[0].id;
-    enemy = await getCharactersByUnitIdWithoutUserId(unitId);
+    const top10 = await getTop10();
+    const topUnitId = top10.rows[0].id;
+    enemy = await getCharactersByUnitIdWithoutUserId(topUnitId);
   }
   return enemy;
 }
