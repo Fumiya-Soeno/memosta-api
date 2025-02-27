@@ -25,34 +25,30 @@ export function processTeamVortexBreakAttacks(params: {
 }): void {
   // Trigger attack every 120 frames.
   if (params.counter % 120 === 0) {
-    // Prefer ally units; if none found, check enemy units.
-    const triggerAlly = params.allyUnits.find(
-      (u) => u.unit.special_name === "ボルテックスブレイク"
-    );
-    if (triggerAlly) {
-      handleVortexBreakAttack({
-        app: params.app,
-        unit: triggerAlly,
-        vortexBreakEffects: params.vortexBreakEffects,
-      });
-    } else {
-      const triggerEnemy = params.enemyUnits.find(
-        (u) => u.unit.special_name === "ボルテックスブレイク"
-      );
-      if (triggerEnemy) {
+    params.allyUnits
+      .filter((u) => u.unit.special_name === "ボルテックスブレイク")
+      .forEach((u) => {
         handleVortexBreakAttack({
           app: params.app,
-          unit: triggerEnemy,
+          unit: u,
           vortexBreakEffects: params.vortexBreakEffects,
         });
-      }
-    }
+      });
+    params.enemyUnits
+      .filter((u) => u.unit.special_name === "ボルテックスブレイク")
+      .forEach((u) => {
+        handleVortexBreakAttack({
+          app: params.app,
+          unit: u,
+          vortexBreakEffects: params.vortexBreakEffects,
+        });
+      });
   }
 
   // Update each active vortex break projectile.
   for (let i = params.vortexBreakEffects.length - 1; i >= 0; i--) {
     const effect = params.vortexBreakEffects[i];
-    // Choose the correct target array based on the effect team.
+    // Choose the correct target array based on the effect's team.
     const targetUnits =
       effect.team === "ally" ? params.enemyUnits : params.allyUnits;
     updateVortexBreakEffect({
