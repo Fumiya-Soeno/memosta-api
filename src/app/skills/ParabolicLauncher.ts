@@ -54,7 +54,7 @@ export function handleParabolicLauncherAttack(params: {
     impactTime: 3,
     damage,
     impact: false,
-    team: attacker.unit.team,
+    team: attacker.team,
   };
   params.parabolicLauncherEffects.push(effect);
 }
