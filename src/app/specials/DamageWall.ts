@@ -25,7 +25,7 @@ export function handleDamageWallAttack(params: {
   const wallThickness = 20;
   const lifetime = 20;
   const damage = unit.unit.attack * 2.0; // 200% のダメージ
-  const team = unit.unit.team;
+  const team = unit.team;
 
   // 作業用グラフィックでパターンを描画し、テクスチャ生成
   const patternGraphics = new PIXI.Graphics();

@@ -31,31 +31,28 @@ export function processTeamDamageWallAttacks(params: {
   counter: number;
   updateTargetHP: (target: UnitText, damage: number) => void;
 }): void {
-  // 100フレームごとに発動
+  // 発動タイミング: 100フレームごとに発動
   if (params.counter % 100 === 0) {
-    // 味方側を優先してチェック
-    const triggerAlly = params.allyUnits.find(
-      (u) => u.unit.special_name === "ダメージウォール"
-    );
-    if (triggerAlly) {
-      handleDamageWallAttack({
-        app: params.app,
-        unit: triggerAlly,
-        damageWallEffects: params.damageWallEffects,
-      });
-    } else {
-      // 味方側に見つからなければ敵側もチェック
-      const triggerEnemy = params.enemyUnits.find(
-        (u) => u.unit.special_name === "ダメージウォール"
-      );
-      if (triggerEnemy) {
+    // 味方側の「ダメージウォール」を持つユニットを全て処理
+    params.allyUnits
+      .filter((u) => u.unit.special_name === "ダメージウォール")
+      .forEach((u) => {
         handleDamageWallAttack({
           app: params.app,
-          unit: triggerEnemy,
+          unit: u,
           damageWallEffects: params.damageWallEffects,
         });
-      }
-    }
+      });
+    // 敵側の「ダメージウォール」を持つユニットを全て処理
+    params.enemyUnits
+      .filter((u) => u.unit.special_name === "ダメージウォール")
+      .forEach((u) => {
+        handleDamageWallAttack({
+          app: params.app,
+          unit: u,
+          damageWallEffects: params.damageWallEffects,
+        });
+      });
   }
 
   // 更新フェーズ: 既存のダメージウォール効果を更新
