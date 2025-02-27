@@ -107,20 +107,6 @@ export function PixiCanvas({
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    const queryParams = enemyUnitId ? `?id=${enemyUnitId}` : "";
-    fetchApi(
-      "/enemy_unit/show" + queryParams,
-      "GET",
-      (result: { records: UnitDataType[] }) => {
-        setEnemyData(result.records);
-      },
-      (error: unknown) => {
-        console.error("APIエラー:", error);
-      }
-    );
-  }, [enemyUnitId]);
-
   // 味方ユニットテキストの生成と配置
   useEffect(() => {
     if (!allyData) return;
@@ -139,6 +125,20 @@ export function PixiCanvas({
     enemyTextsRef.current = createUnitTexts(app, enemyData, false);
     if (!enemyUnitId) setEnemyUnitId(enemyTextsRef.current[0].unit.id);
   }, [enemyData, width, height]);
+
+  useEffect(() => {
+    const queryParams = enemyUnitId ? `?id=${enemyUnitId}` : "";
+    fetchApi(
+      "/enemy_unit/show" + queryParams,
+      "GET",
+      (result: { records: UnitDataType[] }) => {
+        setEnemyData(result.records);
+      },
+      (error: unknown) => {
+        console.error("APIエラー:", error);
+      }
+    );
+  }, [enemyUnitId]);
 
   const handleStart = () => {
     const app = appRef.current;
