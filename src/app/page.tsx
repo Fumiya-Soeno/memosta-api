@@ -11,9 +11,14 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    fetchApi("/wins/show", "GET", (result: any) => {
-      setRows(result.rows);
-    });
+    fetchApi(
+      "/wins/show",
+      "GET",
+      (result: any) => {
+        setRows(result.rows);
+      },
+      () => {}
+    );
   }, []);
 
   return (
