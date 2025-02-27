@@ -7,7 +7,9 @@ import { PixiCanvas } from "./components/PixiCanvas";
 import { fetchApi } from "../../pages/helpers/api";
 
 export default function Home() {
-  const [rows, setRows] = useState<{ ID: number; win_rate: number }[]>([]);
+  const [rows, setRows] = useState<
+    { id: number; win_rate: number; name: string; win: number }[]
+  >([]);
   const router = useRouter();
 
   useEffect(() => {

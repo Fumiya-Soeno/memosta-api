@@ -19,7 +19,7 @@ export async function getUserCharacters(userId) {
 
 /**
  * ユニットIDに基づくキャラクター情報を取得
- * @param {number} unitId - ユニットのID
+ * @param {number} unitId - ユニットのid
  * @returns {Promise<Array>} キャラクター情報の配列
  */
 export async function getCharactersByUnitId(unitId, userId) {
@@ -128,30 +128,30 @@ export async function getTop10() {
   return await sql`
     WITH winrate AS (
       SELECT
-        u.ID,
-        COUNT(DISTINCT w.ID) AS win,
-        (COUNT(DISTINCT w.ID) * 1.0 / NULLIF(COUNT(DISTINCT w.ID) + COUNT(DISTINCT l.ID), 0)) AS win_rate
+        u.id,
+        COUNT(DISTINCT w.id) AS win,
+        (COUNT(DISTINCT w.id) * 1.0 / NULLIF(COUNT(DISTINCT w.id) + COUNT(DISTINCT l.id), 0)) AS win_rate
       FROM units u
-      LEFT JOIN wins w ON u.ID = w.winner
-      LEFT JOIN wins l ON u.ID = l.loser
-      GROUP BY u.ID
-      HAVING (COUNT(DISTINCT w.ID) * 1.0 / NULLIF(COUNT(DISTINCT w.ID) + COUNT(DISTINCT l.ID), 0)) IS NOT NULL
+      LEFT JOIN wins w ON u.id = w.winner
+      LEFT JOIN wins l ON u.id = l.loser
+      GROUP BY u.id
+      HAVING (COUNT(DISTINCT w.id) * 1.0 / NULLIF(COUNT(DISTINCT w.id) + COUNT(DISTINCT l.id), 0)) IS NOT NULL
     ),
     unit_names AS (
       SELECT
-        uc.unit_id AS ID,
-        string_agg(c.NAME, '' ORDER BY uc.ID) AS name
+        uc.unit_id AS id,
+        string_agg(c.NAME, '' ORDER BY uc.id) AS name
       FROM unit_characters uc
-      LEFT JOIN characters c ON uc.character_id = c.ID
+      LEFT JOIN characters c ON uc.character_id = c.id
       GROUP BY uc.unit_id
     )
     SELECT
-      wr.ID,
+      wr.id,
       un.name,
       wr.win,
       wr.win_rate
     FROM winrate wr
-    LEFT JOIN unit_names un ON wr.ID = un.ID
+    LEFT JOIN unit_names un ON wr.id = un.id
     ORDER BY wr.win_rate DESC
     LIMIT 10;
   `;
