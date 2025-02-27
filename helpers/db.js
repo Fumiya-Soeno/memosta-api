@@ -72,15 +72,9 @@ export async function getActiveUnit(userId) {
   `;
 }
 
-export async function getActiveEnemyUnit(unitId = null) {
+export async function getActiveEnemyUnit(unitId) {
   let enemy;
-  if (unitId) {
-    enemy = await getCharactersByUnitIdWithoutUserId(unitId);
-  } else {
-    const top10 = await getTop10();
-    const topUnitId = top10.rows[9].id; // 10位をデフォルトで表示
-    enemy = await getCharactersByUnitIdWithoutUserId(topUnitId);
-  }
+  enemy = await getCharactersByUnitIdWithoutUserId(unitId);
   return enemy;
 }
 

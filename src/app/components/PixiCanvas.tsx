@@ -127,7 +127,8 @@ export function PixiCanvas({
   }, [enemyData, width, height]);
 
   useEffect(() => {
-    const queryParams = enemyUnitId ? `?id=${enemyUnitId}` : "";
+    if (!enemyUnitId) return;
+    const queryParams = `?id=${enemyUnitId}`;
     fetchApi(
       "/enemy_unit/show" + queryParams,
       "GET",
