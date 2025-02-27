@@ -3,6 +3,7 @@ import {
   createUnit,
   createCharacter,
   createUnitCharacter,
+  updateActiveUnit,
 } from "../../helpers/db";
 
 export default async function handler(req, res) {
@@ -53,6 +54,7 @@ export default async function handler(req, res) {
       const characterId = await createCharacter(character);
       await createUnitCharacter(unitId, characterId, index);
     }
+    await updateActiveUnit(userId, unitId);
 
     return res.status(200).json({ success: true, unitId: unitId });
   } catch (error) {
