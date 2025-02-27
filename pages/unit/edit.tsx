@@ -107,13 +107,6 @@ const EditUnit = () => {
               {activeChar?.special_name}
             </div>
           </div>
-          <div>
-            <Icon name={activeChar?.passive_name}></Icon>
-            <div className="text-center">PASSIVE</div>
-            <div className="text-center text-xs">
-              {activeChar?.passive_name}
-            </div>
-          </div>
         </div>
       </div>
     </Template>
