@@ -89,12 +89,12 @@ const EditUnit = () => {
 
         <div className="flex gap-4">
           <div>
-            <Icon name={activeChar?.skill_name}></Icon>
+            <Icon name={activeChar?.skill_name ?? ""} />
             <div className="text-center">SKILL</div>
             <div className="text-center text-xs">{activeChar?.skill_name}</div>
           </div>
           <div>
-            <Icon name={activeChar?.special_name}></Icon>
+            <Icon name={activeChar?.special_name ?? ""} />
             <div className="text-center">SPECIAL</div>
             <div className="text-center text-xs">
               {activeChar?.special_name}
