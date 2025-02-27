@@ -8,6 +8,7 @@ import { fetchApi } from "../helpers/api";
 const NewUnit = () => {
   const [unitName, setUnitName] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false); // 追加: ローディング状態
   const router = useRouter();
 
   const handleCreateUnit = () => {
@@ -22,6 +23,7 @@ const NewUnit = () => {
     }
     // エラーがなければエラー状態をクリア
     setError("");
+    setIsLoading(true); // API コール前に無効化
 
     fetchApi(
       "/unit/create",
@@ -30,9 +32,10 @@ const NewUnit = () => {
         router.push(`/unit/edit?id=${result.unitId}`);
       },
       (error: unknown) => {
+        setIsLoading(false); // エラー発生時は解除
         console.error("APIエラー:", error);
       },
-      { name: unitName } // POSTボディとしてユニット名を送信
+      { name: unitName } // POST ボディとしてユニット名を送信
     );
   };
 
@@ -50,7 +53,12 @@ const NewUnit = () => {
           />
           <button
             onClick={handleCreateUnit}
-            className="ml-2 px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+            disabled={isLoading} // ローディング中は無効化
+            className={`ml-2 px-4 py-1 rounded ${
+              isLoading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-500 hover:bg-blue-600 text-white"
+            }`}
           >
             登録
           </button>
