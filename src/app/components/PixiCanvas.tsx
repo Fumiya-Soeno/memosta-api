@@ -3,6 +3,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as PIXI from "pixi.js";
 import { fetchApi } from "../../../pages/helpers/api";
+
+import { useSearchParams } from "next/navigation";
+
 import { UnitDataType } from "../../types/unit";
 import { DamageText, updateDamageTexts } from "../utils/DamageTextUtil";
 import { updateUnitHPBar } from "../utils/updateHPBar";
@@ -60,6 +63,7 @@ export function PixiCanvas({
   const [enemyData, setEnemyData] = useState<UnitDataType[] | null>(null);
 
   const [unitId, setUnitId] = useState<number | null>(null);
+  const [enemyUnitId, setEnemyUnitId] = useState<number | null>(null);
 
   useEffect(() => {
     const app = new PIXI.Application({ width, height, backgroundColor });
@@ -90,9 +94,19 @@ export function PixiCanvas({
     );
   }, [unitId]);
 
+  const searchParams = useSearchParams();
   useEffect(() => {
+    const paramsUnitId = Number(searchParams?.get("id"));
+    if (paramsUnitId) {
+      setEnemyUnitId(paramsUnitId);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (enemyUnitId === null) return;
+    const queryParams = `?id=${enemyUnitId}`;
     fetchApi(
-      "/enemy_unit/show",
+      "/enemy_unit/show" + queryParams,
       "GET",
       (result: { records: UnitDataType[] }) => {
         setEnemyData(result.records);
@@ -101,7 +115,7 @@ export function PixiCanvas({
         console.error("APIエラー:", error);
       }
     );
-  }, []);
+  }, [enemyUnitId]);
 
   // 味方ユニットテキストの生成と配置
   useEffect(() => {

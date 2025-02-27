@@ -71,11 +71,15 @@ export async function getActiveUnit(userId) {
   `;
 }
 
-export async function getActiveEnemyUnit() {
-  const result = await sql`SELECT id FROM units ORDER BY id DESC LIMIT 1`;
-  const unitId = result.rows[0].id;
-  const enemy = await getCharactersByUnitIdWithoutUserId(unitId);
-
+export async function getActiveEnemyUnit(unitId = null) {
+  let enemy;
+  if (unitId) {
+    enemy = await getCharactersByUnitIdWithoutUserId(unitId);
+  } else {
+    const result = await sql`SELECT id FROM units ORDER BY id DESC LIMIT 1`;
+    const unitId = result.rows[0].id;
+    enemy = await getCharactersByUnitIdWithoutUserId(unitId);
+  }
   return enemy;
 }
 

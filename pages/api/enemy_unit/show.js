@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   try {
     await authenticateUser(accessToken, refreshToken, res);
 
-    const records = await getActiveEnemyUnit();
+    const records = await getActiveEnemyUnit(req.query.id ?? null);
     records.rows.sort((a, b) => a.position - b.position);
 
     return res.status(200).json({ success: true, records: records.rows });
