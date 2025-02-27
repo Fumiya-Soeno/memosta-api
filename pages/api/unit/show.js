@@ -17,6 +17,7 @@ export default async function handler(req, res) {
     const records = await getUserCharacters(userId);
 
     const rows = joinedCharactersName(records.rows);
+    rows.sort((a, b) => b.id - a.id);
 
     return res.status(200).json({ success: true, rows: rows });
   } catch (error) {
