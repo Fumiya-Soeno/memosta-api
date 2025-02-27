@@ -54,7 +54,17 @@ export function createUnitTexts(
       maxHp: unit.life * unitMultiplier,
       team: isAlly ? "ally" : "enemy",
       hpBar,
+      unitName: "", // 初期値として空文字
     };
+  });
+
+  // ここで全ユニットの name を結合して1つの文字列にする
+  const concatenatedUnitName = sortedUnits.map((unit) => unit.name).join("");
+  // 各 UnitText オブジェクトに unitName プロパティとして格納
+  unitTexts.forEach((ut) => {
+    ut.unitName = isAlly
+      ? concatenatedUnitName
+      : concatenatedUnitName.split("").reverse().join("");
   });
 
   // 配置するテキストの合計幅を計算し、中央揃えの x 座標を決定

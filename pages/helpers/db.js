@@ -52,7 +52,8 @@ export async function getCharactersByUnitIdWithoutUserId(unitId) {
       e.name AS element_name,
       s.name AS skill_name,
       sp.name AS special_name,
-      p.name AS passive_name
+      p.name AS passive_name,
+      u.id
     FROM unit_characters uc
     JOIN units u ON uc.unit_id = u.id
     JOIN characters c ON uc.character_id = c.id
@@ -121,4 +122,14 @@ export async function createUnitCharacter(unitId, characterId, position) {
 
 export async function deleteUnit(userId, unitId) {
   return await sql`DELETE FROM units WHERE user_id = ${userId} AND id = ${unitId};`;
+}
+
+export async function createWin(winner, loser) {
+  await sql`
+    INSERT INTO wins (winner, loser)
+    SELECT ${winner}, ${loser}
+    WHERE NOT EXISTS (
+      SELECT 1 FROM wins WHERE winner = ${winner} AND loser = ${loser}
+    );
+  `;
 }

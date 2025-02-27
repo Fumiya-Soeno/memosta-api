@@ -27,4 +27,6 @@ export interface UnitText {
   // HPバー表示用のグラフィックスオブジェクト
   hpBar: PIXI.Graphics;
   isDuplicate: boolean;
+  unitName: string;
+  id: number;
 }

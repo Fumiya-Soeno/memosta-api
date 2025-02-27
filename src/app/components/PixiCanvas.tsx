@@ -103,8 +103,7 @@ export function PixiCanvas({
   }, [searchParams]);
 
   useEffect(() => {
-    if (enemyUnitId === null) return;
-    const queryParams = `?id=${enemyUnitId}`;
+    const queryParams = enemyUnitId ? `?id=${enemyUnitId}` : "";
     fetchApi(
       "/enemy_unit/show" + queryParams,
       "GET",
@@ -121,12 +120,7 @@ export function PixiCanvas({
   useEffect(() => {
     if (!allyData) return;
     const app = appRef.current;
-    if (!app) return;
-    // 既存の味方テキストを削除
-    allyTextsRef.current.forEach((ut) => {
-      app.stage.removeChild(ut.text);
-      app.stage.removeChild(ut.hpBar);
-    });
+    if (!app || allyTextsRef.current.length !== 0) return;
     // ヘルパー関数を使用して味方テキストを作成
     allyTextsRef.current = createUnitTexts(app, allyData, true);
   }, [allyData, width, height]);
@@ -135,14 +129,10 @@ export function PixiCanvas({
   useEffect(() => {
     if (!enemyData) return;
     const app = appRef.current;
-    if (!app) return;
-    // 既存の敵テキストを削除
-    enemyTextsRef.current.forEach((ut) => {
-      app.stage.removeChild(ut.text);
-      app.stage.removeChild(ut.hpBar);
-    });
+    if (!app || enemyTextsRef.current.length !== 0) return;
     // ヘルパー関数を使用して敵テキストを作成
     enemyTextsRef.current = createUnitTexts(app, enemyData, false);
+    if (!enemyUnitId) setEnemyUnitId(enemyTextsRef.current[0].unit.id);
   }, [enemyData, width, height]);
 
   const handleStart = () => {
@@ -222,6 +212,71 @@ export function PixiCanvas({
 
       // ダメージ表示の更新
       updateDamageTexts(app, damageTextsRef.current);
+
+      // 勝敗判定
+      if (
+        allyTextsRef.current.length === 0 ||
+        enemyTextsRef.current.length === 0
+      ) {
+        app.ticker.stop();
+        let winMessage = "";
+        if (allyTextsRef.current.length > 0) {
+          winMessage = `${allyTextsRef.current[0].unitName}\nWINS!!`;
+          fetchApi(
+            "/wins/create",
+            "POST",
+            (result: any) => {
+              console.log(result);
+            },
+            (error: unknown) => {
+              console.error("APIエラー:", error);
+            },
+            { winner: unitId, loser: enemyUnitId }
+          );
+        } else if (enemyTextsRef.current.length > 0) {
+          winMessage = `${enemyTextsRef.current[0].unitName}\nWINS!!`;
+          fetchApi(
+            "/wins/create",
+            "POST",
+            (result: any) => {
+              console.log(result);
+            },
+            (error: unknown) => {
+              console.error("APIエラー:", error);
+            },
+            { winner: enemyUnitId, loser: unitId }
+          );
+        } else {
+          winMessage = "DRAW!";
+        }
+        const style = new PIXI.TextStyle({
+          fontSize: 24,
+          fill: 0xffffff,
+          fontWeight: "bold",
+          align: "center",
+        });
+        const winText = new PIXI.Text(winMessage, style);
+        winText.anchor.set(0.5);
+        winText.x = app.screen.width / 2;
+        winText.y = app.screen.height / 2;
+
+        // Create a black semi-transparent band behind the win text
+        const band = new PIXI.Graphics();
+        band.beginFill(0x000000, 0.5);
+        // Add some padding around the text
+        const paddingX = 200;
+        const paddingY = 10;
+        band.drawRect(
+          winText.x - winText.width / 2 - paddingX,
+          winText.y - winText.height / 2 - paddingY,
+          winText.width + paddingX * 2,
+          winText.height + paddingY * 2
+        );
+        band.endFill();
+
+        app.stage.addChild(band);
+        app.stage.addChild(winText);
+      }
     });
   };
 
