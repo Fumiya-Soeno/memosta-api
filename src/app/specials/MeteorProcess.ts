@@ -6,8 +6,9 @@ import { MeteorEffect, handleMeteorAttack } from "./Meteor";
 
 /**
  * processTeamMeteorAttacks
- * Every 120 frames, if a unit with special_name "メテオ" exists (ally side is preferred),
- * a meteor attack is triggered. Then, all active meteor effects are updated.
+ * Every 80 frames, if any unit with special_name "メテオ" exists in either team,
+ * trigger a meteor attack for each such unit.
+ * Then, all active meteor effects are updated.
  */
 export function processTeamMeteorAttacks(params: {
   app: PIXI.Application;
@@ -19,27 +20,24 @@ export function processTeamMeteorAttacks(params: {
   updateTargetHP: (target: UnitText, damage: number) => void;
 }): void {
   if (params.counter % 80 === 0) {
-    const triggerAlly = params.allyUnits.find(
-      (u) => u.unit.special_name === "メテオ"
-    );
-    if (triggerAlly) {
-      handleMeteorAttack({
-        app: params.app,
-        unit: triggerAlly,
-        meteorEffects: params.meteorEffects,
-      });
-    } else {
-      const triggerEnemy = params.enemyUnits.find(
-        (u) => u.unit.special_name === "メテオ"
-      );
-      if (triggerEnemy) {
+    params.allyUnits
+      .filter((u) => u.unit.special_name === "メテオ")
+      .forEach((u) => {
         handleMeteorAttack({
           app: params.app,
-          unit: triggerEnemy,
+          unit: u,
           meteorEffects: params.meteorEffects,
         });
-      }
-    }
+      });
+    params.enemyUnits
+      .filter((u) => u.unit.special_name === "メテオ")
+      .forEach((u) => {
+        handleMeteorAttack({
+          app: params.app,
+          unit: u,
+          meteorEffects: params.meteorEffects,
+        });
+      });
   }
 
   updateTeamMeteorEffects({
