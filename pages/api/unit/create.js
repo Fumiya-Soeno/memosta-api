@@ -23,13 +23,13 @@ export default async function handler(req, res) {
   const unitObject = [];
 
   unitNameArray.forEach((unitName) => {
-    const life = Math.ceil(Math.random() * 10) + 1;
-    const attack = 11 - life;
-    const speed = Math.ceil(Math.random() * 10) + 1;
-    const skill = Math.ceil(Math.random() * 10) + 1;
-    const special = Math.ceil(Math.random() * 10) + 1;
-    const element = Math.ceil(Math.random() * 3) + 1;
-    const vector = Math.ceil(Math.random() * 5) + 1;
+    const life = Math.floor(Math.random() * 10) + 1; // 1 ~ 10
+    const attack = 11 - life; // lifeに連動（1 ~ 10）
+    const speed = Math.floor(Math.random() * 11); // 0 ~ 10
+    const skill = Math.floor(Math.random() * 10) + 1; // 1 ~ 10
+    const special = Math.floor(Math.random() * 10) + 1; // 1 ~ 10
+    const element = Math.floor(Math.random() * 3) + 1; // 1 ~ 3
+    const vector = Math.floor(Math.random() * 5) + 1; // 1 ~ 5
 
     unitObject.push({
       name: unitName,
