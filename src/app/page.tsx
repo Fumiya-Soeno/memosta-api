@@ -24,16 +24,18 @@ export default function Home() {
 
         {/* ランキング表示 */}
         <div className="flex flex-col gap-2">
-          {rows.map((row) => (
+          <p className="text-xs">勝率TOP10</p>
+          {rows.map((row, index) => (
             <div
               key={row.id}
-              className="p-4 border rounded-lg cursor-pointer shadow-md hover:bg-gray-100 transition"
+              className="p-2 border rounded-lg cursor-pointer shadow-md hover:bg-gray-100 transition"
               onClick={() => (window.location.href = `/?id=${row.id}`)}
             >
-              <p className="text-xs font-bold">{row.name}</p>
-              <p className="text-xs font-bold">勝利数: {row.win}</p>
+              <p className="text-xs font-bold">
+                {index + 1}位 {row.name}
+              </p>
               <p className="text-xs text-gray-600">
-                勝率: {(row.win_rate * 100).toFixed(2)}%
+                勝率{(row.win_rate * 100).toFixed(1)}%/{row.win}勝
               </p>
             </div>
           ))}
