@@ -30,8 +30,9 @@ export default function Home() {
               className="p-4 border rounded-lg cursor-pointer shadow-md hover:bg-gray-100 transition"
               onClick={() => (window.location.href = `/?id=${row.id}`)}
             >
-              <p className="text-lg font-bold">ID: {row.id}</p>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs font-bold">{row.name}</p>
+              <p className="text-xs font-bold">勝利数: {row.win}</p>
+              <p className="text-xs text-gray-600">
                 勝率: {(row.win_rate * 100).toFixed(2)}%
               </p>
             </div>

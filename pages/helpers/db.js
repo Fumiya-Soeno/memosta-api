@@ -126,15 +126,33 @@ export async function deleteUnit(userId, unitId) {
 
 export async function getTop10() {
   return await sql`
-    SELECT
+    WITH winrate AS (
+      SELECT
         u.ID,
-        (COUNT(w.ID) * 1.0 / NULLIF(COUNT(w.ID) + COUNT(l.ID), 0)) AS win_rate
-    FROM units u
-    LEFT JOIN wins w ON u.ID = w.winner
-    LEFT JOIN wins l ON u.ID = l.loser
-    GROUP BY u.ID
-    HAVING (COUNT(w.ID) * 1.0 / NULLIF(COUNT(w.ID) + COUNT(l.ID), 0)) IS NOT NULL
-    ORDER BY win_rate DESC
+        COUNT(DISTINCT w.ID) AS win,
+        (COUNT(DISTINCT w.ID) * 1.0 / NULLIF(COUNT(DISTINCT w.ID) + COUNT(DISTINCT l.ID), 0)) AS win_rate
+      FROM units u
+      LEFT JOIN wins w ON u.ID = w.winner
+      LEFT JOIN wins l ON u.ID = l.loser
+      GROUP BY u.ID
+      HAVING (COUNT(DISTINCT w.ID) * 1.0 / NULLIF(COUNT(DISTINCT w.ID) + COUNT(DISTINCT l.ID), 0)) IS NOT NULL
+    ),
+    unit_names AS (
+      SELECT
+        uc.unit_id AS ID,
+        string_agg(c.NAME, '' ORDER BY uc.ID) AS name
+      FROM unit_characters uc
+      LEFT JOIN characters c ON uc.character_id = c.ID
+      GROUP BY uc.unit_id
+    )
+    SELECT
+      wr.ID,
+      un.name,
+      wr.win,
+      wr.win_rate
+    FROM winrate wr
+    LEFT JOIN unit_names un ON wr.ID = un.ID
+    ORDER BY wr.win_rate DESC
     LIMIT 10;
   `;
 }
