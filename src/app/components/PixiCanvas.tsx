@@ -280,5 +280,12 @@ export function PixiCanvas({
     });
   };
 
+  useEffect(() => {
+    fetchApi("/wins/show", "GET", (result: any) => {
+      const rows = result.rows;
+      const unitId = rows.id;
+    });
+  });
+
   return <CanvasContainer ref={pixiContainerRef} onStart={handleStart} />;
 }

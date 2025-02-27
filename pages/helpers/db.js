@@ -124,6 +124,21 @@ export async function deleteUnit(userId, unitId) {
   return await sql`DELETE FROM units WHERE user_id = ${userId} AND id = ${unitId};`;
 }
 
+export async function getTop10() {
+  return await sql`
+    SELECT
+        u.ID,
+        (COUNT(w.ID) * 1.0 / NULLIF(COUNT(w.ID) + COUNT(l.ID), 0)) AS win_rate
+    FROM units u
+    LEFT JOIN wins w ON u.ID = w.winner
+    LEFT JOIN wins l ON u.ID = l.loser
+    GROUP BY u.ID
+    HAVING (COUNT(w.ID) * 1.0 / NULLIF(COUNT(w.ID) + COUNT(l.ID), 0)) IS NOT NULL
+    ORDER BY win_rate DESC
+    LIMIT 10;
+  `;
+}
+
 export async function createWin(winner, loser) {
   await sql`
     INSERT INTO wins (winner, loser)
