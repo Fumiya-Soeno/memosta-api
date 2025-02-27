@@ -1,14 +1,31 @@
 "use client";
 
 import React from "react";
+
 import CrossBurstIcon from "./icons/skill/CrossBurstIcon";
 import LockOnLaserIcon from "./icons/skill/LockOnLaserIcon";
-import PoisonMistIcon from "./icons/special/PoisonMistIcon";
-import KyuchiIcon from "./icons/passive/KyuchiIcon";
-import PowerUpIcon from "./icons/special/PowerUpIcon";
-import TatsujinIcon from "./icons/passive/TatsujinIcon";
 import PenetratingDiffusionIcon from "./icons/skill/PenetratingDiffusionIcon";
+import EchoBladeIcon from "./icons/skill/EchoBladeIcon";
+import GuardianFallIcon from "./icons/skill/GuardianFallIcon";
+import BlitzShockIcon from "./icons/skill/BlitzShockIcon";
+import SpiralShotIcon from "./icons/skill/SpiralShotIcon";
+import FlameEdgeIcon from "./icons/skill/FlameEdgeIcon";
+import LorenzBurstIcon from "./icons/skill/LorenzBurstIcon";
+import ParabolicLauncherIcon from "./icons/skill/ParabolicLauncherIcon";
+
+import PoisonMistIcon from "./icons/special/PoisonMistIcon";
+import PowerUpIcon from "./icons/special/PowerUpIcon";
 import EarthQuakeIcon from "./icons/special/EarthQuakeIcon";
+import DamageWallIcon from "./icons/special/DamageWallIcon";
+import MeteorIcon from "./icons/special/MeteorIcon";
+import RegenIcon from "./icons/special/RegenIcon";
+import HealingIcon from "./icons/special/HealingIcon";
+import ShadowDiveIcon from "./icons/special/ShadowDiveIcon";
+import VortexBreakIcon from "./icons/special/VortexBreakIcon";
+import DoppelgangerIcon from "./icons/special/DoppelgangerIcon";
+
+import TatsujinIcon from "./icons/passive/TatsujinIcon";
+import KyuchiIcon from "./icons/passive/KyuchiIcon";
 import ReflectionIcon from "./icons/passive/ReflectionIcon";
 
 const Icon = ({ name }) => {
@@ -23,6 +40,28 @@ const Icon = ({ name }) => {
     case "貫通拡散弾":
       icon = <PenetratingDiffusionIcon />;
       break;
+    case "エコーブレード":
+      icon = <EchoBladeIcon />;
+      break;
+    case "ガーディアンフォール":
+      icon = <GuardianFallIcon />;
+      break;
+    case "ブリッツショック":
+      icon = <BlitzShockIcon />;
+      break;
+    case "スパイラルショット":
+      icon = <SpiralShotIcon />;
+      break;
+    case "フレイムエッジ":
+      icon = <FlameEdgeIcon />;
+      break;
+    case "ローレンツバースト":
+      icon = <LorenzBurstIcon />;
+      break;
+    case "パラボリックランチャー":
+      icon = <ParabolicLauncherIcon />;
+      break;
+
     case "毒霧":
       icon = <PoisonMistIcon />;
       break;
@@ -32,6 +71,28 @@ const Icon = ({ name }) => {
     case "アースクエイク":
       icon = <EarthQuakeIcon />;
       break;
+    case "ダメージウォール":
+      icon = <DamageWallIcon />;
+      break;
+    case "メテオ":
+      icon = <MeteorIcon />;
+      break;
+    case "リジェネ":
+      icon = <RegenIcon />;
+      break;
+    case "ヒーリング":
+      icon = <HealingIcon />;
+      break;
+    case "シャドウダイブ":
+      icon = <ShadowDiveIcon />;
+      break;
+    case "ボルテックスブレイク":
+      icon = <VortexBreakIcon />;
+      break;
+    case "ドッペルゲンガー":
+      icon = <DoppelgangerIcon />;
+      break;
+
     case "達人":
       icon = <TatsujinIcon />;
       break;
