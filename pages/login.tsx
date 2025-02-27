@@ -8,6 +8,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [showLoginForm, setShowLoginForm] = useState(false);
   const router = useRouter();
 
   // ログイン状態チェック（ログイン済みならトップへリダイレクト）
@@ -109,49 +110,58 @@ const Login = () => {
   return (
     <Template>
       <div className="flex flex-col items-center justify-center">
-        <form
-          className="bg-white p-6 rounded shadow-md w-80"
-          onSubmit={handleSubmit}
-        >
-          <h2 className="text-2xl font-bold mb-4 text-center">ログイン</h2>
-          {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              メールアドレス
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-300 text-gray-900"
-              placeholder="example@example.com"
-            />
-          </div>
-          <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              パスワード
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-300 text-gray-900"
-              placeholder="6文字以上"
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-          >
-            ログイン
-          </button>
-        </form>
         <button
           onClick={handleGuestLogin}
-          className="mt-4 w-80 bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+          className="mb-4 w-80 bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
         >
           ゲストで遊ぶ
         </button>
+        {!showLoginForm && (
+          <button
+            onClick={() => setShowLoginForm(true)}
+            className="text-xs text-gray-700"
+          >
+            ログインフォームを表示
+          </button>
+        )}
+        {showLoginForm && (
+          <form
+            className="bg-white p-6 rounded shadow-md w-80"
+            onSubmit={handleSubmit}
+          >
+            {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2">
+                メールアドレス
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-300 text-gray-900"
+                placeholder="example@example.com"
+              />
+            </div>
+            <div className="mb-6">
+              <label className="block text-gray-700 text-sm font-bold mb-2">
+                パスワード
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-300 text-gray-900"
+                placeholder="6文字以上"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+            >
+              ログイン
+            </button>
+          </form>
+        )}
       </div>
     </Template>
   );
