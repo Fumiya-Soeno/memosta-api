@@ -42,14 +42,7 @@ const EditUnit = () => {
   return (
     <Template>
       <div className="w-full flex flex-col items-center justify-center h-[calc(100vh-60px)]">
-        <h1 className="text-2xl font-bold">ユニット編集</h1>
-        {/* ✅ onChange を追加して編集可能にする */}
-        <input
-          type="text"
-          className="text-gray-600 border border-gray-300 rounded px-2 py-1 mt-2"
-          value={unitName}
-          onChange={(e) => setUnitName(e.target.value)}
-        />
+        <h1 className="text-2xl font-bold">ユニット詳細</h1>
         <div className="m-6">
           {unitData?.map((char: UnitDataType, index: number) => (
             <span
