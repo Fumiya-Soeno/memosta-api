@@ -24,7 +24,7 @@ export default function Home() {
 
         {/* ランキング表示 */}
         <div className="flex flex-col gap-2">
-          <p className="text-xs">勝率TOP10</p>
+          <p className="text-xs">全国ランキング 勝率TOP10</p>
           {rows.map((row, index) => (
             <div
               key={row.id}

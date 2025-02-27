@@ -29,7 +29,7 @@ const NewUnit = () => {
       "/unit/create",
       "POST",
       (result: any) => {
-        router.push(`/unit/edit?id=${result.unitId}`);
+        router.push("/");
       },
       (error: unknown) => {
         setIsLoading(false); // エラー発生時は解除
@@ -62,6 +62,24 @@ const NewUnit = () => {
           >
             登録
           </button>
+        </div>
+        <div className="mt-3 text-center">
+          <p className="text-sm">
+            ↑適当に文字列を入れて登録してみよう！
+            <br />
+            (12文字以内)
+          </p>
+          <br />
+          <p>▪️ゲーム説明▪️</p>
+          <p className="text-xs text-left mt-1">
+            色んな文字を戦わせることができるゲーム。
+            <br />
+            自分のお気に入りの単語を登録してみよう！
+            <br />
+            勝率が高いと全国ランキングに乗るぞ！！
+            <br />
+            自分の最強ユニットをランクインさせよう！
+          </p>
         </div>
         {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}
       </div>

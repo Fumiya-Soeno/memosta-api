@@ -78,7 +78,7 @@ export async function getActiveEnemyUnit(unitId = null) {
     enemy = await getCharactersByUnitIdWithoutUserId(unitId);
   } else {
     const top10 = await getTop10();
-    const topUnitId = top10.rows[0].id;
+    const topUnitId = top10.rows[9].id; // 10位をデフォルトで表示
     enemy = await getCharactersByUnitIdWithoutUserId(topUnitId);
   }
   return enemy;

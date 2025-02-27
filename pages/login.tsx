@@ -10,7 +10,7 @@ const Login = () => {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  // ✅ ログイン状態をチェック
+  // ログイン状態チェック（ログイン済みならトップへリダイレクト）
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -18,11 +18,10 @@ const Login = () => {
           method: "GET",
           credentials: "include",
         });
-
         if (response.ok) {
           const data = await response.json();
           if (data.loggedIn) {
-            router.push("/"); // すでにログイン済みならトップページにリダイレクト
+            router.push("/");
           }
         }
       } catch (error) {
@@ -33,7 +32,7 @@ const Login = () => {
     checkAuth();
   }, [router]);
 
-  // フロントエンドでのバリデーション
+  // 入力値バリデーション
   const validateInput = () => {
     if (!email) {
       return "メールアドレスを入力してください";
@@ -50,30 +49,27 @@ const Login = () => {
     return null;
   };
 
+  // 通常のログイン処理
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // バリデーションのチェック
     const validationError = validateInput();
     if (validationError) {
       setError(validationError);
       return;
     }
+    setError(null);
 
-    // ログインAPIの呼び出し
     try {
       const response = await fetch("/api/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
       if (response.ok) {
         const result = await response.json();
         console.log("ログイン成功:", result);
-        router.push("/"); // トップページにリダイレクト
+        router.push("/");
       } else {
         const errorData = await response.json();
         setError(errorData.message || "ログインに失敗しました");
@@ -83,9 +79,36 @@ const Login = () => {
     }
   };
 
+  // ゲストログイン処理（固定の認証情報でログイン）
+  const handleGuestLogin = async () => {
+    // 固定の認証情報
+    const guestEmail = "Test@test.com";
+    const guestPassword = "testtest";
+    setError(null);
+
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: guestEmail, password: guestPassword }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("ゲストログイン成功:", result);
+        router.push("/unit/new");
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || "ゲストログインに失敗しました");
+      }
+    } catch (err) {
+      setError("サーバーエラーが発生しました");
+    }
+  };
+
   return (
     <Template>
-      <div className="flex flex-col items-center justify-center bg-gray-100">
+      <div className="flex flex-col items-center justify-center">
         <form
           className="bg-white p-6 rounded shadow-md w-80"
           onSubmit={handleSubmit}
@@ -123,6 +146,12 @@ const Login = () => {
             ログイン
           </button>
         </form>
+        <button
+          onClick={handleGuestLogin}
+          className="mt-4 w-80 bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+        >
+          ゲストで遊ぶ
+        </button>
       </div>
     </Template>
   );
