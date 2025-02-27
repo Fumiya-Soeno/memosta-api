@@ -1,10 +1,10 @@
-import { authenticateUser } from "../../helpers/auth";
+import { authenticateUser } from "../../../helpers/auth";
 import {
   createUnit,
   createCharacter,
   createUnitCharacter,
   updateActiveUnit,
-} from "../../helpers/db";
+} from "../../../helpers/db";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {

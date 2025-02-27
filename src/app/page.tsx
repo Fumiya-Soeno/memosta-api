@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Template } from "./components/common/Template";
 import { PixiCanvas } from "./components/PixiCanvas";
-import { fetchApi } from "../../pages/helpers/api";
+import { fetchApi } from "../../helpers/api";
 
 export default function Home() {
   const [rows, setRows] = useState<

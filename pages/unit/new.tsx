@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Template } from "../../src/app/components/common/Template";
-import { fetchApi } from "../helpers/api";
+import { fetchApi } from "../../helpers/api";
 
 const NewUnit = () => {
   const [unitName, setUnitName] = useState<string>("");

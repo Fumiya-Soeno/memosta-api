@@ -1,6 +1,6 @@
-import { authenticateUser } from "../../helpers/auth";
-import { getUserCharacters } from "../../helpers/db";
-import { joinedCharactersName } from "../../helpers/unit";
+import { authenticateUser } from "../../../helpers/auth";
+import { getUserCharacters } from "../../../helpers/db";
+import { joinedCharactersName } from "../../../helpers/unit";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {

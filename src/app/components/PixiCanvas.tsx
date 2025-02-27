@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import * as PIXI from "pixi.js";
-import { fetchApi } from "../../../pages/helpers/api";
+import { fetchApi } from "../../../helpers/api";
 
 import { useSearchParams } from "next/navigation";
 

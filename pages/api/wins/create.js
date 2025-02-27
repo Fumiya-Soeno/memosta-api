@@ -1,5 +1,5 @@
-import { authenticateUser } from "../../helpers/auth";
-import { createWin } from "../../helpers/db";
+import { authenticateUser } from "../../../helpers/auth";
+import { createWin } from "../../../helpers/db";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {

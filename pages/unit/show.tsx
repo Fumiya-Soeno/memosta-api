@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Template } from "../../src/app/components/common/Template";
-import { fetchApi } from "../helpers/api";
+import { fetchApi } from "../../helpers/api";
 
 interface UnitDataType {
   id: number;

@@ -1,6 +1,6 @@
 import { sql } from "@vercel/postgres";
 import bcrypt from "bcrypt";
-import { generateTokens } from "../helpers/token";
+import { generateTokens } from "../../helpers/token";
 
 const SALT_ROUNDS = 10; // bcryptのソルト生成のためのラウンド数
 

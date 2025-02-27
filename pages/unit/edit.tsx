@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Template } from "../../src/app/components/common/Template";
-import { fetchApi } from "../helpers/api";
-import { joinedCharactersName, charNameColorClasses } from "../helpers/unit";
+import { fetchApi } from "../../helpers/api";
+import { joinedCharactersName, charNameColorClasses } from "../../helpers/unit";
 import BarIndicator from "../../src/app/components/unit/BarIndicator";
 import VectorIndicator from "../../src/app/components/unit/VectorIndicator";
 import Icon from "../../src/app/components/unit/Icon";
