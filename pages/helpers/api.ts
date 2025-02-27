@@ -1,10 +1,10 @@
 // helpers/api.ts
 export async function fetchApi(
   endpoint: string,
-  method: "GET" | "POST" = "GET",
+  method: "GET" | "POST" | "DELETE" = "GET",
   onSuccess: (result: any) => void,
   onError: (error: unknown) => void,
-  body?: any // 任意のデータ型を受け取れるように変更
+  body?: any
 ): Promise<void> {
   try {
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
