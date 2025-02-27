@@ -83,7 +83,7 @@ const EditUnit = () => {
           </div>
           <div className="flex ml-4">
             <span>VEC</span>
-            <VectorIndicator arrow={activeChar?.vector} />
+            <VectorIndicator arrow={activeChar?.vector ?? 0} />
           </div>
         </div>
 
