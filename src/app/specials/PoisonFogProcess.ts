@@ -38,14 +38,26 @@ export function processTeamPoisonFogAttacks(params: {
     if (allyPoisonUnits.length > 0) {
       handlePoisonFogAttack({
         app: params.app,
-        texts: allyPoisonUnits,
+        texts: allyPoisonUnits.map((u) => ({
+          ...u,
+          unit: {
+            ...u.unit,
+            special_name: u.unit.special_name ?? "",
+          },
+        })),
         poisonFogs: params.poisonFogs,
       });
     }
     if (enemyPoisonUnits.length > 0) {
       handlePoisonFogAttack({
         app: params.app,
-        texts: enemyPoisonUnits,
+        texts: enemyPoisonUnits.map((u) => ({
+          ...u,
+          unit: {
+            ...u.unit,
+            special_name: u.unit.special_name ?? "",
+          },
+        })),
         poisonFogs: params.poisonFogs,
       });
     }
