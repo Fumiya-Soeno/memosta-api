@@ -28,7 +28,11 @@ import TatsujinIcon from "./icons/passive/TatsujinIcon";
 import KyuchiIcon from "./icons/passive/KyuchiIcon";
 import ReflectionIcon from "./icons/passive/ReflectionIcon";
 
-const Icon = ({ name }) => {
+interface IconProps {
+  name: string;
+}
+
+const Icon: React.FC<IconProps> = ({ name }) => {
   let icon;
   switch (name) {
     case "十字バースト":
