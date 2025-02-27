@@ -48,6 +48,12 @@ export function handleDoppelgangerAttack(params: {
       team,
     },
     isDuplicate: true,
+    // 以下、UnitText 型に必要な追加プロパティ
+    powerUpMultiplier: 1.0, // デフォルト値
+    baseAttack: params.unit.unit.attack / 5, // 1/5 の値をそのまま利用
+    team: team, // チーム情報
+    unitName: params.unit.unit.name, // 元のユニット名
+    id: params.unit.unit.id, // 一意な識別子
   };
 
   // Add duplicate to the stage.
