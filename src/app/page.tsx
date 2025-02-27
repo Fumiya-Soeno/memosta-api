@@ -8,7 +8,7 @@ import { fetchApi } from "../../helpers/api";
 
 export default function Home() {
   const [rows, setRows] = useState<
-    { id: number; win_rate: number; name: string; win: number }[]
+    { id: number; win_rate: number; name: string; win: number; loss: number }[]
   >([]);
   const router = useRouter();
 
@@ -42,7 +42,7 @@ export default function Home() {
                 {index + 1}位 {row.name}
               </p>
               <p className="text-xs text-gray-600">
-                勝率{(row.win_rate * 100).toFixed(1)}%/{row.win}勝
+                勝率{(row.win_rate * 100).toFixed(1)}%({row.win}勝{row.loss}敗)
               </p>
             </div>
           ))}

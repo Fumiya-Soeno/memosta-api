@@ -130,6 +130,7 @@ export async function getTop10() {
       SELECT
         u.id,
         COUNT(DISTINCT w.id) AS win,
+        COUNT(DISTINCT l.id) AS loss,
         (COUNT(DISTINCT w.id) * 1.0 / NULLIF(COUNT(DISTINCT w.id) + COUNT(DISTINCT l.id), 0)) AS win_rate
       FROM units u
       LEFT JOIN wins w ON u.id = w.winner
@@ -149,6 +150,7 @@ export async function getTop10() {
       wr.id,
       un.name,
       wr.win,
+      wr.loss,
       wr.win_rate
     FROM winrate wr
     LEFT JOIN unit_names un ON wr.id = un.id
