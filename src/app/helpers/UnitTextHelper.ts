@@ -1,5 +1,6 @@
 // UnitTextHelper.ts
 import * as PIXI from "pixi.js";
+import { ITextStyle } from "pixi.js";
 import { UnitDataType } from "../../types/unit";
 import { UnitText } from "../../types/UnitText";
 
@@ -46,8 +47,8 @@ export function createUnitTexts(
   const unitMultiplier = 6 / units.length;
 
   // 各ユニットから UnitText オブジェクトを生成
-  const unitTexts: UnitText[] = sortedUnits.map((unit) => {
-    const text = new PIXI.Text(unit.name, textStyle);
+  const unitTexts: UnitText[] = sortedUnits.map((unit, index) => {
+    const text = new PIXI.Text(unit.name, textStyle as Partial<ITextStyle>);
     text.anchor.set(0.5);
     // 味方は向きを反転（+180度）する
     const angle = isAlly
@@ -70,6 +71,8 @@ export function createUnitTexts(
       team: isAlly ? "ally" : "enemy",
       hpBar,
       unitName: "", // 初期値として空文字
+      isDuplicate: false, // 追加: 重複しているかのフラグ（初期値 false）
+      id: unit.id, // 追加: 一意な識別子（ここでは index を利用）
     };
   });
 
