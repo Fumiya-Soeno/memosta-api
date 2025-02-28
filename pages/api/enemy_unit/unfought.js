@@ -22,8 +22,9 @@ export default async function handler(req, res) {
     await authenticateUser(accessToken, refreshToken, res);
 
     const records = await getRandomUnfoughtUnit(unitId);
+    const unfoughtUnitId = records?.id ?? unitId;
 
-    return res.status(200).json({ success: true, unitId: records.id });
+    return res.status(200).json({ success: true, unitId: unfoughtUnitId });
   } catch (error) {
     console.error("エラー:", error);
     return res
