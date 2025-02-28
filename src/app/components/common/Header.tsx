@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useEffect } from "react";
 import { LogoutButton } from "./LogoutButton";
 import { SidebarLink } from "./SidebarLink";
@@ -42,9 +41,9 @@ export function Header() {
   return (
     // relative を指定して、絶対配置のメニューを親要素内に収めます
     <header className="relative flex justify-between items-center px-8 py-4 bg-gray-800 text-white text-lg">
-      <Link href="/" className="text-white no-underline">
+      <a href="/" className="text-white no-underline">
         Character&apos;s War
-      </Link>
+      </a>
       <nav className="flex items-center space-x-4">
         {isLoggedIn && (
           <>
