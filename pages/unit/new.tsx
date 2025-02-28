@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Template } from "../../src/app/components/common/Template";
 import { fetchApi } from "../../helpers/api";
+import { setActiveUnitIdClient } from "../../helpers/activeUnitHelper";
 
 const NewUnit = () => {
   const [unitName, setUnitName] = useState<string>("");
@@ -29,7 +30,8 @@ const NewUnit = () => {
       "/unit/create",
       "POST",
       async (result: any) => {
-        router.push(`/?id=${result.unitId}`);
+        setActiveUnitIdClient(result.unitId);
+        router.push(`/?id=${result.unitId10th}`);
       },
       (error: unknown) => {
         setIsLoading(false); // エラー発生時は解除

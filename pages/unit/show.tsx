@@ -4,11 +4,14 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Template } from "../../src/app/components/common/Template";
 import { fetchApi } from "../../helpers/api";
+import {
+  getActiveUnitId,
+  setActiveUnitIdClient,
+} from "../../helpers/activeUnitHelper";
 
 interface UnitDataType {
   id: number;
   name: string;
-  // その他必要なプロパティを追加（例：vector, position, speed など）
 }
 
 const Unit = () => {
@@ -16,25 +19,22 @@ const Unit = () => {
   const [activeUnitId, setActiveUnitId] = useState<number | null>(null);
   const router = useRouter();
 
-  // ユニット一覧とアクティブユニットを取得
+  // ユニット一覧を取得
   useEffect(() => {
     fetchApi(
       "/unit/show",
       "GET",
       (result: { rows: UnitDataType[] }) => {
         setUnits(result.rows);
-        // ユニット一覧取得後、アクティブユニットを取得
-        fetchApi(
-          "/active_unit/show",
-          "GET",
-          (result: { rows: { unit_id: number }[] }) => {
-            const activeId = result.rows[0]?.unit_id;
-            setActiveUnitId(activeId);
-          },
-          (error: unknown) => {
-            console.error("active_unit/show APIエラー:", error);
-          }
-        );
+        // 初回表示時、localStorageに保存されているアクティブユニットIDを読み込み、
+        // なければ最初のユニットIDを使用する
+        const storedActiveId = getActiveUnitId();
+        if (storedActiveId) {
+          setActiveUnitId(storedActiveId);
+        } else if (result.rows.length > 0) {
+          setActiveUnitId(result.rows[0].id);
+          setActiveUnitIdClient(result.rows[0].id);
+        }
       },
       (error: unknown) => {
         console.error("unit/show APIエラー:", error);
@@ -42,25 +42,15 @@ const Unit = () => {
     );
   }, []);
 
-  // ユニットカードクリック時は編集画面へ遷移
+  // ユニットカードクリックで編集画面へ遷移
   const handleCardClick = (id: number) => {
     router.push(`/unit/edit?id=${id}`);
   };
 
-  // 「Set Active」ボタンでアクティブユニットを変更
+  // 「Set Active」ボタンでアクティブユニットをクライアント側で更新
   const handleSetActive = (unitId: number) => {
-    fetchApi(
-      "/active_unit/update",
-      "POST",
-      (result: any) => {
-        console.log("Active unit updated:", result);
-        setActiveUnitId(unitId);
-      },
-      (error: unknown) => {
-        console.error("active_unit/update APIエラー:", error);
-      },
-      { unitId }
-    );
+    setActiveUnitIdClient(unitId);
+    setActiveUnitId(unitId);
   };
 
   // 「削除」ボタンでユニットを削除
@@ -71,15 +61,16 @@ const Unit = () => {
       (result: any) => {
         console.log("Unit deleted:", result);
         setUnits((prev) => prev.filter((unit) => unit.id !== id));
-        // Optionally clear active unit if deleted
+        // アクティブユニットが削除された場合は、クリアする
         if (activeUnitId === id) {
           setActiveUnitId(null);
+          localStorage.removeItem("activeUnitId");
         }
       },
       (error: unknown) => {
         console.error("unit/delete APIエラー:", error);
       },
-      { unitId: id } // Set body.unitId to the unit's id
+      { unitId: id } // リクエストボディに { unitId: id } を送信
     );
   };
 

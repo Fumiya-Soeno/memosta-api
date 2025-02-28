@@ -3,7 +3,6 @@ import {
   createUnit,
   createCharacter,
   createUnitCharacter,
-  updateActiveUnit,
   get10thUnitId,
 } from "../../../helpers/db";
 
@@ -55,10 +54,9 @@ export default async function handler(req, res) {
       const characterId = await createCharacter(character);
       await createUnitCharacter(unitId, characterId, index);
     }
-    await updateActiveUnit(userId, unitId);
     const unitId10th = await get10thUnitId();
 
-    return res.status(200).json({ success: true, unitId: unitId10th });
+    return res.status(200).json({ success: true, unitId, unitId10th });
   } catch (error) {
     console.error("エラー:", error);
     return res

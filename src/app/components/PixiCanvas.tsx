@@ -14,6 +14,11 @@ import { createUnitTexts } from "../helpers/UnitTextHelper";
 import { SkillManager } from "../skills/SkillManager";
 import { SpecialManager } from "../specials/SpecialManager";
 
+import {
+  getActiveUnitId,
+  setActiveUnitIdClient,
+} from "../../../helpers/activeUnitHelper";
+
 interface PixiCanvasProps {
   width?: number;
   height?: number;
@@ -81,15 +86,7 @@ export function PixiCanvas({
       pixiContainerRef.current.appendChild(app.view as HTMLCanvasElement);
     }
     appRef.current = app;
-    fetchApi(
-      "/active_unit/show",
-      "GET",
-      (result: any) => {
-        const id = result?.rows[0]?.unit_id;
-        if (id) setUnitId(id);
-      },
-      () => {}
-    );
+    setUnitId(getActiveUnitId());
     return () => {
       app.destroy(true, true);
     };
