@@ -83,6 +83,61 @@ export function PixiCanvas({
     };
   }, [width, height, backgroundColor]);
 
+  // 初期状態で「Click to Start」の点滅する帯とテキストを表示
+  useEffect(() => {
+    const app = appRef.current;
+    if (!app) return;
+
+    // スタート画面用コンテナを作成
+    const startScreenContainer = new PIXI.Container();
+    app.stage.addChild(startScreenContainer);
+
+    // 黒い帯（矩形）の作成
+    const band = new PIXI.Graphics();
+    band.beginFill(0x000000);
+    const bandWidth = app.screen.width;
+    const bandHeight = 70;
+    band.drawRect(
+      0,
+      app.screen.height / 2 - bandHeight / 2,
+      bandWidth,
+      bandHeight
+    );
+    band.endFill();
+    startScreenContainer.addChild(band);
+
+    // 「Click to Start」テキストの作成
+    const style = new PIXI.TextStyle({
+      fontSize: 24,
+      fill: 0xffffff,
+      fontWeight: "bold",
+      align: "center",
+    });
+    const startText = new PIXI.Text("Click to Start", style);
+    startText.anchor.set(0.5);
+    startText.x = app.screen.width / 2;
+    startText.y = app.screen.height / 2;
+    startScreenContainer.addChild(startText);
+
+    // 点滅効果: bandのα値を変化させる
+    let blinkCounter = 0;
+    const blinkTicker = (delta: number) => {
+      blinkCounter += delta;
+      const alpha = 0.5 + 0.5 * Math.sin(blinkCounter * 0.1);
+      band.alpha = alpha;
+    };
+    app.ticker.add(blinkTicker);
+
+    // スタート画面にインタラクティブ設定を追加し、クリック時にhandleStartを実行
+    startScreenContainer.interactive = true;
+    startScreenContainer.buttonMode = true;
+    startScreenContainer.on("pointerdown", () => {
+      app.ticker.remove(blinkTicker);
+      app.stage.removeChild(startScreenContainer);
+      handleStart();
+    });
+  }, []);
+
   useEffect(() => {
     if (unitId === null) return;
     fetchApi(
@@ -110,7 +165,6 @@ export function PixiCanvas({
     if (!allyData) return;
     const app = appRef.current;
     if (!app || allyTextsRef.current.length !== 0) return;
-    // ヘルパー関数を使用して味方テキストを作成
     allyTextsRef.current = createUnitTexts(app, allyData, true);
   }, [allyData, width, height]);
 
@@ -119,7 +173,6 @@ export function PixiCanvas({
     if (!enemyData) return;
     const app = appRef.current;
     if (!app || enemyTextsRef.current.length !== 0) return;
-    // ヘルパー関数を使用して敵テキストを作成
     enemyTextsRef.current = createUnitTexts(app, enemyData, false);
     if (!enemyUnitId) setEnemyUnitId(enemyTextsRef.current[0].unit.id);
   }, [enemyData, width, height]);
@@ -264,10 +317,9 @@ export function PixiCanvas({
         winText.x = app.screen.width / 2;
         winText.y = app.screen.height / 2;
 
-        // Create a black semi-transparent band behind the win text
+        // 黒い半透明の帯をwinTextの背景に作成
         const band = new PIXI.Graphics();
         band.beginFill(0x000000, 0.5);
-        // Add some padding around the text
         const paddingX = 200;
         const paddingY = 10;
         band.drawRect(
