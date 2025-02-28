@@ -202,3 +202,23 @@ export async function createWin(winner, loser) {
     );
   `;
 }
+
+export async function getRandomUnfoughtUnit(unitId) {
+  const result = await sql`
+    WITH candidate_units AS (
+      SELECT id
+      FROM units
+      WHERE id != ${unitId}
+    )
+    SELECT id
+    FROM candidate_units
+    WHERE id NOT IN (
+      SELECT loser FROM wins WHERE winner = ${unitId}
+      UNION
+      SELECT winner FROM wins WHERE loser = ${unitId}
+    )
+    ORDER BY random()
+    LIMIT 1;
+  `;
+  return result.rows[0];
+}

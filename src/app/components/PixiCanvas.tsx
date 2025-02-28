@@ -14,15 +14,26 @@ import { createUnitTexts } from "../helpers/UnitTextHelper";
 import { SkillManager } from "../skills/SkillManager";
 import { SpecialManager } from "../specials/SpecialManager";
 
-import {
-  getActiveUnitId,
-  setActiveUnitIdClient,
-} from "../../../helpers/activeUnitHelper";
+import { getActiveUnitId } from "../../../helpers/activeUnitHelper";
 
 interface PixiCanvasProps {
   width?: number;
   height?: number;
   backgroundColor?: number;
+}
+
+async function redirectRandomUnfortUnit(unitId: number | null) {
+  if (!unitId) return;
+  fetchApi(
+    `/enemy_unit/unfought?id=${unitId}`,
+    "GET",
+    (result: { unitId: number }) => {
+      window.location.href = `/?id=${result.unitId}`;
+    },
+    (error: unknown) => {
+      console.error("APIエラー:", error);
+    }
+  );
 }
 
 export function PixiCanvas({
@@ -74,6 +85,7 @@ export function PixiCanvas({
   const allyUnitNameRef = useRef<string>("");
 
   const [enemyUnitName, setEnemyUnitName] = useState<string>("");
+  const enemyUnitNameRef = useRef<string>("");
 
   useEffect(() => {
     const app = new PIXI.Application({ width, height, backgroundColor });
@@ -153,7 +165,9 @@ export function PixiCanvas({
     if (!app || enemyTextsRef.current.length !== 0) return;
     enemyTextsRef.current = createUnitTexts(app, enemyData, false);
     if (!enemyUnitId) setEnemyUnitId(enemyTextsRef.current[0].unit.id);
-    setEnemyUnitName(enemyTextsRef.current[0].unitName);
+    const newName = enemyTextsRef.current[0].unitName;
+    setEnemyUnitName(newName);
+    enemyUnitNameRef.current = newName;
   }, [enemyData, width, height]);
 
   // enemyDataの取得（idが指定されている場合のみ）
@@ -318,11 +332,11 @@ export function PixiCanvas({
         enemyTextsRef.current.length === 0
       ) {
         app.ticker.stop();
-        let winMessage = "";
+        let outcome = "";
         if (allyTextsRef.current.length > 0) {
-          winMessage = `${allyUnitNameRef.current}\nWINS!!`;
+          outcome = "YOU WINS!!";
           // 同名ユニットの場合は勝敗登録しない
-          if (allyUnitNameRef.current !== enemyUnitName) {
+          if (allyUnitNameRef.current !== enemyUnitNameRef.current) {
             fetchApi(
               "/wins/create",
               "POST",
@@ -336,9 +350,9 @@ export function PixiCanvas({
             );
           }
         } else if (enemyTextsRef.current.length > 0) {
-          winMessage = `${enemyUnitName}\nWINS!!`;
+          outcome = "YOU LOSE";
           // 同名ユニットの場合は勝敗登録しない
-          if (allyUnitNameRef.current !== enemyUnitName) {
+          if (allyUnitNameRef.current !== enemyUnitNameRef.current) {
             fetchApi(
               "/wins/create",
               "POST",
@@ -352,34 +366,88 @@ export function PixiCanvas({
             );
           }
         } else {
-          winMessage = "DRAW!";
+          outcome = "DRAW!";
         }
-        const style = new PIXI.TextStyle({
+
+        // テキストスタイルの定義
+        const bigStyle = new PIXI.TextStyle({
           fontSize: 24,
           fill: 0xffffff,
           fontWeight: "bold",
           align: "center",
         });
-        const winText = new PIXI.Text(winMessage, style);
-        winText.anchor.set(0.5);
-        winText.x = app.screen.width / 2;
-        winText.y = app.screen.height / 2;
+        const vsTextStyle = new PIXI.TextStyle({
+          fontSize: 14,
+          fill: 0xeeeeee,
+          align: "center",
+        });
+        const smallStyle = new PIXI.TextStyle({
+          fontSize: 22,
+          fill: 0x4444ff,
+          fontWeight: "bold",
+          align: "center",
+        });
 
-        // 黒い半透明の帯をwinTextの背景に作成
+        // 1行目：勝敗結果
+        const outcomeText = new PIXI.Text(outcome, bigStyle);
+        outcomeText.anchor.set(0.5);
+        outcomeText.x = app.screen.width / 2;
+        outcomeText.y = app.screen.height / 2 - 40;
+
+        // 2行目：自軍 VS 敵軍
+        const vsMessage = `(YOU) ${allyUnitNameRef.current}  vs  ${enemyUnitNameRef.current}`;
+        const vsText = new PIXI.Text(vsMessage, vsTextStyle);
+        vsText.anchor.set(0.5);
+        vsText.x = app.screen.width / 2;
+        vsText.y = app.screen.height / 2;
+
+        // 3行目：次のバトルへの案内
+        const clickText = new PIXI.Text("クリックで次のバトルへ", smallStyle);
+        clickText.anchor.set(0.5);
+        clickText.x = app.screen.width / 2;
+        clickText.y = app.screen.height / 2 + 40;
+        clickText.eventMode = "dynamic";
+        clickText.on("pointerdown", () => {
+          redirectRandomUnfortUnit(unitId);
+        });
+
+        // クリック可能な背景用（半透明の帯）を追加（必要に応じて）
         const band = new PIXI.Graphics();
-        band.beginFill(0x000000, 0.5);
+        band.beginFill(0x000000, 0.9);
         const paddingX = 200;
         const paddingY = 10;
+        // 背景は全テキストを囲むように計算
         band.drawRect(
-          winText.x - winText.width / 2 - paddingX,
-          winText.y - winText.height / 2 - paddingY,
-          winText.width + paddingX * 2,
-          winText.height + paddingY * 2
+          outcomeText.x -
+            Math.max(outcomeText.width, vsText.width, clickText.width) / 2 -
+            paddingX,
+          outcomeText.y - outcomeText.height - paddingY,
+          Math.max(outcomeText.width, vsText.width, clickText.width) +
+            paddingX * 2,
+          outcomeText.height + vsText.height + clickText.height + paddingY * 9
         );
         band.endFill();
+        band.eventMode = "dynamic";
+        band.on("pointerdown", () => {
+          redirectRandomUnfortUnit(unitId);
+        });
 
-        app.stage.addChild(band);
-        app.stage.addChild(winText);
+        // 下線を描画
+        const underline = new PIXI.Graphics();
+        underline.lineStyle(2, 0x4444ff, 1); // 線の太さ2px、色はsmallStyleのfillに合わせる
+        // 下線はclickTextの下部中央に合わせる
+        underline.moveTo(
+          clickText.x - clickText.width / 2,
+          clickText.y + clickText.height / 2 + 2
+        );
+        underline.lineTo(
+          clickText.x + clickText.width / 2,
+          clickText.y + clickText.height / 2 + 2
+        );
+        underline.eventMode = "none"; // クリックイベントが重ならないように設定
+
+        // ステージに追加
+        app.stage.addChild(band, outcomeText, vsText, clickText, underline);
       }
     });
   };
