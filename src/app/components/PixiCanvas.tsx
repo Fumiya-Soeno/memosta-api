@@ -83,10 +83,74 @@ export function PixiCanvas({
     };
   }, [width, height, backgroundColor]);
 
-  // 初期状態で「Click to Start」の点滅する帯とテキストを表示
+  // allyDataの取得
+  useEffect(() => {
+    if (unitId === null) return;
+    fetchApi(
+      `/unit/edit?unitId=${unitId}`,
+      "GET",
+      (result: { records: UnitDataType[] }) => {
+        setAllyData(result.records);
+      },
+      (error: unknown) => {
+        console.error("APIエラー:", error);
+      }
+    );
+  }, [unitId]);
+
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const paramsUnitId = Number(searchParams?.get("id"));
+    if (paramsUnitId) {
+      setEnemyUnitId(paramsUnitId);
+    }
+  }, [searchParams]);
+
+  // 味方ユニットテキストの生成と配置
+  useEffect(() => {
+    if (!allyData) return;
+    const app = appRef.current;
+    if (!app || allyTextsRef.current.length !== 0) return;
+    allyTextsRef.current = createUnitTexts(app, allyData, true);
+  }, [allyData, width, height]);
+
+  // 敵ユニットテキストの生成と配置
+  useEffect(() => {
+    if (!enemyData) return;
+    const app = appRef.current;
+    if (!app || enemyTextsRef.current.length !== 0) return;
+    enemyTextsRef.current = createUnitTexts(app, enemyData, false);
+    if (!enemyUnitId) setEnemyUnitId(enemyTextsRef.current[0].unit.id);
+  }, [enemyData, width, height]);
+
+  // enemyDataの取得
+  useEffect(() => {
+    if (!enemyUnitId) return;
+    const queryParams = `?id=${enemyUnitId}`;
+    fetchApi(
+      "/enemy_unit/show" + queryParams,
+      "GET",
+      (result: { records: UnitDataType[] }) => {
+        setEnemyData(result.records);
+      },
+      (error: unknown) => {
+        console.error("APIエラー:", error);
+      }
+    );
+  }, [enemyUnitId]);
+
+  // allyData, enemyDataが取得できたら「Click to Start」のスタート画面を表示
   useEffect(() => {
     const app = appRef.current;
     if (!app) return;
+    // allyDataとenemyDataがnullでなく、両方の長さが0でないことを確認
+    if (
+      !allyData ||
+      !enemyData ||
+      allyData.length === 0 ||
+      enemyData.length === 0
+    )
+      return;
 
     // スタート画面用コンテナを作成
     const startScreenContainer = new PIXI.Container();
@@ -130,67 +194,12 @@ export function PixiCanvas({
 
     // スタート画面にインタラクティブ設定を追加し、クリック時にhandleStartを実行
     startScreenContainer.interactive = true;
-    startScreenContainer.buttonMode = true;
     startScreenContainer.on("pointerdown", () => {
       app.ticker.remove(blinkTicker);
       app.stage.removeChild(startScreenContainer);
       handleStart();
     });
-  }, []);
-
-  useEffect(() => {
-    if (unitId === null) return;
-    fetchApi(
-      `/unit/edit?unitId=${unitId}`,
-      "GET",
-      (result: { records: UnitDataType[] }) => {
-        setAllyData(result.records);
-      },
-      (error: unknown) => {
-        console.error("APIエラー:", error);
-      }
-    );
-  }, [unitId]);
-
-  const searchParams = useSearchParams();
-  useEffect(() => {
-    const paramsUnitId = Number(searchParams?.get("id"));
-    if (paramsUnitId) {
-      setEnemyUnitId(paramsUnitId);
-    }
-  }, [searchParams]);
-
-  // 味方ユニットテキストの生成と配置
-  useEffect(() => {
-    if (!allyData) return;
-    const app = appRef.current;
-    if (!app || allyTextsRef.current.length !== 0) return;
-    allyTextsRef.current = createUnitTexts(app, allyData, true);
-  }, [allyData, width, height]);
-
-  // 敵ユニットテキストの生成と配置
-  useEffect(() => {
-    if (!enemyData) return;
-    const app = appRef.current;
-    if (!app || enemyTextsRef.current.length !== 0) return;
-    enemyTextsRef.current = createUnitTexts(app, enemyData, false);
-    if (!enemyUnitId) setEnemyUnitId(enemyTextsRef.current[0].unit.id);
-  }, [enemyData, width, height]);
-
-  useEffect(() => {
-    if (!enemyUnitId) return;
-    const queryParams = `?id=${enemyUnitId}`;
-    fetchApi(
-      "/enemy_unit/show" + queryParams,
-      "GET",
-      (result: { records: UnitDataType[] }) => {
-        setEnemyData(result.records);
-      },
-      (error: unknown) => {
-        console.error("APIエラー:", error);
-      }
-    );
-  }, [enemyUnitId]);
+  }, [allyData, enemyData]);
 
   const handleStart = () => {
     const app = appRef.current;
