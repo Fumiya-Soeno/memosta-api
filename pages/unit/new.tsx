@@ -28,8 +28,8 @@ const NewUnit = () => {
     fetchApi(
       "/unit/create",
       "POST",
-      (result: any) => {
-        router.push("/");
+      async (result: any) => {
+        router.push(`/?id=${result.unitId}`);
       },
       (error: unknown) => {
         setIsLoading(false); // エラー発生時は解除

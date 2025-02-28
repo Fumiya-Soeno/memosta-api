@@ -63,6 +63,8 @@ export function PixiCanvas({
   const [unitId, setUnitId] = useState<number | null>(null);
   const [enemyUnitId, setEnemyUnitId] = useState<number | null>(null);
 
+  const searchParams = useSearchParams();
+
   useEffect(() => {
     const app = new PIXI.Application({ width, height, backgroundColor });
     if (pixiContainerRef.current) {
@@ -98,11 +100,31 @@ export function PixiCanvas({
     );
   }, [unitId]);
 
-  const searchParams = useSearchParams();
+  // URLの?idパラメータからenemyUnitIdを取得
   useEffect(() => {
     const paramsUnitId = Number(searchParams?.get("id"));
     if (paramsUnitId) {
       setEnemyUnitId(paramsUnitId);
+    }
+  }, [searchParams]);
+
+  // id指定がない場合、Pixi画面上にメッセージを表示
+  useEffect(() => {
+    const app = appRef.current;
+    if (!app) return;
+    // URLにidパラメータが存在しなければ
+    if (!searchParams?.get("id")) {
+      const style = new PIXI.TextStyle({
+        fontSize: 12,
+        fill: 0x000000,
+        fontWeight: "bold",
+        align: "center",
+      });
+      const message = new PIXI.Text("戦うユニットを選んで下さい", style);
+      message.anchor.set(0.5);
+      message.x = app.screen.width / 2;
+      message.y = app.screen.height / 4;
+      app.stage.addChild(message);
     }
   }, [searchParams]);
 
@@ -123,7 +145,7 @@ export function PixiCanvas({
     if (!enemyUnitId) setEnemyUnitId(enemyTextsRef.current[0].unit.id);
   }, [enemyData, width, height]);
 
-  // enemyDataの取得
+  // enemyDataの取得（idが指定されている場合のみ）
   useEffect(() => {
     if (!enemyUnitId) return;
     const queryParams = `?id=${enemyUnitId}`;
@@ -143,7 +165,7 @@ export function PixiCanvas({
   useEffect(() => {
     const app = appRef.current;
     if (!app) return;
-    // allyDataとenemyDataがnullでなく、両方の長さが0でないことを確認
+    // allyDataとenemyDataがnullでなく、かつどちらもlengthが0でない場合のみ
     if (
       !allyData ||
       !enemyData ||
@@ -193,7 +215,7 @@ export function PixiCanvas({
     app.ticker.add(blinkTicker);
 
     // スタート画面にインタラクティブ設定を追加し、クリック時にhandleStartを実行
-    startScreenContainer.interactive = true;
+    startScreenContainer.eventMode = "dynamic";
     startScreenContainer.on("pointerdown", () => {
       app.ticker.remove(blinkTicker);
       app.stage.removeChild(startScreenContainer);

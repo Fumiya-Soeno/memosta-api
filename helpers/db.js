@@ -153,6 +153,11 @@ export async function getTop10() {
   `;
 }
 
+export async function get10thUnitId() {
+  const top10 = await getTop10();
+  return top10.rows[9].id;
+}
+
 export async function createWin(winner, loser) {
   await sql`
     INSERT INTO wins (winner, loser)
