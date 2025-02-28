@@ -11,8 +11,6 @@ import { DamageText, updateDamageTexts } from "../utils/DamageTextUtil";
 import { updateUnitHPBar } from "../utils/updateHPBar";
 import { createUnitTexts } from "../helpers/UnitTextHelper";
 
-import CanvasContainer from "../components/CanvasContainer";
-
 import { SkillManager } from "../skills/SkillManager";
 import { SpecialManager } from "../specials/SpecialManager";
 
@@ -298,5 +296,5 @@ export function PixiCanvas({
     );
   }, []);
 
-  return <CanvasContainer ref={pixiContainerRef} onStart={handleStart} />;
+  return <div ref={pixiContainerRef} />;
 }
