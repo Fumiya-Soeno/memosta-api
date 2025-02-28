@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LogoutButton } from "./LogoutButton";
 import { SidebarLink } from "./SidebarLink";
 // ハンバーガーアイコン用に react-icons を利用（パッケージ未導入の場合はインストールしてください）
@@ -9,6 +9,31 @@ import { HiOutlineMenu } from "react-icons/hi";
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // ログイン状態を確認
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const response = await fetch("/api/auth/me", {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setIsLoggedIn(data.loggedIn);
+        } else {
+          setIsLoggedIn(false);
+        }
+      } catch (error) {
+        console.error("ログイン状態の確認中にエラーが発生しました", error);
+        setIsLoggedIn(false);
+      }
+    };
+
+    checkLoginStatus();
+  }, []);
 
   const toggleMenu = () => {
     setMenuOpen((prev) => !prev);
@@ -21,22 +46,26 @@ export function Header() {
         Character&apos;s War
       </Link>
       <nav className="flex items-center space-x-4">
-        {/* デスクトップ：Logout ボタンを表示 */}
-        <div className="hidden md:block">
-          <LogoutButton />
-        </div>
-        {/* スマホ：ハンバーガーメニューアイコン */}
-        <button
-          className="md:hidden"
-          onClick={toggleMenu}
-          aria-label="メニュー"
-        >
-          <HiOutlineMenu size={24} />
-        </button>
+        {isLoggedIn && (
+          <>
+            {/* デスクトップ：Logout ボタンを表示 */}
+            <div className="hidden md:block">
+              <LogoutButton />
+            </div>
+            {/* スマホ：ハンバーガーメニューアイコン */}
+            <button
+              className="md:hidden"
+              onClick={toggleMenu}
+              aria-label="メニュー"
+            >
+              <HiOutlineMenu size={24} />
+            </button>
+          </>
+        )}
       </nav>
 
       {/* スマホ用ハンバーガーメニュー */}
-      {menuOpen && (
+      {menuOpen && isLoggedIn && (
         <div className="absolute top-full right-0 mt-2 w-52 bg-gray-100 shadow-md z-50">
           <nav>
             <ul className="list-none p-4">
