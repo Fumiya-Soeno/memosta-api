@@ -72,6 +72,11 @@ export function PixiCanvas({
 
   useEffect(() => {
     const app = new PIXI.Application({ width, height, backgroundColor });
+
+    // PixiCanvasをスクロール可能にする
+    app.renderer.plugins.interaction.autoPreventDefault = false;
+    if (app.renderer.view.style) app.renderer.view.style.touchAction = "auto";
+
     if (pixiContainerRef.current) {
       pixiContainerRef.current.appendChild(app.view as HTMLCanvasElement);
     }
