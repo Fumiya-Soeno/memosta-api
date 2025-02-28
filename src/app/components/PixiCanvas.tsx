@@ -65,6 +65,11 @@ export function PixiCanvas({
 
   const searchParams = useSearchParams();
 
+  const [allyUnitName, setAllyUnitName] = useState<string>("");
+  const allyUnitNameRef = useRef<string>("");
+
+  const [enemyUnitName, setEnemyUnitName] = useState<string>("");
+
   useEffect(() => {
     const app = new PIXI.Application({ width, height, backgroundColor });
     if (pixiContainerRef.current) {
@@ -134,6 +139,9 @@ export function PixiCanvas({
     const app = appRef.current;
     if (!app || allyTextsRef.current.length !== 0) return;
     allyTextsRef.current = createUnitTexts(app, allyData, true);
+    const newName = allyTextsRef.current[0].unitName;
+    setAllyUnitName(newName);
+    allyUnitNameRef.current = newName;
   }, [allyData, width, height]);
 
   // 敵ユニットテキストの生成と配置
@@ -143,6 +151,7 @@ export function PixiCanvas({
     if (!app || enemyTextsRef.current.length !== 0) return;
     enemyTextsRef.current = createUnitTexts(app, enemyData, false);
     if (!enemyUnitId) setEnemyUnitId(enemyTextsRef.current[0].unit.id);
+    setEnemyUnitName(enemyTextsRef.current[0].unitName);
   }, [enemyData, width, height]);
 
   // enemyDataの取得（idが指定されている場合のみ）
@@ -309,31 +318,37 @@ export function PixiCanvas({
         app.ticker.stop();
         let winMessage = "";
         if (allyTextsRef.current.length > 0) {
-          winMessage = `${allyTextsRef.current[0].unitName}\nWINS!!`;
-          fetchApi(
-            "/wins/create",
-            "POST",
-            (result: any) => {
-              console.log(result);
-            },
-            (error: unknown) => {
-              console.error("APIエラー:", error);
-            },
-            { winner: unitId, loser: enemyUnitId }
-          );
+          winMessage = `${allyUnitNameRef.current}\nWINS!!`;
+          // 同名ユニットの場合は勝敗登録しない
+          if (allyUnitNameRef.current !== enemyUnitName) {
+            fetchApi(
+              "/wins/create",
+              "POST",
+              (result: any) => {
+                console.log(result);
+              },
+              (error: unknown) => {
+                console.error("APIエラー:", error);
+              },
+              { winner: unitId, loser: enemyUnitId }
+            );
+          }
         } else if (enemyTextsRef.current.length > 0) {
-          winMessage = `${enemyTextsRef.current[0].unitName}\nWINS!!`;
-          fetchApi(
-            "/wins/create",
-            "POST",
-            (result: any) => {
-              console.log(result);
-            },
-            (error: unknown) => {
-              console.error("APIエラー:", error);
-            },
-            { winner: enemyUnitId, loser: unitId }
-          );
+          winMessage = `${enemyUnitName}\nWINS!!`;
+          // 同名ユニットの場合は勝敗登録しない
+          if (allyUnitNameRef.current !== enemyUnitName) {
+            fetchApi(
+              "/wins/create",
+              "POST",
+              (result: any) => {
+                console.log(result);
+              },
+              (error: unknown) => {
+                console.error("APIエラー:", error);
+              },
+              { winner: enemyUnitId, loser: unitId }
+            );
+          }
         } else {
           winMessage = "DRAW!";
         }
