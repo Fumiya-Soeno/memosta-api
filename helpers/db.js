@@ -153,6 +153,41 @@ export async function getTop10() {
   `;
 }
 
+export async function getNew10() {
+  return await sql`
+    WITH winrate AS (
+      SELECT
+        u.id,
+        COUNT(DISTINCT w.id) AS win,
+        COUNT(DISTINCT l.id) AS loss,
+        (COUNT(DISTINCT w.id) * 1.0 / NULLIF(COUNT(DISTINCT w.id) + COUNT(DISTINCT l.id), 0)) AS win_rate
+      FROM units u
+      LEFT JOIN wins w ON u.id = w.winner
+      LEFT JOIN wins l ON u.id = l.loser
+      GROUP BY u.id
+      HAVING (COUNT(DISTINCT w.id) * 1.0 / NULLIF(COUNT(DISTINCT w.id) + COUNT(DISTINCT l.id), 0)) IS NOT NULL
+    ),
+    unit_names AS (
+      SELECT
+        uc.unit_id AS id,
+        string_agg(c.NAME, '' ORDER BY uc.id) AS name
+      FROM unit_characters uc
+      LEFT JOIN characters c ON uc.character_id = c.id
+      GROUP BY uc.unit_id
+    )
+    SELECT
+      wr.id,
+      un.name,
+      wr.win,
+      wr.loss,
+      wr.win_rate
+    FROM winrate wr
+    LEFT JOIN unit_names un ON wr.id = un.id
+    ORDER BY wr.id DESC
+    LIMIT 10;
+  `;
+}
+
 export async function get10thUnitId() {
   const top10 = await getTop10();
   return top10.rows[9].id;

@@ -1,5 +1,5 @@
 import { authenticateUser } from "../../../helpers/auth";
-import { getTop10 } from "../../../helpers/db";
+import { getTop10, getNew10 } from "../../../helpers/db";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -13,10 +13,15 @@ export default async function handler(req, res) {
 
   try {
     await authenticateUser(accessToken, refreshToken, res);
+
     const records = await getTop10();
     const sortedRecords = records.rows.sort((a, b) => b.win_rate - a.win_rate);
 
-    return res.status(200).json({ success: true, rows: sortedRecords });
+    const new10 = await getNew10();
+
+    return res
+      .status(200)
+      .json({ success: true, rows: sortedRecords, rowsNew: new10.rows });
   } catch (error) {
     console.error("エラー:", error);
     return res
