@@ -86,8 +86,8 @@ const Unit = () => {
                   onClick={() => handleCardClick(unit.id)}
                   className="w-full h-16 bg-white shadow-lg rounded-lg flex items-center justify-between text-gray-800 text-lg cursor-pointer hover:bg-gray-100 transition px-4"
                 >
-                  <div>
-                    {unit.name}{" "}
+                  <div className="text-sm md:text-base">
+                    <span>{unit.name} </span>
                     {activeUnitId === unit.id && (
                       <span className="text-blue-500 font-bold">(Active)</span>
                     )}
@@ -104,7 +104,7 @@ const Unit = () => {
                         Set Active
                       </button>
                     )}
-                    {activeUnitId !== unit.id && (
+                    {/* {activeUnitId !== unit.id && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -114,7 +114,7 @@ const Unit = () => {
                       >
                         削除
                       </button>
-                    )}
+                    )} */}
                   </div>
                 </li>
               ))
