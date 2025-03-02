@@ -9,7 +9,7 @@ import { setActiveUnitIdClient } from "../../helpers/activeUnitHelper";
 const NewUnit = () => {
   const [unitName, setUnitName] = useState<string>("");
   const [error, setError] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false); // 追加: ローディング状態
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
 
   const handleCreateUnit = () => {
@@ -22,9 +22,16 @@ const NewUnit = () => {
       setError("ユニット名は12文字以内で入力してください");
       return;
     }
+    // 絵文字が含まれているかチェック (Extended Pictographic は多くの絵文字をカバー)
+    const emojiRegex = /\p{Extended_Pictographic}/u;
+    if (emojiRegex.test(unitName)) {
+      setError("絵文字は入力できません");
+      return;
+    }
+
     // エラーがなければエラー状態をクリア
     setError("");
-    setIsLoading(true); // API コール前に無効化
+    setIsLoading(true);
 
     fetchApi(
       "/unit/create",
@@ -34,10 +41,10 @@ const NewUnit = () => {
         router.push(`/?id=${result.unitId10th}`);
       },
       (error: unknown) => {
-        setIsLoading(false); // エラー発生時は解除
+        setIsLoading(false);
         console.error("APIエラー:", error);
       },
-      { name: unitName } // POST ボディとしてユニット名を送信
+      { name: unitName }
     );
   };
 
@@ -55,7 +62,7 @@ const NewUnit = () => {
           />
           <button
             onClick={handleCreateUnit}
-            disabled={isLoading} // ローディング中は無効化
+            disabled={isLoading}
             className={`ml-2 px-4 py-1 rounded ${
               isLoading
                 ? "bg-gray-400 cursor-not-allowed"
@@ -71,6 +78,7 @@ const NewUnit = () => {
             <br />
             (12文字以内)
           </p>
+          {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}
           <br />
           <p>▪️ゲーム説明▪️</p>
           <p className="text-xs text-left mt-1">
@@ -83,7 +91,6 @@ const NewUnit = () => {
             自分の最強ユニットをランクインさせよう！
           </p>
         </div>
-        {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}
       </div>
     </Template>
   );
