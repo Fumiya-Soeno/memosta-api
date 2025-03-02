@@ -44,6 +44,25 @@ export async function getCharactersByUnitId(unitId, userId) {
   `;
 }
 
+export async function getCharacter(name) {
+  return await sql`
+    SELECT
+      c.name, c.life, c.attack, c.speed,
+      v.vector,
+      e.name AS element_name,
+      s.name AS skill_name,
+      s.description AS skill_desc,
+      sp.name AS special_name,
+      sp.description AS special_desc
+    FROM characters AS c
+    LEFT JOIN vectors v ON c.vector = v.id
+    LEFT JOIN elements e ON c.element = e.id
+    LEFT JOIN skills s ON c.skill = s.id
+    LEFT JOIN specials sp ON c.special = sp.id
+    WHERE c.name = ${name};
+  `;
+}
+
 export async function getCharactersByUnitIdWithoutUserId(unitId) {
   return await sql`
     SELECT

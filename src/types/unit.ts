@@ -8,7 +8,9 @@ export interface UnitDataType {
   speed: number;
   vector: number;
   skill_name: string;
+  skill_desc: string;
   special_name: string;
+  special_desc: string;
   passive_name: string;
   position: number;
 }
