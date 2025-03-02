@@ -127,24 +127,28 @@ export function PixiCanvas({
     }
   }, [searchParams]);
 
+  const placeEmptyUnitText = () => {
+    const app = appRef.current;
+    if (!app) return;
+    const style = new PIXI.TextStyle({
+      fontSize: 12,
+      fill: 0x000000,
+      fontWeight: "bold",
+      align: "center",
+    });
+    const message = new PIXI.Text("戦うユニットを選んで下さい", style);
+    message.anchor.set(0.5);
+    message.x = app.screen.width / 2;
+    message.y = app.screen.height / 4;
+    app.stage.addChild(message);
+  };
+
   // id指定がない場合、Pixi画面上にメッセージを表示
   useEffect(() => {
     const app = appRef.current;
     if (!app) return;
     // URLにidパラメータが存在しなければ
-    if (!searchParams?.get("id")) {
-      const style = new PIXI.TextStyle({
-        fontSize: 12,
-        fill: 0x000000,
-        fontWeight: "bold",
-        align: "center",
-      });
-      const message = new PIXI.Text("戦うユニットを選んで下さい", style);
-      message.anchor.set(0.5);
-      message.x = app.screen.width / 2;
-      message.y = app.screen.height / 4;
-      app.stage.addChild(message);
-    }
+    if (!searchParams?.get("id")) placeEmptyUnitText();
   }, [searchParams]);
 
   // 味方ユニットテキストの生成と配置
@@ -165,7 +169,8 @@ export function PixiCanvas({
     if (!app || enemyTextsRef.current.length !== 0) return;
     enemyTextsRef.current = createUnitTexts(app, enemyData, false);
     if (!enemyUnitId) setEnemyUnitId(enemyTextsRef.current[0].unit.id);
-    const newName = enemyTextsRef.current[0].unitName;
+    const newName = enemyTextsRef.current[0]?.unitName ?? "";
+    if (newName === "") placeEmptyUnitText();
     setEnemyUnitName(newName);
     enemyUnitNameRef.current = newName;
   }, [enemyData, width, height]);
