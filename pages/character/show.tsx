@@ -35,7 +35,7 @@ const ShowCharacter = () => {
     <Template>
       <div className="w-full flex flex-col items-center justify-center h-[calc(100vh-60px)]">
         <div className="m-6">
-          <span className={`inline-block text-5xl`}>{charData?.name}</span>
+          <span className={`inline-block text-6xl`}>{charData?.name}</span>
         </div>
 
         <div className="flex mb-4">
@@ -62,7 +62,7 @@ const ShowCharacter = () => {
           </div>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex gap-4 mt-2">
           <div>
             <Icon name={charData?.skill_name ?? ""} />
             <div className="text-sm text-center mt-2">
