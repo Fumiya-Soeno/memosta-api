@@ -16,7 +16,13 @@ const generateOptions = (start: number, count: number): Option[] => {
 const SearchCharacter = () => {
   const [skills, setSkills] = useState<Option[]>([]);
   const [specials, setSpecials] = useState<Option[]>([]);
+  const [searchLife, setSearchLife] = useState<number | null>(null);
+  const [searchAttack, setSearchAttack] = useState<number | null>(null);
+  const [searchSpeed, setSearchSpeed] = useState<number | null>(null);
+  const [searchSkill, setSearchSkill] = useState<number | null>(null);
+  const [searchSpecial, setSearchSpecial] = useState<number | null>(null);
 
+  // プルダウン用のオプション取得
   const fetchPulldownOptions = () => {
     fetchApi(
       "/unit/pulldown",
@@ -44,34 +50,117 @@ const SearchCharacter = () => {
     fetchPulldownOptions();
   }, []);
 
-  const handleSearchUnit = () => {
-    fetchApi(
-      "/unit/search",
-      "POST",
-      (result: any) => {
-        // 検索結果処理
-      },
-      (error: unknown) => {
-        // エラー処理
-      },
-      {
-        // リクエストボディ
-      }
-    );
-  };
+  // search APIを呼び出す共通関数
+  const performSearch = useCallback(
+    (
+      life: number | null,
+      attack: number | null,
+      speed: number | null,
+      skill: number | null,
+      special: number | null
+    ) => {
+      const requestBody: {
+        searchLife?: number;
+        searchAttack?: number;
+        searchSpeed?: number;
+        searchSkill?: number;
+        searchSpecial?: number;
+      } = {};
 
-  const handleSkillChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      console.log("選択されたスキル:", e.target.value);
+      if (life !== null) {
+        requestBody.searchLife = life;
+      }
+      if (attack !== null) {
+        requestBody.searchAttack = attack;
+      }
+      if (speed !== null) {
+        requestBody.searchSpeed = speed;
+      }
+      if (skill !== null) {
+        requestBody.searchSkill = skill;
+      }
+      if (special !== null) {
+        requestBody.searchSpecial = special;
+      }
+
+      fetchApi(
+        "/character/search",
+        "POST",
+        (result: any) => {
+          // 検索結果の処理
+          console.log("Search result:", result);
+        },
+        (error: unknown) => {
+          console.error("Search API エラー:", error);
+        },
+        requestBody
+      );
     },
     []
   );
 
+  // 各ステータスのonChangeハンドラ
+  const handleLifeChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value === "" ? null : Number(e.target.value);
+      setSearchLife(value);
+      performSearch(
+        value,
+        searchAttack,
+        searchSpeed,
+        searchSkill,
+        searchSpecial
+      );
+    },
+    [searchAttack, searchSpeed, searchSkill, searchSpecial, performSearch]
+  );
+
+  const handleAttackChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value === "" ? null : Number(e.target.value);
+      setSearchAttack(value);
+      performSearch(searchLife, value, searchSpeed, searchSkill, searchSpecial);
+    },
+    [searchLife, searchSpeed, searchSkill, searchSpecial, performSearch]
+  );
+
+  const handleSpeedChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value === "" ? null : Number(e.target.value);
+      setSearchSpeed(value);
+      performSearch(
+        searchLife,
+        searchAttack,
+        value,
+        searchSkill,
+        searchSpecial
+      );
+    },
+    [searchLife, searchAttack, searchSkill, searchSpecial, performSearch]
+  );
+
+  const handleSkillChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value === "" ? null : Number(e.target.value);
+      setSearchSkill(value);
+      performSearch(
+        searchLife,
+        searchAttack,
+        searchSpeed,
+        value,
+        searchSpecial
+      );
+    },
+    [searchLife, searchAttack, searchSpeed, searchSpecial, performSearch]
+  );
+
   const handleSpecialChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
-      console.log("選択された特殊:", e.target.value);
+      const value = e.target.value === "" ? null : Number(e.target.value);
+      setSearchSpecial(value);
+      performSearch(searchLife, searchAttack, searchSpeed, searchSkill, value);
     },
-    []
+    [searchLife, searchAttack, searchSpeed, searchSkill, performSearch]
   );
 
   // 数値オプションの生成（先頭に空の選択肢を追加）
@@ -96,21 +185,21 @@ const SearchCharacter = () => {
           name="life"
           label="HP"
           options={lifeOptions}
-          onChange={() => {}}
+          onChange={handleLifeChange}
         />
         <SelectField
           id="attack"
           name="attack"
           label="攻撃力"
           options={attackOptions}
-          onChange={() => {}}
+          onChange={handleAttackChange}
         />
         <SelectField
           id="speed"
           name="speed"
           label="スピード"
           options={speedOptions}
-          onChange={() => {}}
+          onChange={handleSpeedChange}
         />
       </div>
       <div className="flex space-x-4 mt-4">
