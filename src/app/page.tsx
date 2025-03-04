@@ -57,7 +57,7 @@ export default function Home() {
 
             {/* 全国ランキング 勝率TOP10 */}
             <div className="flex flex-col gap-2">
-              <p className="text-xs text-center">全国ランキング 勝率TOP10</p>
+              <p className="text-xs text-center">勝率TOP10 [シーズン1]</p>
               {winRows.map((row, index) => (
                 <div
                   key={row.id}

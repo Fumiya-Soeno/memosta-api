@@ -241,3 +241,12 @@ export async function getRandomUnfoughtUnit(unitId) {
   `;
   return result.rows[0];
 }
+
+export async function getPulldownData() {
+  const result = await sql`
+    SELECT
+      (SELECT json_agg(t) FROM (SELECT id, name FROM skills WHERE id != 0) t) AS skills,
+      (SELECT json_agg(t) FROM (SELECT id, name FROM specials WHERE id != 0) t) AS specials;
+  `;
+  return result;
+}

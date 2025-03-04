@@ -39,7 +39,7 @@ export function Sidebar() {
         <ul className="list-none p-0">
           <SidebarLink href="/unit/new" text="ユニット登録" />
           <SidebarLink href="/unit/show" text="ユニット管理" />
-          <SidebarLink href="/unit/search" text="ユニット検索" />
+          <SidebarLink href="/character/search" text="キャラクター検索" />
         </ul>
       </nav>
     </aside>
