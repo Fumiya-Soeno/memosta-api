@@ -250,3 +250,48 @@ export async function getPulldownData() {
   `;
   return result;
 }
+
+export async function searchCharacter(
+  life = 0,
+  attack = 0,
+  speed = 0,
+  skill,
+  special
+) {
+  let result;
+
+  if (skill && special) {
+    result = await sql`
+    SELECT * FROM characters WHERE
+      life >= ${life} AND
+      attack >= ${attack} AND
+      speed >= ${speed} AND
+      skill = ${skill} AND
+      special = ${special};
+  `;
+  } else if (skill) {
+    result = await sql`
+    SELECT * FROM characters WHERE
+      life >= ${life} AND
+      attack >= ${attack} AND
+      speed >= ${speed} AND
+      skill = ${skill};
+  `;
+  } else if (special) {
+    result = await sql`
+    SELECT * FROM characters WHERE
+      life >= ${life} AND
+      attack >= ${attack} AND
+      speed >= ${speed} AND
+      special = ${special};
+  `;
+  } else {
+    result = await sql`
+    SELECT * FROM characters WHERE
+      life >= ${life} AND
+      attack >= ${attack} AND
+      speed >= ${speed};
+  `;
+  }
+  return result;
+}

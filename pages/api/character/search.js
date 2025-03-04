@@ -1,5 +1,5 @@
 import { authenticateUser } from "../../../helpers/auth";
-import {} from "../../../helpers/db";
+import { searchCharacter } from "../../../helpers/db";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -11,12 +11,25 @@ export default async function handler(req, res) {
   const accessToken = req.cookies.accessToken;
   const refreshToken = req.cookies.refreshToken;
 
-  const body = req.body;
+  const { searchLife, searchAttack, searchSpeed, searchSkill, searchSpecial } =
+    req.body;
 
   try {
-    const userId = await authenticateUser(accessToken, refreshToken, res);
+    await authenticateUser(accessToken, refreshToken, res);
 
-    return res.status(200).json({ success: true });
+    const life = searchLife ? searchLife * 10 : 0;
+
+    const result = await searchCharacter(
+      life,
+      searchAttack,
+      searchSpeed,
+      searchSkill,
+      searchSpecial
+    );
+
+    const rows = result.rows;
+
+    return res.status(200).json({ success: true, rows });
   } catch (error) {
     console.error("エラー:", error);
     return res
