@@ -181,55 +181,58 @@ const SearchCharacter = () => {
 
   return (
     <Template>
-      <div className="space-y-4">
-        {/* 検索フィールド */}
-        <div className="flex space-x-4">
-          <SelectField
-            id="life"
-            name="life"
-            label="HP"
-            options={lifeOptions}
-            onChange={handleLifeChange}
-          />
-          <SelectField
-            id="attack"
-            name="attack"
-            label="攻撃力"
-            options={attackOptions}
-            onChange={handleAttackChange}
-          />
-          <SelectField
-            id="speed"
-            name="speed"
-            label="スピード"
-            options={speedOptions}
-            onChange={handleSpeedChange}
-          />
-        </div>
-        <div className="flex space-x-4">
-          <SelectField
-            id="skills"
-            name="skills"
-            options={[{ value: "", label: "通常技(SKILL)" }, ...skills]}
-            onChange={handleSkillChange}
-          />
-          <SelectField
-            id="specials"
-            name="specials"
-            options={[{ value: "", label: "必殺技(SPECIAL)" }, ...specials]}
-            onChange={handleSpecialChange}
-          />
+      <div className="flex flex-col min-h-screen">
+        {/* 固定された検索フィールド */}
+        <div className="sticky top-0 z-10 p-4 bg-black border-b border-gray-600">
+          <div className="space-y-4">
+            <div className="flex space-x-4">
+              <SelectField
+                id="life"
+                name="life"
+                label="HP"
+                options={lifeOptions}
+                onChange={handleLifeChange}
+              />
+              <SelectField
+                id="attack"
+                name="attack"
+                label="攻撃力"
+                options={attackOptions}
+                onChange={handleAttackChange}
+              />
+              <SelectField
+                id="speed"
+                name="speed"
+                label="スピード"
+                options={speedOptions}
+                onChange={handleSpeedChange}
+              />
+              <SelectField
+                id="skills"
+                name="skills"
+                options={[{ value: "", label: "通常技(SKILL)" }, ...skills]}
+                onChange={handleSkillChange}
+              />
+              <SelectField
+                id="specials"
+                name="specials"
+                options={[{ value: "", label: "必殺技(SPECIAL)" }, ...specials]}
+                onChange={handleSpecialChange}
+              />
+            </div>
+          </div>
         </div>
 
         {/* 検索結果（キャラクター一覧） */}
-        {results.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-            {results.map((charData) => {
-              console.log(charData.id);
-              return <CharacterDetails key={charData.id} charData={charData} />;
-            })}
-          </div>
-        )}
+        <div className="p-4 inline-block">
+          {results.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {results.map((charData) => (
+                <CharacterDetails key={charData.id} charData={charData} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </Template>
   );
