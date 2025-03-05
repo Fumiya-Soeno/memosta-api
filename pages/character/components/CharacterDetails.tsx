@@ -4,7 +4,7 @@ import Icon from "@/app/components/unit/Icon";
 
 export const CharacterDetails = ({ charData }: any) => {
   return (
-    <div className="flex justify-center items-center min-h-screen p-4">
+    <div className="flex justify-center items-center p-4">
       <div className="bg-gray-900 shadow-lg rounded-xl p-6 w-full max-w-md">
         <div className="mb-4 text-center">
           <span className="block text-6xl font-bold">{charData?.name}</span>

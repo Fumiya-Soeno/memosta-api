@@ -262,35 +262,75 @@ export async function searchCharacter(
 
   if (skill && special) {
     result = await sql`
-    SELECT * FROM characters WHERE
-      life >= ${life} AND
-      attack >= ${attack} AND
-      speed >= ${speed} AND
-      skill = ${skill} AND
-      special = ${special};
+      SELECT
+        c.id, c.name, c.life, c.attack, c.speed,
+        v.vector,
+        s.name AS skill_name, s.description AS skill_desc,
+        sp.name AS special_name, sp.description AS special_desc
+      FROM characters c
+        LEFT JOIN vectors v ON c.vector = v.id
+        LEFT JOIN skills s ON c.skill = s.id
+        LEFT JOIN specials sp ON c.special = sp.id
+      WHERE 1 = 1
+        AND life >= ${life}
+        AND attack >= ${attack}
+        AND speed >= ${speed}
+        AND skill = ${skill}
+        AND special = ${special}
+      GROUP BY c.id, c.name, c.life, c.attack, c.speed, v.vector, s.name, s.description, sp.name, sp.description;
   `;
   } else if (skill) {
     result = await sql`
-    SELECT * FROM characters WHERE
-      life >= ${life} AND
-      attack >= ${attack} AND
-      speed >= ${speed} AND
-      skill = ${skill};
+      SELECT
+        c.id, c.name, c.life, c.attack, c.speed,
+        v.vector,
+        s.name AS skill_name, s.description AS skill_desc,
+        sp.name AS special_name, sp.description AS special_desc
+      FROM characters c
+        LEFT JOIN vectors v ON c.vector = v.id
+        LEFT JOIN skills s ON c.skill = s.id
+        LEFT JOIN specials sp ON c.special = sp.id
+      WHERE 1 = 1
+        AND life >= ${life}
+        AND attack >= ${attack}
+        AND speed >= ${speed}
+        AND skill = ${skill}
+      GROUP BY c.id, c.name, c.life, c.attack, c.speed, v.vector, s.name, s.description, sp.name, sp.description;
   `;
   } else if (special) {
     result = await sql`
-    SELECT * FROM characters WHERE
-      life >= ${life} AND
-      attack >= ${attack} AND
-      speed >= ${speed} AND
-      special = ${special};
+      SELECT
+        c.id, c.name, c.life, c.attack, c.speed,
+        v.vector,
+        s.name AS skill_name, s.description AS skill_desc,
+        sp.name AS special_name, sp.description AS special_desc
+      FROM characters c
+        LEFT JOIN vectors v ON c.vector = v.id
+        LEFT JOIN skills s ON c.skill = s.id
+        LEFT JOIN specials sp ON c.special = sp.id
+      WHERE 1 = 1
+        AND life >= ${life}
+        AND attack >= ${attack}
+        AND speed >= ${speed}
+        AND special = ${special}
+      GROUP BY c.id, c.name, c.life, c.attack, c.speed, v.vector, s.name, s.description, sp.name, sp.description;
   `;
   } else {
     result = await sql`
-    SELECT * FROM characters WHERE
-      life >= ${life} AND
-      attack >= ${attack} AND
-      speed >= ${speed};
+      SELECT
+        c.id, c.name, c.life, c.attack, c.speed,
+        v.vector,
+        s.name AS skill_name, s.description AS skill_desc,
+        sp.name AS special_name, sp.description AS special_desc
+      FROM characters c
+        LEFT JOIN vectors v ON c.vector = v.id
+        LEFT JOIN skills s ON c.skill = s.id
+        LEFT JOIN specials sp ON c.special = sp.id
+      WHERE 1 = 1
+        AND life >= ${life}
+        AND attack >= ${attack}
+        AND speed >= ${speed}
+      GROUP BY c.id, c.name, c.life, c.attack, c.speed, v.vector, s.name, s.description, sp.name, sp.description;
   `;
   }
   return result;
