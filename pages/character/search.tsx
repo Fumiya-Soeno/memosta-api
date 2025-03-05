@@ -3,8 +3,11 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Template } from "../../src/app/components/common/Template";
 import { fetchApi } from "../../helpers/api";
-import { SelectField, Option } from "./components/SelectField";
-import { CharacterDetails } from "./components/CharacterDetails";
+import {
+  SelectField,
+  Option,
+} from "../../src/app/components/character/SelectField";
+import { CharacterDetails } from "../../src/app/components/character/CharacterDetails";
 
 const generateOptions = (start: number, count: number): Option[] => {
   return Array.from({ length: count }, (_, index) => {

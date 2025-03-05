@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Template } from "../../src/app/components/common/Template";
 import { fetchApi } from "../../helpers/api";
 import { UnitDataType } from "../../src/types/unit";
-import { CharacterDetails } from "./components/CharacterDetails";
+import { CharacterDetails } from "../../src/app/components/character/CharacterDetails";
 
 const ShowCharacter = () => {
   const searchParams = useSearchParams();
