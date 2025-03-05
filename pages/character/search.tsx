@@ -23,6 +23,7 @@ const SearchCharacter = () => {
   const [searchSkill, setSearchSkill] = useState<number | null>(null);
   const [searchSpecial, setSearchSpecial] = useState<number | null>(null);
   const [results, setResults] = useState<any[]>([]);
+  const [visibleCount, setVisibleCount] = useState(10);
 
   // プルダウン用のオプション取得
   const fetchPulldownOptions = () => {
@@ -91,6 +92,7 @@ const SearchCharacter = () => {
         (result: any) => {
           console.log("Search result:", result);
           setResults(result.rows);
+          setVisibleCount(10); // 新規検索時は表示件数をリセット
         },
         (error: unknown) => {
           console.error("Search API エラー:", error);
@@ -226,11 +228,24 @@ const SearchCharacter = () => {
         {/* 検索結果（キャラクター一覧） */}
         <div className="p-4 inline-block">
           {results.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {results.map((charData) => (
-                <CharacterDetails key={charData.id} charData={charData} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {results.slice(0, visibleCount).map((charData) => (
+                  <CharacterDetails key={charData.id} charData={charData} />
+                ))}
+              </div>
+              {/* もっと表示ボタン（残り件数がある場合のみ表示） */}
+              {visibleCount < results.length && (
+                <div className="mt-4 text-center">
+                  <button
+                    className="px-4 py-2 bg-blue-500 text-white rounded"
+                    onClick={() => setVisibleCount(visibleCount + 10)}
+                  >
+                    もっと表示
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
