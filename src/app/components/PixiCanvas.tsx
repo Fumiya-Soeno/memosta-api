@@ -251,6 +251,11 @@ export function PixiCanvas({
     // スタート画面にインタラクティブ設定を追加し、クリック時にhandleStartを実行
     startScreenContainer.eventMode = "dynamic";
     startScreenContainer.on("pointerdown", () => {
+      if (
+        allyTextsRef.current.length === 0 ||
+        enemyTextsRef.current.length === 0
+      )
+        return;
       app.ticker.remove(blinkTicker);
       app.stage.removeChild(startScreenContainer);
       handleStart();
