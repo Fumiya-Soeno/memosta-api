@@ -146,8 +146,8 @@ export async function getTop10() {
         COUNT(DISTINCT l.id) AS loss,
         (COUNT(DISTINCT w.id) * 1.0 / NULLIF(COUNT(DISTINCT w.id) + COUNT(DISTINCT l.id), 0)) AS win_rate
       FROM units u
-      LEFT JOIN wins w ON u.id = w.winner
-      LEFT JOIN wins l ON u.id = l.loser
+      LEFT JOIN wins w ON u.id = w.winner AND w.season = ${process.env.CURRENT_SEASON}
+      LEFT JOIN wins l ON u.id = l.loser AND l.season = ${process.env.CURRENT_SEASON}
       GROUP BY u.id
       HAVING (COUNT(DISTINCT w.id) * 1.0 / NULLIF(COUNT(DISTINCT w.id) + COUNT(DISTINCT l.id), 0)) IS NOT NULL
     ),
@@ -179,12 +179,16 @@ export async function getNew10() {
         u.id,
         COUNT(DISTINCT w.id) AS win,
         COUNT(DISTINCT l.id) AS loss,
-        (COUNT(DISTINCT w.id) * 1.0 / NULLIF(COUNT(DISTINCT w.id) + COUNT(DISTINCT l.id), 0)) AS win_rate
+        COALESCE(
+          (COUNT(DISTINCT w.id) * 1.0 /
+            NULLIF(COUNT(DISTINCT w.id) + COUNT(DISTINCT l.id), 0)
+          ),
+          0
+        ) AS win_rate
       FROM units u
-      LEFT JOIN wins w ON u.id = w.winner
-      LEFT JOIN wins l ON u.id = l.loser
+      LEFT JOIN wins w ON u.id = w.winner AND w.season = ${process.env.CURRENT_SEASON}
+      LEFT JOIN wins l ON u.id = l.loser AND l.season = ${process.env.CURRENT_SEASON}
       GROUP BY u.id
-      HAVING (COUNT(DISTINCT w.id) * 1.0 / NULLIF(COUNT(DISTINCT w.id) + COUNT(DISTINCT l.id), 0)) IS NOT NULL
     ),
     unit_names AS (
       SELECT
@@ -214,10 +218,13 @@ export async function get10thUnitId() {
 
 export async function createWin(winner, loser) {
   await sql`
-    INSERT INTO wins (winner, loser)
-    SELECT ${winner}, ${loser}
+    INSERT INTO wins (winner, loser, season)
+    SELECT ${winner}, ${loser}, ${process.env.CURRENT_SEASON}
     WHERE NOT EXISTS (
-      SELECT 1 FROM wins WHERE winner = ${winner} AND loser = ${loser}
+      SELECT 1 FROM wins
+        WHERE winner = ${winner}
+        AND loser = ${loser}
+        AND season = ${process.env.CURRENT_SEASON}
     );
   `;
 }
@@ -233,9 +240,9 @@ export async function getRandomUnfoughtUnit(unitId) {
     SELECT id
     FROM candidate_units
     WHERE id NOT IN (
-      SELECT loser FROM wins WHERE winner = ${unitId}
+      SELECT loser FROM wins WHERE winner = ${unitId} AND season = ${process.env.CURRENT_SEASON}
       UNION
-      SELECT winner FROM wins WHERE loser = ${unitId}
+      SELECT winner FROM wins WHERE loser = ${unitId} AND season = ${process.env.CURRENT_SEASON}
     )
     ORDER BY random()
     LIMIT 1;

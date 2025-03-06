@@ -6,13 +6,38 @@ import { Template } from "../../src/app/components/common/Template";
 import { fetchApi } from "../../helpers/api";
 import { setActiveUnitIdClient } from "../../helpers/activeUnitHelper";
 
+async function getWordMultiplier(unitName: string): Promise<number> {
+  const url = `https://ja.wikipedia.org/w/api.php?action=query&format=json&origin=*&list=search&srsearch=${encodeURIComponent(
+    unitName
+  )}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  const hitCount = data.query.searchinfo.totalhits;
+
+  // 上限・下限でクランプ（制限）
+  if (hitCount <= 0) {
+    return 1.0;
+  } else if (hitCount >= 200000) {
+    return 2.0;
+  }
+
+  // 対数スケールで計算
+  // --- 例：自然対数 ---
+  const ratio = Math.log(hitCount + 1) / Math.log(200000 + 1);
+  // --- 例：常用対数(10)を使う場合 ---
+  // const ratio = Math.log10(hitCount + 1) / Math.log10(200000 + 1);
+
+  const multiplier = 1.0 + ratio; // 1.0 〜 2.0 の範囲
+  return multiplier;
+}
+
 const NewUnit = () => {
   const [unitName, setUnitName] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
 
-  const handleCreateUnit = () => {
+  const handleCreateUnit = async () => {
     // ユニット名のバリデーション
     if (!unitName.trim()) {
       setError("ユニット名を入力してください");
@@ -31,8 +56,10 @@ const NewUnit = () => {
 
     // エラーがなければエラー状態をクリア
     setError("");
-    setIsLoading(true);
 
+    console.log(await getWordMultiplier(unitName));
+
+    return;
     fetchApi(
       "/unit/create",
       "POST",

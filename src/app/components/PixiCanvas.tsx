@@ -151,28 +151,32 @@ export function PixiCanvas({
     if (!searchParams?.get("id")) placeEmptyUnitText();
   }, [searchParams]);
 
-  // 味方ユニットテキストの生成と配置
+  // 味方ユニットテキストの生成と配置（非同期に対応）
   useEffect(() => {
     if (!allyData) return;
     const app = appRef.current;
     if (!app || allyTextsRef.current.length !== 0) return;
-    allyTextsRef.current = createUnitTexts(app, allyData, true);
-    const newName = allyTextsRef.current[0].unitName;
-    setAllyUnitName(newName);
-    allyUnitNameRef.current = newName;
+    (async () => {
+      allyTextsRef.current = await createUnitTexts(app, allyData, true);
+      const newName = allyTextsRef.current[0].unitName;
+      setAllyUnitName(newName);
+      allyUnitNameRef.current = newName;
+    })();
   }, [allyData, width, height]);
 
-  // 敵ユニットテキストの生成と配置
+  // 敵ユニットテキストの生成と配置（非同期に対応）
   useEffect(() => {
     if (!enemyData) return;
     const app = appRef.current;
     if (!app || enemyTextsRef.current.length !== 0) return;
-    enemyTextsRef.current = createUnitTexts(app, enemyData, false);
-    if (!enemyUnitId) setEnemyUnitId(enemyTextsRef.current[0].unit.id);
-    const newName = enemyTextsRef.current[0]?.unitName ?? "";
-    if (newName === "") placeEmptyUnitText();
-    setEnemyUnitName(newName);
-    enemyUnitNameRef.current = newName;
+    (async () => {
+      enemyTextsRef.current = await createUnitTexts(app, enemyData, false);
+      if (!enemyUnitId) setEnemyUnitId(enemyTextsRef.current[0].unit.id);
+      const newName = enemyTextsRef.current[0]?.unitName ?? "";
+      if (newName === "") placeEmptyUnitText();
+      setEnemyUnitName(newName);
+      enemyUnitNameRef.current = newName;
+    })();
   }, [enemyData, width, height]);
 
   // enemyDataの取得（idが指定されている場合のみ）

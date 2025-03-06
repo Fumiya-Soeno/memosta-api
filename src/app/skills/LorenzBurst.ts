@@ -16,7 +16,7 @@ export interface LorenzBurstEffect {
  * handleLorenzBurstAttack
  * Every 12 frames, if a unit’s skill_name is "ローレンツバースト", an electric attack effect is generated
  * at the unit’s position. The effect covers a circle of approximately 50px in diameter and
- * deals damage equal to 80% of the unit's attack. The effect lasts for 4 frames.
+ * deals damage equal to 20% of the unit's attack. The effect lasts for 4 frames.
  */
 export function handleLorenzBurstAttack(params: {
   app: PIXI.Application;
@@ -31,7 +31,7 @@ export function handleLorenzBurstAttack(params: {
 
   const centerX = attacker.text.x;
   const centerY = attacker.text.y;
-  const damage = attacker.unit.attack * 0.8;
+  const damage = attacker.unit.attack * 0.2;
 
   const effect: LorenzBurstEffect = {
     graphics: new PIXI.Graphics(),
