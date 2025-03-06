@@ -30,7 +30,7 @@ export async function createUnitTexts(
   // 表示用の文字列はソート済みのユニット名を結合
   const concatenatedUnitName = sortedUnits.map((unit) => unit.name).join("");
 
-  // ユニットの文字最大重複回数
+  // ユニット名文字列中で最も多く出現する文字の出現回数を取得
   const unitNameDuplicateCount =
     getMaxCharacterDuplicateCount(concatenatedUnitName);
 
@@ -38,13 +38,19 @@ export async function createUnitTexts(
   let unitNameDuplicateMultiplier = 1;
   const maxUnitNameDuplicateMultiplier = 0.05;
   if (concatenatedUnitName.length > 1) {
+    // 重複率（0～1の範囲）
+    const duplicateRatio =
+      (unitNameDuplicateCount - 1) / (concatenatedUnitName.length - 1);
+    // 対数スケールに変換するための定数（例: k = 9）
+    const k = 9;
+    // duplicateRatio を対数変換して 0～1 にスケール
+    const scaledRatio = Math.log10(1 + k * duplicateRatio) / Math.log10(1 + k);
+    // scaledRatio が 0 のときは倍率1、1 のときは maxUnitNameDuplicateMultiplier となるように線形補間
     unitNameDuplicateMultiplier =
-      1 -
-      (Math.log10(unitNameDuplicateCount) / Math.log10(12)) *
-        (1 - maxUnitNameDuplicateMultiplier);
+      1 - scaledRatio * (1 - maxUnitNameDuplicateMultiplier);
   }
 
-  // 記号が入っているとユニットパワー1/10
+  // 記号が入っているとユニットパワーが1/10に
   let incluteASCIIMultiplier = 1;
   const incluteASCIIRegex =
     /[\u0021-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007E\uFF01-\uFF5E]/;

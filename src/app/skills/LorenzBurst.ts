@@ -69,7 +69,7 @@ export function updateLorenzBurstEffects(params: {
   damageTexts: DamageText[];
 }) {
   const { app, lorenzBurstEffects, updateTargetHP, damageTexts } = params;
-  const radius = 150; // 50px diameter
+  const radius = 50;
   lorenzBurstEffects.forEach((effect, index) => {
     // Decrease lifetime and fade out.
     effect.lifetime--;
