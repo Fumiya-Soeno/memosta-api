@@ -71,7 +71,7 @@ export function Header() {
             <ul className="list-none p-4">
               <SidebarLink href="/unit/new" text="ユニット登録" />
               <SidebarLink href="/unit/show" text="ユニット管理" />
-              <SidebarLink href="/character/show" text="キャラクター検索" />
+              <SidebarLink href="/character/search" text="キャラクター検索" />
             </ul>
           </nav>
         </div>
