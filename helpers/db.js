@@ -225,9 +225,10 @@ export async function createWin(winner, loser) {
 export async function getRandomUnfoughtUnit(unitId) {
   const result = await sql`
     WITH candidate_units AS (
-      SELECT id
+      SELECT units.id
       FROM units
-      WHERE id != ${unitId}
+      INNER JOIN unit_characters ON units.id = unit_characters.unit_id
+      WHERE units.id != ${unitId}
     )
     SELECT id
     FROM candidate_units
