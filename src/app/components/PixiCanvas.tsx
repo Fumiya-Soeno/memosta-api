@@ -87,6 +87,10 @@ export function PixiCanvas({
   const [enemyUnitName, setEnemyUnitName] = useState<string>("");
   const enemyUnitNameRef = useRef<string>("");
 
+  // HPバー表示用のPIXI.Graphicsをrefで保持
+  const enemyHPBarRef = useRef<PIXI.Graphics | null>(null);
+  const allyHPBarRef = useRef<PIXI.Graphics | null>(null);
+
   useEffect(() => {
     const app = new PIXI.Application({ width, height, backgroundColor });
 
@@ -147,7 +151,6 @@ export function PixiCanvas({
   useEffect(() => {
     const app = appRef.current;
     if (!app) return;
-    // URLにidパラメータが存在しなければ
     if (!searchParams?.get("id")) placeEmptyUnitText();
   }, [searchParams]);
 
@@ -199,7 +202,6 @@ export function PixiCanvas({
   useEffect(() => {
     const app = appRef.current;
     if (!app) return;
-    // allyDataとenemyDataがnullでなく、かつどちらもlengthが0でない場合のみ
     if (
       !allyData ||
       !enemyData ||
@@ -208,11 +210,9 @@ export function PixiCanvas({
     )
       return;
 
-    // スタート画面用コンテナを作成
     const startScreenContainer = new PIXI.Container();
     app.stage.addChild(startScreenContainer);
 
-    // 黒い帯（矩形）の作成
     const band = new PIXI.Graphics();
     band.beginFill(0x000000);
     const bandWidth = app.screen.width;
@@ -226,7 +226,6 @@ export function PixiCanvas({
     band.endFill();
     startScreenContainer.addChild(band);
 
-    // 「Click to Start」テキストの作成
     const style = new PIXI.TextStyle({
       fontSize: 24,
       fill: 0xffffff,
@@ -239,7 +238,6 @@ export function PixiCanvas({
     startText.y = app.screen.height / 2;
     startScreenContainer.addChild(startText);
 
-    // 点滅効果: bandのα値を変化させる
     let blinkCounter = 0;
     const blinkTicker = (delta: number) => {
       blinkCounter += delta;
@@ -248,7 +246,6 @@ export function PixiCanvas({
     };
     app.ticker.add(blinkTicker);
 
-    // スタート画面にインタラクティブ設定を追加し、クリック時にhandleStartを実行
     startScreenContainer.eventMode = "dynamic";
     startScreenContainer.on("pointerdown", () => {
       if (
@@ -266,8 +263,22 @@ export function PixiCanvas({
     const app = appRef.current;
     if (!app || animationStartedRef.current) return;
     animationStartedRef.current = true;
+
+    // HPバー（幅300px, 高さ5px）の作成
+    const enemyHPBar = new PIXI.Graphics();
+    enemyHPBar.x = (app.screen.width - 300) / 2;
+    enemyHPBar.y = 20; // 画面上部
+    app.stage.addChild(enemyHPBar);
+    enemyHPBarRef.current = enemyHPBar;
+
+    const allyHPBar = new PIXI.Graphics();
+    allyHPBar.x = (app.screen.width - 300) / 2;
+    allyHPBar.y = app.screen.height - 20 - 5; // 画面下部
+    app.stage.addChild(allyHPBar);
+    allyHPBarRef.current = allyHPBar;
+
     app.ticker.add(() => {
-      // ユニットの移動更新とHPバー更新
+      // 各ユニットの移動更新と個別HPバー更新
       [...allyTextsRef.current, ...enemyTextsRef.current].forEach((ut) => {
         ut.text.x += ut.vx;
         ut.text.y += ut.vy;
@@ -278,6 +289,7 @@ export function PixiCanvas({
         updateUnitHPBar(ut);
       });
 
+      // 死亡ユニットの除去
       allyTextsRef.current = allyTextsRef.current.filter((ut) => {
         if (ut.hp <= 0) {
           app.stage.removeChild(ut.text);
@@ -337,8 +349,52 @@ export function PixiCanvas({
       specialManager.counter = attackFrameCounter.current;
       specialManager.update();
 
-      // ダメージ表示の更新
       updateDamageTexts(app, damageTextsRef.current);
+
+      // 総体力と各グループの最大HPを計算（ユニットごとにmaxHpが定義されていなければ現在のHPを最大値とする）
+      const totalEnemyHP = enemyTextsRef.current.reduce(
+        (sum, ut) => sum + ut.hp,
+        0
+      );
+      const totalAllyHP = allyTextsRef.current.reduce(
+        (sum, ut) => sum + ut.hp,
+        0
+      );
+      const totalEnemyMaxHP = enemyTextsRef.current.reduce(
+        (sum, ut) => sum + (ut.maxHp !== undefined ? ut.maxHp : ut.hp),
+        0
+      );
+      const totalAllyMaxHP = allyTextsRef.current.reduce(
+        (sum, ut) => sum + (ut.maxHp !== undefined ? ut.maxHp : ut.hp),
+        0
+      );
+      const enemyRatio =
+        totalEnemyMaxHP > 0 ? totalEnemyHP / totalEnemyMaxHP : 0;
+      const allyRatio = totalAllyMaxHP > 0 ? totalAllyHP / totalAllyMaxHP : 0;
+
+      // 敵HPバー更新
+      if (enemyHPBarRef.current) {
+        enemyHPBarRef.current.clear();
+        // 背景（薄いグレー）
+        enemyHPBarRef.current.beginFill(0xff0000);
+        enemyHPBarRef.current.drawRect(0, 0, 300, 5);
+        enemyHPBarRef.current.endFill();
+        // 現在のHP（緑色）
+        enemyHPBarRef.current.beginFill(0x00ff00);
+        enemyHPBarRef.current.drawRect(0, 0, 300 * enemyRatio, 5);
+        enemyHPBarRef.current.endFill();
+      }
+
+      // 友軍HPバー更新
+      if (allyHPBarRef.current) {
+        allyHPBarRef.current.clear();
+        allyHPBarRef.current.beginFill(0xff0000);
+        allyHPBarRef.current.drawRect(0, 0, 300, 5);
+        allyHPBarRef.current.endFill();
+        allyHPBarRef.current.beginFill(0x00ff00);
+        allyHPBarRef.current.drawRect(0, 0, 300 * allyRatio, 5);
+        allyHPBarRef.current.endFill();
+      }
 
       // 勝敗判定
       if (
@@ -349,7 +405,6 @@ export function PixiCanvas({
         let outcome = "";
         if (allyTextsRef.current.length > 0) {
           outcome = "YOU WINS!!";
-          // 同名ユニットの場合は勝敗登録しない
           if (allyUnitNameRef.current !== enemyUnitNameRef.current) {
             fetchApi(
               "/wins/create",
@@ -365,7 +420,6 @@ export function PixiCanvas({
           }
         } else if (enemyTextsRef.current.length > 0) {
           outcome = "YOU LOSE";
-          // 同名ユニットの場合は勝敗登録しない
           if (allyUnitNameRef.current !== enemyUnitNameRef.current) {
             fetchApi(
               "/wins/create",
@@ -383,7 +437,6 @@ export function PixiCanvas({
           outcome = "DRAW!";
         }
 
-        // テキストスタイルの定義
         const bigStyle = new PIXI.TextStyle({
           fontSize: 24,
           fill: 0xffffff,
@@ -402,20 +455,17 @@ export function PixiCanvas({
           align: "center",
         });
 
-        // 1行目：勝敗結果
         const outcomeText = new PIXI.Text(outcome, bigStyle);
         outcomeText.anchor.set(0.5);
         outcomeText.x = app.screen.width / 2;
         outcomeText.y = app.screen.height / 2 - 40;
 
-        // 2行目：自軍 VS 敵軍
         const vsMessage = `(YOU) ${allyUnitNameRef.current}  vs  ${enemyUnitNameRef.current}`;
         const vsText = new PIXI.Text(vsMessage, vsTextStyle);
         vsText.anchor.set(0.5);
         vsText.x = app.screen.width / 2;
         vsText.y = app.screen.height / 2;
 
-        // 3行目：次のバトルへの案内
         const clickText = new PIXI.Text("クリックで次のバトルへ", smallStyle);
         clickText.anchor.set(0.5);
         clickText.x = app.screen.width / 2;
@@ -425,12 +475,10 @@ export function PixiCanvas({
           redirectRandomUnfortUnit(unitId);
         });
 
-        // クリック可能な背景用（半透明の帯）を追加（必要に応じて）
         const band = new PIXI.Graphics();
         band.beginFill(0x000000, 0.9);
         const paddingX = 200;
         const paddingY = 10;
-        // 背景は全テキストを囲むように計算
         band.drawRect(
           outcomeText.x -
             Math.max(outcomeText.width, vsText.width, clickText.width) / 2 -
@@ -446,10 +494,8 @@ export function PixiCanvas({
           redirectRandomUnfortUnit(unitId);
         });
 
-        // 下線を描画
         const underline = new PIXI.Graphics();
-        underline.lineStyle(2, 0x4444ff, 1); // 線の太さ2px、色はsmallStyleのfillに合わせる
-        // 下線はclickTextの下部中央に合わせる
+        underline.lineStyle(2, 0x4444ff, 1);
         underline.moveTo(
           clickText.x - clickText.width / 2,
           clickText.y + clickText.height / 2 + 2
@@ -458,9 +504,8 @@ export function PixiCanvas({
           clickText.x + clickText.width / 2,
           clickText.y + clickText.height / 2 + 2
         );
-        underline.eventMode = "none"; // クリックイベントが重ならないように設定
+        underline.eventMode = "none";
 
-        // ステージに追加
         app.stage.addChild(band, outcomeText, vsText, clickText, underline);
       }
     });
