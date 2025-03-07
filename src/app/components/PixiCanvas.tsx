@@ -277,8 +277,23 @@ export function PixiCanvas({
     app.stage.addChild(allyHPBar);
     allyHPBarRef.current = allyHPBar;
 
+    // タイマー表示用テキストの作成（右上、10pxマージン）
+    const timerStyle = new PIXI.TextStyle({
+      fontSize: 16,
+      fill: 0x000000,
+    });
+    const timerText = new PIXI.Text("10.0", timerStyle);
+    // 右上に配置（アンカー右上）
+    timerText.anchor.set(1, 0);
+    timerText.x = app.screen.width - 10;
+    timerText.y = 10;
+    app.stage.addChild(timerText);
+
+    // ゲーム開始時刻を記録
+    const startTime = Date.now();
+
     app.ticker.add(() => {
-      // 各ユニットの移動更新と個別HPバー更新
+      // ユニットの移動更新と個別HPバー更新
       [...allyTextsRef.current, ...enemyTextsRef.current].forEach((ut) => {
         ut.text.x += ut.vx;
         ut.text.y += ut.vy;
@@ -351,7 +366,12 @@ export function PixiCanvas({
 
       updateDamageTexts(app, damageTextsRef.current);
 
-      // 総体力と各グループの最大HPを計算（ユニットごとにmaxHpが定義されていなければ現在のHPを最大値とする）
+      // 残り時間の計算（開始からの経過時間）
+      const elapsed = (Date.now() - startTime) / 1000;
+      const remainingTime = Math.max(10 - elapsed, 0);
+      timerText.text = remainingTime.toFixed(1);
+
+      // 総体力と各グループの最大HPを計算
       const totalEnemyHP = enemyTextsRef.current.reduce(
         (sum, ut) => sum + ut.hp,
         0
@@ -375,11 +395,9 @@ export function PixiCanvas({
       // 敵HPバー更新
       if (enemyHPBarRef.current) {
         enemyHPBarRef.current.clear();
-        // 背景（薄いグレー）
-        enemyHPBarRef.current.beginFill(0xff0000);
+        enemyHPBarRef.current.beginFill(0xaaaaaa);
         enemyHPBarRef.current.drawRect(0, 0, 300, 5);
         enemyHPBarRef.current.endFill();
-        // 現在のHP（緑色）
         enemyHPBarRef.current.beginFill(0x00ff00);
         enemyHPBarRef.current.drawRect(0, 0, 300 * enemyRatio, 5);
         enemyHPBarRef.current.endFill();
@@ -388,7 +406,7 @@ export function PixiCanvas({
       // 友軍HPバー更新
       if (allyHPBarRef.current) {
         allyHPBarRef.current.clear();
-        allyHPBarRef.current.beginFill(0xff0000);
+        allyHPBarRef.current.beginFill(0xaaaaaa);
         allyHPBarRef.current.drawRect(0, 0, 300, 5);
         allyHPBarRef.current.endFill();
         allyHPBarRef.current.beginFill(0x00ff00);
@@ -396,14 +414,17 @@ export function PixiCanvas({
         allyHPBarRef.current.endFill();
       }
 
-      // 勝敗判定
+      // 勝敗判定：ユニットが全滅または時間切れの場合
       if (
         allyTextsRef.current.length === 0 ||
-        enemyTextsRef.current.length === 0
+        enemyTextsRef.current.length === 0 ||
+        remainingTime <= 0
       ) {
         app.ticker.stop();
         let outcome = "";
-        if (allyTextsRef.current.length > 0) {
+        if (remainingTime <= 0) {
+          outcome = "DRAW!";
+        } else if (allyTextsRef.current.length > 0) {
           outcome = "YOU WINS!!";
           if (allyUnitNameRef.current !== enemyUnitNameRef.current) {
             fetchApi(
