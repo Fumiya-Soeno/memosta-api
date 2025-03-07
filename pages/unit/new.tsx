@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Template } from "../../src/app/components/common/Template";
 import { fetchApi } from "../../helpers/api";
 import { setActiveUnitIdClient } from "../../helpers/activeUnitHelper";
+import { bannedRegex } from "../../helpers/bannedRegex";
 
 const NewUnit = () => {
   const [unitName, setUnitName] = useState<string>("");
@@ -26,6 +27,13 @@ const NewUnit = () => {
     const emojiRegex = /\p{Extended_Pictographic}/u;
     if (emojiRegex.test(unitName)) {
       setError("絵文字は入力できません");
+      return;
+    }
+    setIsLoading(true);
+
+    // 禁止ワードのチェック（例：暴力、差別、下品など）
+    if (bannedRegex.test(unitName)) {
+      setError("暴力や差別、下品なワードは使用できません");
       return;
     }
 

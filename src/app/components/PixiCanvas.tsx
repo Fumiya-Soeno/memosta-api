@@ -282,7 +282,7 @@ export function PixiCanvas({
       fontSize: 16,
       fill: 0x000000,
     });
-    const timerText = new PIXI.Text("10.0", timerStyle);
+    const timerText = new PIXI.Text("60.0", timerStyle);
     // 右上に配置（アンカー右上）
     timerText.anchor.set(1, 0);
     timerText.x = app.screen.width - 10;
@@ -368,7 +368,7 @@ export function PixiCanvas({
 
       // 残り時間の計算（開始からの経過時間）
       const elapsed = (Date.now() - startTime) / 1000;
-      const remainingTime = Math.max(10 - elapsed, 0);
+      const remainingTime = Math.max(60 - elapsed, 0);
       timerText.text = remainingTime.toFixed(1);
 
       // 総体力と各グループの最大HPを計算
@@ -395,7 +395,7 @@ export function PixiCanvas({
       // 敵HPバー更新
       if (enemyHPBarRef.current) {
         enemyHPBarRef.current.clear();
-        enemyHPBarRef.current.beginFill(0xaaaaaa);
+        enemyHPBarRef.current.beginFill(0xff0000);
         enemyHPBarRef.current.drawRect(0, 0, 300, 5);
         enemyHPBarRef.current.endFill();
         enemyHPBarRef.current.beginFill(0x00ff00);
@@ -406,7 +406,7 @@ export function PixiCanvas({
       // 友軍HPバー更新
       if (allyHPBarRef.current) {
         allyHPBarRef.current.clear();
-        allyHPBarRef.current.beginFill(0xaaaaaa);
+        allyHPBarRef.current.beginFill(0xff0000);
         allyHPBarRef.current.drawRect(0, 0, 300, 5);
         allyHPBarRef.current.endFill();
         allyHPBarRef.current.beginFill(0x00ff00);
