@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Template } from "../../src/app/components/common/Template";
 import { fetchApi } from "../../helpers/api";
 import { setActiveUnitIdClient } from "../../helpers/activeUnitHelper";
-import { bannedRegex } from "../../helpers/bannedRegex";
 
 // 登録中のオーバーレイコンポーネント
 const LoadingOverlay = () => (
@@ -56,9 +55,26 @@ const NewUnit = () => {
       setError("絵文字は入力できません");
       return;
     }
-    // 禁止ワードのチェック（例：暴力、差別、下品など）
-    if (bannedRegex.test(unitName)) {
-      setError("暴力や差別、下品なワードは使用できません");
+
+    // Perspective API のチェック（サーバーサイドの API 経由）
+    try {
+      const response = await fetch("/api/perspective-check", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text: unitName }),
+      });
+      const data = await response.json();
+      if (data.toxicity && data.toxicity > 0.3) {
+        setError(
+          `毒性0.3以上の単語は使用不可(毒性: ${data.toxicity.toFixed(2)})`
+        );
+        return;
+      }
+    } catch (err) {
+      console.error("Perspective API エラー", err);
+      setError("システムエラーが発生しました");
       return;
     }
 
@@ -83,7 +99,7 @@ const NewUnit = () => {
 
   return (
     <Template>
-      {/* relativeにしてオーバーレイが正しく配置されるように */}
+      {/* relative にしてオーバーレイが正しく配置されるように */}
       <div className="relative w-full flex flex-col items-center justify-center h-[calc(100vh-60px)]">
         <h1 className="text-2xl font-bold mb-4">ユニット登録</h1>
         <div className="flex items-center">
@@ -113,7 +129,7 @@ const NewUnit = () => {
             <br />
             (12文字以内)
           </p>
-          {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}
+          {error && <div className="mt-2 text-red-500 text-xs">{error}</div>}
           <br />
           <p>▪️ゲーム説明▪️</p>
           <p className="text-xs text-left mt-1">
