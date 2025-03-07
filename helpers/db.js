@@ -211,9 +211,9 @@ export async function getNew10() {
   `;
 }
 
-export async function get10thUnitId() {
+export async function get10thUnitId(unitId) {
   const top10 = await getTop10();
-  return top10.rows[9].id;
+  return top10.rows[9]?.id ?? unitId;
 }
 
 export async function createWin(winner, loser) {

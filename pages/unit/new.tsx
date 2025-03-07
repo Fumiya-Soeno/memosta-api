@@ -7,6 +7,33 @@ import { fetchApi } from "../../helpers/api";
 import { setActiveUnitIdClient } from "../../helpers/activeUnitHelper";
 import { bannedRegex } from "../../helpers/bannedRegex";
 
+// 登録中のオーバーレイコンポーネント
+const LoadingOverlay = () => (
+  <div className="absolute inset-0 flex flex-col items-center justify-center bg-white bg-opacity-70 z-10">
+    <svg
+      className="animate-spin h-10 w-10 text-blue-500"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      ></circle>
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+      ></path>
+    </svg>
+    <p className="mt-4 text-lg text-blue-500">登録中...</p>
+  </div>
+);
+
 const NewUnit = () => {
   const [unitName, setUnitName] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -29,16 +56,15 @@ const NewUnit = () => {
       setError("絵文字は入力できません");
       return;
     }
-    setIsLoading(true);
-
     // 禁止ワードのチェック（例：暴力、差別、下品など）
     if (bannedRegex.test(unitName)) {
       setError("暴力や差別、下品なワードは使用できません");
       return;
     }
 
-    // エラーがなければエラー状態をクリア
+    // エラーがなければエラー状態をクリアし、ローディング開始
     setError("");
+    setIsLoading(true);
 
     fetchApi(
       "/unit/create",
@@ -57,7 +83,8 @@ const NewUnit = () => {
 
   return (
     <Template>
-      <div className="w-full flex flex-col items-center justify-center h-[calc(100vh-60px)]">
+      {/* relativeにしてオーバーレイが正しく配置されるように */}
+      <div className="relative w-full flex flex-col items-center justify-center h-[calc(100vh-60px)]">
         <h1 className="text-2xl font-bold mb-4">ユニット登録</h1>
         <div className="flex items-center">
           <input
@@ -66,6 +93,7 @@ const NewUnit = () => {
             placeholder="ユニット名を入力"
             value={unitName}
             onChange={(e) => setUnitName(e.target.value)}
+            disabled={isLoading}
           />
           <button
             onClick={handleCreateUnit}
@@ -98,6 +126,7 @@ const NewUnit = () => {
             自分の最強ユニットをランクインさせよう！
           </p>
         </div>
+        {isLoading && <LoadingOverlay />}
       </div>
     </Template>
   );

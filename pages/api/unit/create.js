@@ -54,9 +54,11 @@ export default async function handler(req, res) {
       const characterId = await createCharacter(character);
       await createUnitCharacter(unitId, characterId, index);
     }
-    const unitId10th = await get10thUnitId();
+    const unitId10th = await get10thUnitId(unitId);
 
-    return res.status(200).json({ success: true, unitId, unitId10th });
+    return res
+      .status(200)
+      .json({ success: true, unitId, unitId10th: unitId10th });
   } catch (error) {
     console.error("エラー:", error);
     return res
