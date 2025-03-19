@@ -259,6 +259,19 @@ export async function getPulldownData() {
   return result;
 }
 
+export async function getUnitIdByName(name) {
+  const result = await sql`
+    SELECT
+      u.id
+    FROM units u
+    JOIN unit_characters uc ON u.id = uc.unit_id
+    JOIN characters c ON uc.character_id = c.id
+    GROUP BY u.id, u.user_id
+    HAVING string_agg(c.name, '' ORDER BY uc.id) = ${name}
+  `;
+  return result.rows[0]?.id ?? undefined;
+}
+
 export async function searchCharacter(
   life = 0,
   attack = 0,

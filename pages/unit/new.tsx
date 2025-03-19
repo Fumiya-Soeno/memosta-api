@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Template } from "../../src/app/components/common/Template";
 import { fetchApi } from "../../helpers/api";
@@ -39,7 +39,14 @@ const NewUnit = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
 
+  useEffect(() => {
+    // エラーが出たらローディングをキャンセルする
+    if (error) setIsLoading(false);
+  }, [error]);
+
   const handleCreateUnit = async () => {
+    setIsLoading(true);
+
     // ユニット名のバリデーション
     if (!unitName.trim()) {
       setError("ユニット名を入力してください");
@@ -78,9 +85,8 @@ const NewUnit = () => {
       return;
     }
 
-    // エラーがなければエラー状態をクリアし、ローディング開始
+    // エラーがなければエラー状態をクリア
     setError("");
-    setIsLoading(true);
 
     fetchApi(
       "/unit/create",
@@ -90,8 +96,7 @@ const NewUnit = () => {
         router.push(`/?id=${result.unitId10th}`);
       },
       (error: unknown) => {
-        setIsLoading(false);
-        console.error("APIエラー:", error);
+        setError("APIエラー");
       },
       { name: unitName }
     );

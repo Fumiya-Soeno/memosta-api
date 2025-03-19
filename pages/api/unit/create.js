@@ -4,6 +4,7 @@ import {
   createCharacter,
   createUnitCharacter,
   get10thUnitId,
+  getUnitIdByName,
 } from "../../../helpers/db";
 
 export default async function handler(req, res) {
@@ -19,6 +20,18 @@ export default async function handler(req, res) {
   const body = req.body;
 
   const unitName = body.name;
+
+  let unitId;
+
+  try {
+    unitId = await getUnitIdByName(unitName);
+  } catch (error) {
+    console.error("エラー:", error);
+    return res
+      .status(error.status || 500)
+      .json({ success: false, message: error.message || "サーバーエラー" });
+  }
+
   const unitNameArray = unitName.split("");
 
   const unitObject = [];
@@ -46,14 +59,17 @@ export default async function handler(req, res) {
 
   try {
     const userId = await authenticateUser(accessToken, refreshToken, res);
-    const unitId = await createUnit(userId);
 
-    let index = 0;
-    for (const character of unitObject) {
-      index++;
-      const characterId = await createCharacter(character);
-      await createUnitCharacter(unitId, characterId, index);
+    if (!unitId) {
+      unitId = await createUnit(userId);
+      let index = 0;
+      for (const character of unitObject) {
+        index++;
+        const characterId = await createCharacter(character);
+        await createUnitCharacter(unitId, characterId, index);
+      }
     }
+
     const unitId10th = await get10thUnitId(unitId);
 
     return res

@@ -20,7 +20,8 @@ export default async function handler(
     const toxicity = await checkToxicity(text);
     res.status(200).json({ toxicity });
   } catch (error) {
-    console.error("Perspective API error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.log("Perspective API error:", error);
+    res.status(201).json({ toxicity: 1 });
+    // res.status(500).json({ error: "Internal server error" });
   }
 }
