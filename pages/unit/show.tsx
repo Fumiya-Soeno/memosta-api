@@ -17,7 +17,15 @@ interface UnitDataType {
 const Unit = () => {
   const [units, setUnits] = useState<UnitDataType[]>([]);
   const [activeUnitId, setActiveUnitId] = useState<number | null>(null);
+  const [isLocalhost, setIsLocalhost] = useState(false);
   const router = useRouter();
+
+  // ブラウザがlocalhostで接続されているか判定
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsLocalhost(window.location.hostname === "localhost");
+    }
+  }, []);
 
   // ユニット一覧を取得
   useEffect(() => {
@@ -104,7 +112,7 @@ const Unit = () => {
                         Set Active
                       </button>
                     )}
-                    {/* {activeUnitId !== unit.id && (
+                    {activeUnitId !== unit.id && isLocalhost && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -114,7 +122,7 @@ const Unit = () => {
                       >
                         削除
                       </button>
-                    )} */}
+                    )}
                   </div>
                 </li>
               ))
