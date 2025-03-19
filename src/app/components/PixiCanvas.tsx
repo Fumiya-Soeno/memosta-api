@@ -41,6 +41,10 @@ export function PixiCanvas({
   height = 600,
   backgroundColor = 0xffffff,
 }: PixiCanvasProps) {
+  // 初期総体力（最大HP）の保存用refs（ユニットが読み込まれたときのみ設定）
+  const initialEnemyMaxHPRef = useRef<number | null>(null);
+  const initialAllyMaxHPRef = useRef<number | null>(null);
+
   const pixiContainerRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<PIXI.Application | null>(null);
   const allyTextsRef = useRef<any[]>([]);
@@ -164,6 +168,13 @@ export function PixiCanvas({
       const newName = allyTextsRef.current[0].unitName;
       setAllyUnitName(newName);
       allyUnitNameRef.current = newName;
+      // 初回読み込み時の総最大HPを保存（後で友軍のHP比率計算に利用）
+      if (initialAllyMaxHPRef.current === null) {
+        initialAllyMaxHPRef.current = allyTextsRef.current.reduce(
+          (sum, ut) => sum + (ut.maxHp !== undefined ? ut.maxHp : ut.hp),
+          0
+        );
+      }
     })();
   }, [allyData, width, height]);
 
@@ -179,6 +190,13 @@ export function PixiCanvas({
       if (newName === "") placeEmptyUnitText();
       setEnemyUnitName(newName);
       enemyUnitNameRef.current = newName;
+      // 初回読み込み時の総最大HPを保存（後で敵HP比率計算に利用）
+      if (initialEnemyMaxHPRef.current === null) {
+        initialEnemyMaxHPRef.current = enemyTextsRef.current.reduce(
+          (sum, ut) => sum + (ut.maxHp !== undefined ? ut.maxHp : ut.hp),
+          0
+        );
+      }
     })();
   }, [enemyData, width, height]);
 
@@ -371,26 +389,25 @@ export function PixiCanvas({
       const remainingTime = Math.max(60 - elapsed, 0);
       timerText.text = remainingTime.toFixed(1);
 
-      // 総体力と各グループの最大HPを計算
-      const totalEnemyHP = enemyTextsRef.current.reduce(
+      // 現在のHP合計（死亡ユニットは除外されるため、減少してもOK）
+      const currentEnemyHP = enemyTextsRef.current.reduce(
         (sum, ut) => sum + ut.hp,
         0
       );
-      const totalAllyHP = allyTextsRef.current.reduce(
+      const currentAllyHP = allyTextsRef.current.reduce(
         (sum, ut) => sum + ut.hp,
         0
       );
-      const totalEnemyMaxHP = enemyTextsRef.current.reduce(
-        (sum, ut) => sum + (ut.maxHp !== undefined ? ut.maxHp : ut.hp),
-        0
-      );
-      const totalAllyMaxHP = allyTextsRef.current.reduce(
-        (sum, ut) => sum + (ut.maxHp !== undefined ? ut.maxHp : ut.hp),
-        0
-      );
+
+      // 初回読み込み時に設定した各グループの最大HPを使用
       const enemyRatio =
-        totalEnemyMaxHP > 0 ? totalEnemyHP / totalEnemyMaxHP : 0;
-      const allyRatio = totalAllyMaxHP > 0 ? totalAllyHP / totalAllyMaxHP : 0;
+        initialEnemyMaxHPRef.current && initialEnemyMaxHPRef.current > 0
+          ? currentEnemyHP / initialEnemyMaxHPRef.current
+          : 0;
+      const allyRatio =
+        initialAllyMaxHPRef.current && initialAllyMaxHPRef.current > 0
+          ? currentAllyHP / initialAllyMaxHPRef.current
+          : 0;
 
       // 敵HPバー更新
       if (enemyHPBarRef.current) {
