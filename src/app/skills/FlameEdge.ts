@@ -18,6 +18,9 @@ export interface FlameEdgeEffect {
   team: "ally" | "enemy";
 }
 
+const power = 6.0;
+const range = 100;
+
 /**
  * Helper function: Draw one crescent-shaped segment.
  * 外側弧と内側弧を描画し、三日月状のエフェクトを表現します。
@@ -64,11 +67,11 @@ export function handleFlameEdgeAttack(params: {
     startY,
     currentLength: 0,
     maxLength: 250,
-    growthRate: 10, // extensionフェーズで毎フレーム伸びる量
+    growthRate: 90, // extensionフェーズで毎フレーム伸びる量
     directionAngle,
     impact: false,
     lifetime: 0,
-    damage: attacker.unit.attack * 0.85,
+    damage: attacker.unit.attack * power,
     target: params.target,
     team: attacker.team,
   };
@@ -121,7 +124,7 @@ export function updateFlameEdgeEffects(params: {
         const posY =
           effect.startY + j * segmentSpacing * Math.sin(effect.directionAngle);
         const segment = new PIXI.Graphics();
-        drawCrescent(segment, 50);
+        drawCrescent(segment, range);
         segment.x = posX;
         segment.y = posY;
         segment.rotation = effect.directionAngle;
@@ -149,7 +152,7 @@ export function updateFlameEdgeEffects(params: {
       const dx = effect.target.text.x - endX;
       const dy = effect.target.text.y - endY;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < 50) {
+      if (dist < range) {
         updateTargetHP(effect.target, effect.damage);
         showDamageText({
           app,

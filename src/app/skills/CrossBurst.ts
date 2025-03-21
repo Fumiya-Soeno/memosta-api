@@ -14,6 +14,10 @@ export interface CrossBurst {
   team: "ally" | "enemy"; // 発射元の所属チームを追加
 }
 
+const power = 0.8;
+const explosionOffset = 100; // 発射方向のオフセット
+const range = 40;
+
 /**
  * handleCrossBurstAttack
  * special_name が "十字バースト" のユニットすべてから、上下左右4方向に爆発エフェクトを発生させます。
@@ -36,8 +40,7 @@ export function handleCrossBurstAttack(params: {
         { dx: -1, dy: 0 },
         { dx: 1, dy: 0 },
       ];
-      const explosionOffset = 60; // 発射方向のオフセット
-      const damage = ut.unit.attack * 0.8;
+      const damage = ut.unit.attack * power;
       const expansionFrames = 6;
       const fadeFrames = 9;
       // 発射元の所属チームを保持
@@ -60,7 +63,7 @@ export function handleCrossBurstAttack(params: {
           age: 0,
           expansionFrames,
           fadeFrames,
-          maxRadius: 30,
+          maxRadius: range,
           damage,
           pos,
           team,

@@ -33,7 +33,7 @@ export function handleTeamPenetratingSpreadAttack(params: {
       spreadBullets: params.spreadBullets,
     });
     // 新たに追加された弾は常に16個（handlePenetratingSpreadAttackで発射）
-    const bulletCount = 16;
+    const bulletCount = 32;
     const startIndex = params.spreadBullets.length - bulletCount;
     for (let i = startIndex; i < params.spreadBullets.length; i++) {
       params.spreadBullets[i].team = unit.team;
@@ -102,7 +102,7 @@ export function processTeamPenetratingSpreadAttacks(params: {
   damageTexts: DamageText[];
   counter: number;
 }) {
-  if (params.counter % 10 === 0) {
+  if (params.counter % 5 === 0) {
     // 各チームから攻撃発動
     handleTeamPenetratingSpreadAttack({
       app: params.app,

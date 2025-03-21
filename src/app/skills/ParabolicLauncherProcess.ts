@@ -30,7 +30,7 @@ export function processTeamParabolicLauncherAttacks(params: {
   counter: number;
   updateTargetHP: (target: UnitText, damage: number) => void;
 }): void {
-  if (params.counter % 10 === 0) {
+  if (params.counter % 4 === 0) {
     // 味方側
     params.allyUnits
       .filter((unit) => unit.unit.skill_name === "パラボリックランチャー")

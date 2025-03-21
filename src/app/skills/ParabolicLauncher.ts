@@ -16,6 +16,9 @@ export interface ParabolicLauncherEffect {
   team: "ally" | "enemy";
 }
 
+const range = 150;
+const power = 5.0;
+
 /**
  * handleParabolicLauncherAttack
  * 発射元ユニットから最も近い敵ユニットへ放物線軌道の攻撃エフェクトを生成します。
@@ -34,7 +37,7 @@ export function handleParabolicLauncherAttack(params: {
   const startY = attacker.text.y;
   const targetX = params.target.text.x;
   const targetY = params.target.text.y;
-  const damage = attacker.unit.attack * 0.7;
+  const damage = attacker.unit.attack * power;
   const effectGraphic = new PIXI.Graphics();
   effectGraphic.beginFill(0xff0000);
   // 円の直径 30px → 半径15px
@@ -94,7 +97,7 @@ export function updateParabolicLauncherEffects(params: {
         eff.graphics.clear();
         eff.graphics.beginFill(0xffa500, 1);
         // インパクト効果：半径20px の円
-        eff.graphics.drawCircle(0, 0, 100);
+        eff.graphics.drawCircle(0, 0, range);
         eff.graphics.endFill();
       }
     } else {
@@ -109,7 +112,7 @@ export function updateParabolicLauncherEffects(params: {
           const dx = target.text.x - eff.targetX;
           const dy = target.text.y - eff.targetY;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 100) {
+          if (dist < range) {
             params.updateTargetHP(target, eff.damage);
             showDamageText({
               app: params.app,

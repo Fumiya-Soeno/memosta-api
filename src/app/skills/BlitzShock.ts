@@ -15,6 +15,9 @@ export interface BlitzShockEffect {
   team: "ally" | "enemy";
 }
 
+const power = 0.75;
+const range = 90;
+
 /**
  * Helper function to draw a jagged blue lightning bolt.
  * Draws a polyline from (0,0) to (0, totalLength) with random horizontal deviations.
@@ -78,7 +81,7 @@ export function handleBlitzShockAttack(params: {
     fallingSpeed,
     isStruck: false,
     lifetime: 0,
-    damage: attacker.unit.attack * 0.5,
+    damage: attacker.unit.attack * power,
     team: attacker.team,
   };
 
@@ -123,7 +126,7 @@ export function updateBlitzShockEffects(params: {
         effect.graphics.clear();
         // Draw impact effect: blue circle of radius 20.
         effect.graphics.beginFill(0x0000ff, 1);
-        effect.graphics.drawCircle(0, 0, 60);
+        effect.graphics.drawCircle(0, 0, range);
         effect.graphics.endFill();
         // Set impact phase lifetime to 3 frames.
         effect.lifetime = 3;
@@ -143,7 +146,7 @@ export function updateBlitzShockEffects(params: {
         const dx = target.text.x - explosionCenter.x;
         const dy = target.text.y - explosionCenter.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 60) {
+        if (dist < range) {
           updateTargetHP(target, effect.damage);
           showDamageText({
             app,

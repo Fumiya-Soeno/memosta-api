@@ -52,8 +52,8 @@ export function processTeamGuardianFallAttacks(params: {
   damageTexts: DamageText[];
   counter: number;
 }) {
-  // 攻撃発動タイミング：6フレームごと
-  if (params.counter % 6 === 0) {
+  // 攻撃発動タイミング：3フレームごと
+  if (params.counter % 3 === 0) {
     // 味方側
     params.allyUnits
       .filter((ally) => ally.unit.skill_name === "ガーディアンフォール")

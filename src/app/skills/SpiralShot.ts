@@ -19,6 +19,9 @@ export interface SpiralShotEffect {
   target?: UnitText; // 発射時に決定したターゲット
 }
 
+const power = 5.0;
+const range = 20;
+
 /**
  * handleSpiralShotAttack
  * 7フレームごとに、skill_name が "スパイラルショット" のユニットから、
@@ -41,16 +44,16 @@ export function handleSpiralShotAttack(params: {
   const baseAngle = Math.atan2(dy, dx);
 
   // パラメータ設定（例：速度8, spiralMagnitude 3, spiralRate 0.3, lifetime 30フレーム）
-  const speed = 3;
+  const speed = 1;
   const spiralMagnitude = 2;
   const spiralRate = 0.3;
   const lifetime = 80;
-  const damage = attacker.unit.attack * 0.65;
+  const damage = attacker.unit.attack * power;
 
   const effectGraphics = new PIXI.Graphics();
   // 初期状態は小さな青い円
   effectGraphics.beginFill(0x0000ff);
-  effectGraphics.drawCircle(0, 0, 5);
+  effectGraphics.drawCircle(0, 0, range / 2);
   effectGraphics.endFill();
   effectGraphics.x = attackerPos.x;
   effectGraphics.y = attackerPos.y;
@@ -112,13 +115,13 @@ export function updateSpiralShotEffects(params: {
         const dx = effect.graphics.x - effect.target.text.x;
         const dy = effect.graphics.y - effect.target.text.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 10) {
+        if (dist < range) {
           effect.impact = true;
           effect.lifetime = 3; // impact フェーズを3フレームに設定
           effect.graphics.clear();
           // Impact 表現：大きな青い円（半径10px）を描画
           effect.graphics.beginFill(0x0000ff);
-          effect.graphics.drawCircle(0, 0, 10);
+          effect.graphics.drawCircle(0, 0, range);
           effect.graphics.endFill();
         }
       }
@@ -130,7 +133,7 @@ export function updateSpiralShotEffects(params: {
       // Impact フェーズ中：適用中は scale と alpha でフェードアウト効果を付与
       const totalImpactDuration = 3;
       const progress = 1 - effect.lifetime / totalImpactDuration;
-      const scaleFactor = 1 + progress * 0.5; // 最大1.5倍
+      const scaleFactor = 1 + progress * 2.0; // 最大1.5倍
       effect.graphics.scale.set(scaleFactor);
       effect.graphics.alpha = 1 - progress;
       // 衝突判定：ターゲットがまだ設定されていれば、衝突範囲（半径10px以内）でダメージ適用
@@ -138,7 +141,7 @@ export function updateSpiralShotEffects(params: {
         const dx = effect.graphics.x - effect.target.text.x;
         const dy = effect.graphics.y - effect.target.text.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 10) {
+        if (dist < range) {
           updateTargetHP(effect.target, effect.damage);
           showDamageText({
             app,

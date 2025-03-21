@@ -43,7 +43,7 @@ export function Header() {
     <header className="relative flex justify-between items-center px-8 py-4 bg-gray-800 text-white text-lg">
       <a href="/" className="text-white no-underline">
         Character&apos;s War
-        <span className="ml-2 text-xs text-gray-500">v3.1.01</span>
+        <span className="ml-2 text-xs text-gray-500">v4.0.01</span>
       </a>
       <nav className="flex items-center space-x-4">
         {isLoggedIn && (

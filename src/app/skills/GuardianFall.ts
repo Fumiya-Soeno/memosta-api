@@ -13,6 +13,8 @@ export interface GuardianFallEffect {
   team: "ally" | "enemy";
 }
 
+const range = 60;
+
 // 固定の20地点オフセット（攻撃者の現在位置を基準）
 const numPoints = 20;
 const radius = 100; // 円の半径（必要に応じて調整）
@@ -106,9 +108,9 @@ export function updateGuardianFallEffects(params: {
       if (effect.graphics.y >= effect.targetY) {
         effect.isExploded = true;
         effect.graphics.clear();
-        // 初期爆発エフェクト：直径80px（半径40px）のエフェクトを描画
+        // 初期爆発エフェクト：直径100px（半径50px）のエフェクトを描画
         effect.graphics.beginFill(0xff6600, 1);
-        effect.graphics.drawCircle(0, 0, 40);
+        effect.graphics.drawCircle(0, 0, range);
         effect.graphics.endFill();
         // 爆発効果の持続時間を 20 フレームに設定（リッチなフェードアウト用）
         effect.lifetime = 20;
@@ -126,7 +128,7 @@ export function updateGuardianFallEffects(params: {
         const dx = target.text.x - explosionCenter.x;
         const dy = target.text.y - explosionCenter.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance < 50) {
+        if (distance < range) {
           updateTargetHP(target, effect.damage);
           showDamageText({
             app,

@@ -9,6 +9,8 @@ export interface PenetratingSpreadBullet {
   team: "ally" | "enemy";
 }
 
+const power = 1.0;
+
 /**
  * handlePenetratingSpreadAttack
  * skill_name が「貫通拡散弾」のユニットすべてから、16方向に弾を発射します。
@@ -28,9 +30,9 @@ export function handlePenetratingSpreadAttack(params: {
   params.texts.forEach((ut) => {
     if (ut.unit.skill_name !== "貫通拡散弾") return;
     const startPos = { x: ut.text.x, y: ut.text.y };
-    const damage = ut.unit.attack * 0.35;
-    const bulletSpeed = 5;
-    const bulletCount = 16;
+    const damage = ut.unit.attack * power;
+    const bulletSpeed = 3;
+    const bulletCount = 32;
     const angleIncrement = (2 * Math.PI) / bulletCount;
     for (let i = 0; i < bulletCount; i++) {
       const angle = i * angleIncrement;

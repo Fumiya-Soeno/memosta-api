@@ -12,6 +12,8 @@ export interface LorenzBurstEffect {
   team: "ally" | "enemy";
 }
 
+const range = 120;
+
 /**
  * handleLorenzBurstAttack
  * Every 12 frames, if a unit’s skill_name is "ローレンツバースト", an electric attack effect is generated
@@ -57,7 +59,7 @@ export function handleLorenzBurstAttack(params: {
 /**
  * updateLorenzBurstEffects
  * Each LorenzBurstEffect is updated every frame. The effect is drawn as a dynamic,
- * random polyline within a circle of radius ~25px (i.e. 50px diameter). The effect fades out over 4 frames.
+ * random polyline within a circle of range ~25px (i.e. 50px diameter). The effect fades out over 4 frames.
  * If any target from the opposite team is within the circle, damage is applied.
  */
 export function updateLorenzBurstEffects(params: {
@@ -69,7 +71,6 @@ export function updateLorenzBurstEffects(params: {
   damageTexts: DamageText[];
 }) {
   const { app, lorenzBurstEffects, updateTargetHP, damageTexts } = params;
-  const radius = 50;
   lorenzBurstEffects.forEach((effect, index) => {
     // Decrease lifetime and fade out.
     effect.lifetime--;
@@ -84,7 +85,7 @@ export function updateLorenzBurstEffects(params: {
       let angle = (i / numPoints) * 2 * Math.PI;
       // Add small random deviation.
       angle += (Math.random() - 0.5) * 0.3;
-      const r = radius + (Math.random() - 0.5) * 5;
+      const r = range + (Math.random() - 0.5) * 5;
       const x = r * Math.cos(angle);
       const y = r * Math.sin(angle);
       points.push({ x, y });
@@ -104,7 +105,7 @@ export function updateLorenzBurstEffects(params: {
       const dx = target.text.x - effect.centerX;
       const dy = target.text.y - effect.centerY;
       const d = Math.sqrt(dx * dx + dy * dy);
-      if (d < radius) {
+      if (d < range) {
         updateTargetHP(target, effect.damage);
         showDamageText({
           app,
