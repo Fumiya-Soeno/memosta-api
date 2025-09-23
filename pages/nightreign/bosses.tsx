@@ -12,7 +12,7 @@ import {
   getDay2Options,
   getDay3ByDay1,
   getDay3ByDay1Day2,
-} from "./lib/mapping";
+} from "../../lib/mapping";
 
 /** プレゼンテーション部品（Tailwind） */
 const Card: React.FC<{ title: string; children: React.ReactNode }> = ({
