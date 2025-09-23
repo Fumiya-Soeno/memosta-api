@@ -115,14 +115,19 @@ const Bosses: React.FC<{ mapping?: Mapping }> = ({
             <SelectBase
               value={day1}
               onChange={(e) => {
-                setDay1(e.target.value);
-                setDay2("");
-                setRaid("");
+                const v = e.target.value as Day1 | "";
+                setDay1(v);
+                // 1日目を未選択に戻したら 2日目/イベントもクリア
+                if (v === "") {
+                  setDay2("");
+                  setRaid("");
+                } else {
+                  setDay2("");
+                  setRaid("");
+                }
               }}
             >
-              <option value="" disabled>
-                選択してください
-              </option>
+              <option value="">{day1 ? "選択" : "選択してください"}</option>
               {allDay1.map((d) => (
                 <option key={d} value={d}>
                   {d}
@@ -140,11 +145,13 @@ const Bosses: React.FC<{ mapping?: Mapping }> = ({
             disabled={!day1}
             value={day2}
             onChange={(e) => {
-              setDay2(e.target.value);
+              const v = e.target.value as Day2 | "";
+              setDay2(v);
+              // 2日目を未選択に戻しても raid は維持（要件的に自然）
               setRaid("");
             }}
           >
-            <option value="" disabled>
+            <option value="">
               {day1 ? "選択してください" : "1日目を先に選んでね"}
             </option>
             {day2Options.map((d2) => {
@@ -166,8 +173,8 @@ const Bosses: React.FC<{ mapping?: Mapping }> = ({
             value={raid}
             onChange={(e) => setRaid(e.target.value)}
           >
-            <option value="" disabled>
-              {day1 ? "（任意）イベントを選択" : "1日目を先に選んでね"}
+            <option value="">
+              {day1 ? "選択してください" : "1日目を先に選んでね"}
             </option>
             {allRaids.map((r) => (
               <option key={r} value={r}>
