@@ -161,3 +161,56 @@ export const getDay3ByDay1Day2 = (
   const list = mapping[day1]?.[day2];
   return list ? uniq(list).sort() : (["ナメレス"] as Day3[]);
 };
+
+export type Day12Pair = { day1: Day1; day2: Day2 };
+export type ReverseIndex = Record<Day3, Day12Pair[]>;
+
+/** 逆引きインデックス作成: Day3 -> [{day1, day2}] */
+export const buildReverseIndex = (mapping: Mapping): ReverseIndex => {
+  const idx: ReverseIndex = {};
+  for (const [d1, m2] of Object.entries(mapping)) {
+    for (const [d2, arr] of Object.entries(m2 || {})) {
+      for (const d3 of arr || []) {
+        (idx[d3] ||= []).push({ day1: d1, day2: d2 });
+      }
+    }
+  }
+  // 重複除去＆安定ソート（見た目のため）
+  for (const k of Object.keys(idx)) {
+    const seen = new Set<string>();
+    idx[k] = idx[k]
+      .filter((p) => {
+        const key = `${p.day1}__${p.day2}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .sort((a, b) =>
+        a.day1 === b.day1
+          ? a.day2.localeCompare(b.day2)
+          : a.day1.localeCompare(b.day1)
+      );
+  }
+  return idx;
+};
+
+/** Day3 から Day1 候補だけを取得 */
+export const getDay1CandidatesForDay3 = (
+  rev: ReverseIndex,
+  day3?: Day3
+): Day1[] => {
+  if (!day3 || !rev[day3]) return [];
+  return Array.from(new Set(rev[day3].map((p) => p.day1))).sort();
+};
+
+/** Day3 + Day1 から Day2 候補を取得 */
+export const getDay2CandidatesForDay3Day1 = (
+  rev: ReverseIndex,
+  day3?: Day3,
+  day1?: Day1
+): Day2[] => {
+  if (!day3 || !day1 || !rev[day3]) return [];
+  return Array.from(
+    new Set(rev[day3].filter((p) => p.day1 === day1).map((p) => p.day2))
+  ).sort();
+};
